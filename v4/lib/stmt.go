@@ -68,7 +68,7 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 		w.w("\ndefer %stls.Free(%d)", tag(ccgo), v)
 		for _, v := range c.f.t.Parameters() {
 			if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
-				w.w("\n*(*%s)(unsafe.Pointer(%sbp)) = %[2]s_%s", c.typ(d.Type()), tag(ccgo), d.Name())
+				w.w("\n*(*%s)(unsafe.Pointer(%s)) = %s_%s", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
 			}
 		}
 	}

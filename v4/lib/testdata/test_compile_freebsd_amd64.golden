@@ -1085,6 +1085,7 @@ assets/tcc-0.9.27/tests/tests2/42_function_pointer.c
 assets/tcc-0.9.27/tests/tests2/43_void_param.c
 assets/tcc-0.9.27/tests/tests2/44_scoped_declarations.c
 assets/tcc-0.9.27/tests/tests2/45_empty_for.c
+assets/tcc-0.9.27/tests/tests2/46_grep.c
 assets/tcc-0.9.27/tests/tests2/47_switch_return.c
 assets/tcc-0.9.27/tests/tests2/48_nested_break.c
 assets/tcc-0.9.27/tests/tests2/49_bracket_evaluation.c

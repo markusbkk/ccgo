@@ -285,6 +285,7 @@ func extractPos(s string) (p token.Position, ok bool) {
 func buildDefs(D, U []string) string {
 	var a []string
 	for _, v := range D {
+		v = v[len("-D"):]
 		if i := strings.IndexByte(v, '='); i > 0 {
 			a = append(a, fmt.Sprintf("#define %s %s", v[:i], v[i+1:]))
 			continue
@@ -293,6 +294,7 @@ func buildDefs(D, U []string) string {
 		a = append(a, fmt.Sprintf("#define %s 1", v))
 	}
 	for _, v := range U {
+		v = v[len("-D"):]
 		a = append(a, fmt.Sprintf("#undef %s", v))
 	}
 	return strings.Join(a, "\n")

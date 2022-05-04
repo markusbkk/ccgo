@@ -241,6 +241,14 @@ func (c *ctx) convertUntyped(n cc.Node, s *buf, from, to cc.Type, fromMode, toMo
 		default:
 			//TODO c.err(errorf("TODO %v", to))
 		}
+	case cc.Float64Value:
+		switch {
+		case x == 0:
+			b.w("(%s%s%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(to), x)
+		default:
+			b.w("%s(%v)", c.typ(to), x)
+		}
+		return &b
 	case nil:
 		// ok
 	default:
@@ -371,6 +379,19 @@ func (c *ctx) convertMode(n cc.Node, w writer, s *buf, from, to cc.Type, fromMod
 		case exprBool:
 			b.w("(%s != 0)", s)
 			return &b
+		case exprIndex:
+			switch x := from.(type) {
+			case *cc.PointerType:
+				switch y := from.Undecay().(type) {
+				case *cc.ArrayType:
+					b.w("((*%s)(unsafe.Pointer(%s)))", c.typ(y), s)
+					return &b
+				default:
+					trc("%T", y)
+				}
+			default:
+				trc("%T", x)
+			}
 		}
 	case exprUintpr:
 		switch toMode {
@@ -561,10 +582,10 @@ func (c *ctx) shiftExpression(w writer, n *cc.ShiftExpression, t cc.Type, mode m
 	case cc.ShiftExpressionAdd: // AdditiveExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.ShiftExpressionLsh: // ShiftExpression "<<" AdditiveExpression
-		b.w("(%s << %s)", c.expr(w, n.ShiftExpression, nil, exprDefault), c.expr(w, n.AdditiveExpression, nil, exprDefault))
+		b.w("(%s << %s)", c.expr(w, n.ShiftExpression, n.Type(), exprDefault), c.expr(w, n.AdditiveExpression, n.Type(), exprDefault))
 		rt, rmode = n.Type(), exprDefault
 	case cc.ShiftExpressionRsh: // ShiftExpression ">>" AdditiveExpression
-		b.w("(%s >> %s)", c.expr(w, n.ShiftExpression, nil, exprDefault), c.expr(w, n.AdditiveExpression, nil, exprDefault))
+		b.w("(%s >> %s)", c.expr(w, n.ShiftExpression, n.Type(), exprDefault), c.expr(w, n.AdditiveExpression, n.Type(), exprDefault))
 		rt, rmode = n.Type(), exprDefault
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -1519,7 +1540,7 @@ out:
 		b.w("%v", n.Value()) //TODO-
 	case cc.PrimaryExpressionFloat: // FLOATCONST
 		rt, rmode = n.Type(), exprUntyped
-		//TODO b.n = n
+		b.n = n
 		b.w("%v", n.Value()) //TODO-
 	case cc.PrimaryExpressionChar: // CHARCONST
 		rt, rmode = n.Type(), exprUntyped

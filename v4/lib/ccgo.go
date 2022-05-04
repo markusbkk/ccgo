@@ -74,7 +74,15 @@ type Task struct {
 
 // NewTask returns a newly created Task. args[0] is the command name.
 func NewTask(goos, goarch string, args []string, stdout, stderr io.Writer, fs fs.FS) (r *Task) {
+	var d []string
+	switch goarch {
+	case "arm", "386":
+		// modernc.org/libc@v1/sys/types/Off_t is 64 bit
+		d = []string{"-D_FILE_OFFSET_BITS=64"}
+	}
+
 	return &Task{
+		D:              d,
 		args:           args,
 		compiledfFiles: map[string]string{},
 		fs:             fs,
@@ -180,6 +188,7 @@ func (t *Task) Main() (err error) {
 		t.cfgArgs = append(t.cfgArgs, flag)
 	}
 
+	// trc("", t.cfgArgs)
 	cfg, err := cc.NewConfig(t.goos, t.goarch, t.cfgArgs...)
 	if err != nil {
 		return err
@@ -191,10 +200,21 @@ func (t *Task) Main() (err error) {
 	cfg.IncludePaths = append(cfg.IncludePaths, cfg.HostSysIncludePaths...)
 	cfg.SysIncludePaths = append(t.I, cfg.HostSysIncludePaths...)
 	t.defs = buildDefs(t.D, t.U)
+	// trc("", t.defs)
 	cfg.FS = t.fs
 	t.cfg = cfg
 	if t.E {
-		panic(todo(""))
+		sources := []cc.Source{
+			{Name: "<predefined>", Value: cfg.Predefined},
+			{Name: "<builtin>", Value: cc.Builtin},
+		}
+		if t.defs != "" {
+			sources = append(sources, cc.Source{Name: "<command-line>", Value: t.defs})
+		}
+		for _, ifn := range t.inputFiles {
+			sources = append(sources, cc.Source{Name: ifn, FS: cfg.FS})
+		}
+		return cc.Preprocess(cfg, sources, t.stdout)
 	}
 
 	if t.c {
