@@ -126,7 +126,8 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				case nm == "":
 					fmt.Fprintf(b, "%s__ccgo%d", tag(field), i)
 				default:
-					fmt.Fprintf(b, "%s%s", tag(field), nm)
+					c.registerFields(x)
+					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteByte(' ')
 				c.typ0(b, f.Type(), true, true, true)
@@ -151,7 +152,8 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				case nm == "":
 					c.err(errorf("TODO"))
 				default:
-					fmt.Fprintf(b, "%s%s", tag(field), nm)
+					c.registerFields(x)
+					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteString(" [0]")
 				c.typ0(b, f.Type(), true, true, true)
@@ -180,6 +182,7 @@ func (c *ctx) structLiteral(t *cc.StructType) string {
 }
 
 func (c *ctx) defineUnion(w writer, t *cc.UnionType) {
+	c.registerFields(t)
 	if t.IsIncomplete() {
 		return
 	}
@@ -194,7 +197,37 @@ func (c *ctx) defineUnion(w writer, t *cc.UnionType) {
 	}
 }
 
+type fielder interface {
+	FieldByIndex(int) *cc.Field
+}
+
+func (c *ctx) registerFields(t fielder) {
+	if _, ok := c.fields[t]; ok {
+		return
+	}
+
+	ns := &nameSpace{}
+	c.fields[t] = ns
+	for i := 0; ; i++ {
+		f := t.FieldByIndex(i)
+		if f == nil {
+			break
+		}
+
+		nm := f.Name()
+		if nm == "" {
+			continue
+		}
+
+		ns.dict.put(nm, ns.reg.put(nm))
+		if x, ok := f.Type().(fielder); ok {
+			c.registerFields(x)
+		}
+	}
+}
+
 func (c *ctx) defineStruct(w writer, t *cc.StructType) {
+	c.registerFields(t)
 	if t.IsIncomplete() {
 		return
 	}
