@@ -5,6 +5,8 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
+	"strings"
+
 	"modernc.org/cc/v4"
 )
 
@@ -23,7 +25,9 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 	case cc.StatementJump: // JumpStatement
 		c.jumpStatement(w, n.JumpStatement)
 	case cc.StatementAsm: // AsmStatement
-		c.err(errorf("%v: assembler statements not supported", n.Position()))
+		a := strings.Split(nodeSource(n.AsmStatement), "\n")
+		w.w("\n// %s", strings.Join(a, "\n// "))
+		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}

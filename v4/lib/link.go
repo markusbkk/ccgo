@@ -388,7 +388,6 @@ func (t *Task) getFileSymbols(fset *token.FileSet, fn string) (r *object, err er
 type linker struct {
 	errors                errors
 	externs               map[string]*object
-	fields                nameSpace
 	fileLinkNames2GoNames dict
 	fileLinkNames2IDs     dict
 	forceExternalPrefix   nameSet
@@ -686,7 +685,7 @@ func (l *linker) epilogue() {
 	}
 
 	l.w("\n\nvar %s = %q\n", l.textSegmentName, l.textSegment.String())
-	l.w("\nvar %s = (*reflect.StringHeader)(unsafe.Pointer(&%s)).Data\n", l.textSegmentNameP, l.textSegmentName)
+	l.w("\nvar %s = (*reflect.StringHeader)(unsafe.Pointer(&(%s))).Data\n", l.textSegmentNameP, l.textSegmentName)
 }
 
 func (l *linker) prologue(nm string) {
@@ -848,7 +847,7 @@ func (fi *fnInfo) Visit(n ast.Node) ast.Visitor {
 	switch x := n.(type) {
 	case *ast.Ident:
 		switch symKind(x.Name) {
-		case staticInternal:
+		case staticInternal, field:
 			// nop
 		default:
 			fi.linkNames.add(x.Name)

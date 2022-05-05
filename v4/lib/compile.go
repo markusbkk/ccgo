@@ -145,6 +145,7 @@ type ctx struct {
 	eh            errHandler
 	enumerators   nameSet
 	f             *fnCtx
+	fields        map[fielder]*nameSpace
 	ifn           string
 	imports       map[string]string // import path: qualifier
 	out           io.Writer
@@ -165,6 +166,7 @@ func newCtx(task *Task, eh errHandler) *ctx {
 	return &ctx{
 		cfg:     task.cfg,
 		eh:      eh,
+		fields:  map[fielder]*nameSpace{},
 		imports: map[string]string{},
 		task:    task,
 	}
@@ -191,6 +193,8 @@ func (c ctx) w(s string, args ...interface{}) {
 		c.closed = true
 	}
 }
+
+func (c *ctx) fieldName(t fielder, f *cc.Field) string { return c.fields[t].dict[f.Name()] }
 
 func (c *ctx) compile(ifn, ofn string) error {
 	f, err := os.Create(ofn)
@@ -283,10 +287,16 @@ func (c *ctx) defines(w writer) {
 	w.w("\n\nconst (\n%s\n)", strings.Join(b, "\n"))
 }
 
+var home = os.Getenv("HOME")
+
 func (c *ctx) pos(n cc.Node) (r token.Position) {
-	if n != nil {
-		r = token.Position(n.Position())
-		if !c.task.fullPaths {
+	if r = token.Position(n.Position()); r.IsValid() {
+		switch {
+		case c.task.fullPaths:
+			if strings.HasPrefix(r.Filename, home) {
+				r.Filename = "$HOME" + r.Filename[len(home):]
+			}
+		default:
 			r.Filename = filepath.Base(r.Filename)
 		}
 	}
@@ -294,7 +304,7 @@ func (c *ctx) pos(n cc.Node) (r token.Position) {
 }
 
 func (c *ctx) prologue(w writer) {
-	w.w(`// %s%s/%s by '%s %s'%s.
+	w.w(`// %s%s/%s by '%s %s'%s
 
 //go:build ignore
 // +build ignore

@@ -449,6 +449,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960521-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960608-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960801-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960802-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960830-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960909-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/961004-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/961017-1.c
@@ -601,6 +602,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/pr2930
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/pr30704.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/pr67218.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/pr72824.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/rbug.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/unsafe-fp-assoc-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ifcvt-onecmpl-abs-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/index-1.c
@@ -1083,6 +1085,7 @@ assets/tcc-0.9.27/tests/tests2/42_function_pointer.c
 assets/tcc-0.9.27/tests/tests2/43_void_param.c
 assets/tcc-0.9.27/tests/tests2/44_scoped_declarations.c
 assets/tcc-0.9.27/tests/tests2/45_empty_for.c
+assets/tcc-0.9.27/tests/tests2/46_grep.c
 assets/tcc-0.9.27/tests/tests2/47_switch_return.c
 assets/tcc-0.9.27/tests/tests2/48_nested_break.c
 assets/tcc-0.9.27/tests/tests2/49_bracket_evaluation.c

@@ -741,17 +741,12 @@ func TestCompile(t *testing.T) {
 	case "freebsd/386":
 	case "freebsd/amd64":
 	case "linux/386":
-		// asm
-		blacklistGCC["960830-1.c"] = struct{}{}
-
 		// _Float128
 		blacklistGCC["nest-align-1.c"] = struct{}{}
 		blacklistGCC["strcmp-1.c"] = struct{}{}
 		blacklistGCC["strlen-1.c"] = struct{}{}
 		blacklistGCC["strncmp-1.c"] = struct{}{}
 	case "linux/s390x":
-		// asm
-		blacklistGCC["pr58574.c"] = struct{}{}
 	case "netbsd/amd64":
 	case "openbsd/amd64":
 	case "windows/386":
@@ -1365,6 +1360,7 @@ func TestExec(t *testing.T) {
 			"fp-cmp-4.c":                   {}, //TODO
 			"fp-cmp-5.c":                   {}, //TODO
 			"fp-cmp-6.c":                   {}, //TODO
+			"fp-cmp-7.c":                   {}, //TODO
 			"fp-cmp-8.c":                   {}, //TODO
 			"fprintf-2.c":                  {}, //TODO
 			"fprintf-chk-1.c":              {}, //TODO
@@ -1853,6 +1849,9 @@ func TestExec(t *testing.T) {
 		case "darwin/amd64":
 		case "darwin/arm64":
 		case "freebsd/386":
+			// asm
+			blacklistGCC["960830-1.c"] = struct{}{}
+			blacklistGCC["rbug.c"] = struct{}{}
 		case "freebsd/amd64":
 		case "linux/386":
 			// asm

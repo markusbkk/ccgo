@@ -216,9 +216,8 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 	}
 
 	if n.Asm != nil {
-		w.w("\n//TODO %T %v (%v: )\n// %s // %v:", n, n.Case, origin(1), cc.NodeSource(d), c.pos(n))
-		c.err(errorf("TODO asm %v", n.Case))
-		return //TODO-
+		w.w("\n//TODO %s %s // %v:", cc.NodeSource(d), cc.NodeSource(n.Asm), c.pos(n))
+		return
 	}
 
 	var info *declInfo
@@ -232,6 +231,7 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 		case d.IsTypename():
 			if external && c.typenames.add(nm) {
 				w.w("\ntype %s%s = %s", tag(typename), nm, c.typedef(d.Type()))
+				c.defineEnumStructUnion(w, d.Type())
 			}
 			if !external {
 				return
