@@ -6,7 +6,9 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
+	"strings"
 	"unicode"
 
 	"modernc.org/cc/v4"
@@ -140,12 +142,23 @@ func (c *ctx) pin(n cc.Node, b *buf) *buf {
 			switch symKind(string(b.bytes())) {
 			case automatic, ccgoAutomatic:
 				c.f.declInfos.takeAddress(x)
-				//trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(3), origin(2))
+				// trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(3), origin(2))
 			}
 		case 2:
 			// ok
 		default:
 			c.err(errorf("%v: internal error: %d", n.Position(), c.pass))
+		}
+	case *cc.PostfixExpression:
+		if y := c.declaratorOf(x.PostfixExpression); y != nil {
+			s := strings.Trim(string(b.bytes()), "()")
+			s = s[:strings.IndexByte(s, '.')]
+			switch symKind(s) {
+			case automatic, ccgoAutomatic:
+				c.f.declInfos.takeAddress(y)
+				// trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), y.Name(), c.pos(y), origin(3), origin(2))
+			}
+			return b
 		}
 	}
 	return b
@@ -247,6 +260,15 @@ func (c *ctx) convertUntyped(n cc.Node, s *buf, from, to cc.Type, fromMode, toMo
 			b.w("(%s%s%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(to), x)
 		default:
 			b.w("%s(%v)", c.typ(to), x)
+		}
+		return &b
+	case *cc.LongDoubleValue:
+		bf := (*big.Float)(x)
+		switch {
+		case bf.Sign() == 0:
+			b.w("(%s%s%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(to), bf)
+		default:
+			b.w("%s(%v)", c.typ(to), bf)
 		}
 		return &b
 	case nil:
@@ -415,6 +437,11 @@ func (c *ctx) convertMode(n cc.Node, w writer, s *buf, from, to cc.Type, fromMod
 				return &b
 			}
 		}
+	case exprVoid:
+		switch toMode {
+		case exprDefault:
+			return s
+		}
 	}
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
@@ -479,7 +506,15 @@ func (c *ctx) convertFromPointer(n cc.Node, s *buf, from *cc.PointerType, to cc.
 		}
 	}
 
+	if cc.IsIntegerType(to) {
+		if toMode == exprDefault {
+			b.w("(%s(%s))", c.typ(to), s)
+			return &b
+		}
+	}
+
 	c.err(errorf("TODO %q %s %s, %s -> %s %s, %s", s, from, from.Kind(), fromMode, to, to.Kind(), toMode))
+	trc("%v: TODO %q %s %s, %s -> %s %s, %s", cpos(n), s, from, from.Kind(), fromMode, to, to.Kind(), toMode)
 	return s //TODO
 }
 
@@ -1018,7 +1053,7 @@ out:
 			c.err(errorf("TODO %T", x))
 		}
 	case cc.PostfixExpressionCall: // PostfixExpression '(' ArgumentExpressionList ')'
-		switch isName(n.PostfixExpression) {
+		switch c.declaratorOf(n.PostfixExpression).Name() {
 		case "__builtin_constant_p":
 			switch mode {
 			case exprBool:
@@ -1038,6 +1073,7 @@ out:
 
 		return c.postfixExpressionCall(w, n)
 	case cc.PostfixExpressionSelect: // PostfixExpression '.' IDENTIFIER
+		b.n = n
 		switch mode {
 		case exprLvalue, exprDefault, exprSelect:
 			rt, rmode = n.Type(), mode
@@ -1278,12 +1314,12 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 		args = append(args, l.AssignmentExpression)
 	}
 	if len(args) < ft.MinArgs() {
-		c.err(errorf("%v: too few arguments to function '%s'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression)))
+		c.err(errorf("%v: too few arguments to function '%s', type '%v' in '%v'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression), ft, cc.NodeSource(n)))
 		return nil, nil, 0
 	}
 
 	if len(args) > ft.MaxArgs() && ft.MaxArgs() >= 0 {
-		c.err(errorf("%v: too many arguments to function '%s'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression)))
+		c.err(errorf("%v: too many arguments to function '%s', type '%v' in '%v'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression), ft, cc.NodeSource(n)))
 		return nil, nil, 0
 	}
 

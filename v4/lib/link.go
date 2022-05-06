@@ -77,6 +77,14 @@ func (o *object) audit(fset *token.FileSet, file *ast.File) (err error) {
 					case automatic, ccgoAutomatic:
 						errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(y.Pos(), true), y.Name))
 					}
+				case *ast.SelectorExpr:
+					switch z := y.X.(type) {
+					case *ast.Ident:
+						switch symKind(z.Name) {
+						case automatic, ccgoAutomatic:
+							errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(z.Pos(), true), z.Name))
+						}
+					}
 				}
 			}
 		}

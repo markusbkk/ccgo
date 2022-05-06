@@ -56,8 +56,15 @@ func (c *ctx) initializer(w writer, a []*cc.Initializer, t cc.Type, off0 int64) 
 		}
 
 		return c.initializerArray(w, a, x, off0)
+	case *cc.StructType:
+		if len(a) == 1 && a[0].Type().Kind() == cc.Struct {
+			return c.expr(w, a[0].AssignmentExpression, t, exprDefault)
+		}
+
+		c.err(errorf("TODO %T", x))
+		return nil
 	default:
-		// trc("%v: in type %v, in expr type %v, t %v", a[0].Position(), a[0].Type(), a[0].AssignmentExpression.Type(), t)
+		trc("%v: in type %v, in expr type %v, t %v", a[0].Position(), a[0].Type(), a[0].AssignmentExpression.Type(), t)
 		c.err(errorf("TODO %T", x))
 		return nil
 	}
