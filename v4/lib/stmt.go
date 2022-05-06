@@ -10,11 +10,14 @@ import (
 	"modernc.org/cc/v4"
 )
 
-func (c *ctx) statement(w writer, n *cc.Statement) {
+func (c *ctx) statement(w writer, n *cc.Statement, blockItem bool) {
 	switch n.Case {
 	case cc.StatementLabeled: // LabeledStatement
 		c.labeledStatement(w, n.LabeledStatement)
 	case cc.StatementCompound: // CompoundStatement
+		if blockItem {
+			w.w("\n")
+		}
 		c.compoundStatement(w, n.CompoundStatement, false)
 	case cc.StatementExpr: // ExpressionStatement
 		c.expressionStatement(w, n.ExpressionStatement)
@@ -43,7 +46,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 			w.w("\nfallthrough")
 		}
 		w.w("\ncase %s:", c.expr(nil, n.ConstantExpression, nil, exprDefault))
-		c.statement(w, n.Statement)
+		c.statement(w, n.Statement, false)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
 			w.w("\nfallthrough")
@@ -54,7 +57,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 			w.w("\nfallthrough")
 		}
 		w.w("\ndefault:")
-		c.statement(w, n.Statement)
+		c.statement(w, n.Statement, false)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -102,7 +105,7 @@ func (c *ctx) blockItem(w writer, n *cc.BlockItem) {
 	case cc.BlockItemLabel: // LabelDeclaration
 		c.err(errorf("TODO %v", n.Case))
 	case cc.BlockItemStmt: // Statement
-		c.statement(w, n.Statement)
+		c.statement(w, n.Statement, true)
 	case cc.BlockItemFuncDef: // DeclarationSpecifiers Declarator CompoundStatement
 		if c.pass == 2 {
 			c.functionDefinition0(w, n.Declarator, n.CompoundStatement, true) //TODO does not really work yet
@@ -119,13 +122,13 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.bracedStatement(w, n.Statement)
 	case cc.SelectionStatementIfElse: // "if" '(' ExpressionList ')' Statement "else" Statement
 		w.w("\nif %s {", c.expr(w, n.ExpressionList, nil, exprBool))
-		c.statement(w, n.Statement)
+		c.statement(w, n.Statement, false)
 		w.w("\n} else {")
-		c.statement(w, n.Statement2)
+		c.statement(w, n.Statement2, false)
 		w.w("\n}")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
 		w.w("\nswitch %s", c.expr(w, n.ExpressionList, nil, exprDefault))
-		c.statement(w, n.Statement)
+		c.statement(w, n.Statement, false)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -134,10 +137,10 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 func (c *ctx) bracedStatement(w writer, n *cc.Statement) {
 	switch n.Case {
 	case cc.StatementCompound:
-		c.statement(w, n)
+		c.statement(w, n, false)
 	default:
 		w.w("{")
-		c.statement(w, n)
+		c.statement(w, n, false)
 		w.w("\n}")
 	}
 }
@@ -149,7 +152,7 @@ func (c *ctx) unbracedStatement(w writer, n *cc.Statement) {
 			c.blockItem(w, l.BlockItem)
 		}
 	default:
-		c.statement(w, n)
+		c.statement(w, n, false)
 	}
 }
 

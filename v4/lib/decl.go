@@ -217,7 +217,11 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 
 	if n.Asm != nil {
 		w.w("\n//TODO %s %s // %v:", cc.NodeSource(d), cc.NodeSource(n.Asm), c.pos(n))
-		return
+		if d.LexicalScope().Parent == nil {
+			return
+		}
+
+		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
 	}
 
 	var info *declInfo
