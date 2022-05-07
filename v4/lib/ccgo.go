@@ -204,17 +204,12 @@ func (t *Task) Main() (err error) {
 	cfg.FS = t.fs
 	t.cfg = cfg
 	if t.E {
-		sources := []cc.Source{
-			{Name: "<predefined>", Value: cfg.Predefined},
-			{Name: "<builtin>", Value: cc.Builtin},
-		}
-		if t.defs != "" {
-			sources = append(sources, cc.Source{Name: "<command-line>", Value: t.defs})
-		}
 		for _, ifn := range t.inputFiles {
-			sources = append(sources, cc.Source{Name: ifn, FS: cfg.FS})
+			if err := cc.Preprocess(cfg, sourcesFor(cfg, ifn, t.defs), t.stdout); err != nil {
+				return err
+			}
 		}
-		return cc.Preprocess(cfg, sources, t.stdout)
+		return nil
 	}
 
 	if t.c {
@@ -228,6 +223,17 @@ func (t *Task) Main() (err error) {
 		t.linkFiles = append(t.linkFiles, "-l=modernc.org/libc")
 	}
 	return t.link()
+}
+
+func sourcesFor(cfg *cc.Config, fn, defs string) (r []cc.Source) {
+	sources := []cc.Source{
+		{Name: "<predefined>", Value: cfg.Predefined},
+		{Name: "<builtin>", Value: cc.Builtin},
+	}
+	if defs != "" {
+		sources = append(sources, cc.Source{Name: "<command-line>", Value: defs})
+	}
+	return append(sources, cc.Source{Name: fn, FS: cfg.FS})
 }
 
 // -c

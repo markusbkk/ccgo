@@ -194,8 +194,6 @@ func (c ctx) w(s string, args ...interface{}) {
 	}
 }
 
-func (c *ctx) fieldName(t fielder, f *cc.Field) string { return c.fields[t].dict[f.Name()] }
-
 func (c *ctx) compile(ifn, ofn string) error {
 	f, err := os.Create(ofn)
 	if err != nil {
@@ -226,15 +224,7 @@ func (c *ctx) compile(ifn, ofn string) error {
 		}
 	}()
 
-	sources := []cc.Source{
-		{Name: "<predefined>", Value: c.cfg.Predefined},
-		{Name: "<builtin>", Value: cc.Builtin},
-	}
-	if c.task.defs != "" {
-		sources = append(sources, cc.Source{Name: "<command-line>", Value: c.task.defs})
-	}
-	sources = append(sources, cc.Source{Name: ifn, FS: c.cfg.FS})
-	if c.ast, err = cc.Translate(c.cfg, sources); err != nil {
+	if c.ast, err = cc.Translate(c.cfg, sourcesFor(c.cfg, ifn, c.task.defs)); err != nil {
 		return err
 	}
 

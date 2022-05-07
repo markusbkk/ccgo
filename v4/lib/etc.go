@@ -489,18 +489,19 @@ func cpos(n cc.Node) (r token.Position) {
 func nodeSource(s ...cc.Node) string {
 	var a []cc.Token
 	for _, n := range s {
-		nodeSource0(n, &a)
+		nodeTokens(n, &a)
 	}
 	sort.Slice(a, func(i, j int) bool { return a[i].Seq() < a[j].Seq() })
 	var b strings.Builder
 	for _, t := range a {
+		// fmt.Fprintf(&b, " %d: ", t.Seq())
 		b.Write(t.Sep())
 		b.Write(t.Src())
 	}
 	return strings.Trim(b.String(), "\n")
 }
 
-func nodeSource0(n cc.Node, a *[]cc.Token) {
+func nodeTokens(n cc.Node, a *[]cc.Token) {
 	if n == nil {
 		return
 	}
@@ -544,28 +545,90 @@ func nodeSource0(n cc.Node, a *[]cc.Token) {
 		}
 
 		if m, ok := v.Field(i).Interface().(cc.Node); ok {
-			nodeSource0(m, a)
+			nodeTokens(m, a)
 		}
 	}
 }
 
-func isName(n cc.Node) string {
-	for {
-		switch x := n.(type) {
-		case *cc.ExpressionList:
-			if x.ExpressionList != nil {
-				return ""
-			}
+func sep(n cc.Node) string {
+	var t cc.Token
+	firstToken(n, &t)
+	return string(t.Sep())
+}
 
-			n = x.AssignmentExpression
-		case *cc.PrimaryExpression:
-			if x.Case == cc.PrimaryExpressionIdent {
-				return x.Token.SrcStr()
-			}
+func firstToken(n cc.Node, r *cc.Token) {
+	if n == nil {
+		return
+	}
 
-			return ""
-		default:
-			return ""
+	if x, ok := n.(cc.Token); ok && x.Seq() != 0 {
+		if r.Seq() == 0 || x.Seq() < r.Seq() {
+			*r = x
+		}
+		return
+	}
+
+	t := reflect.TypeOf(n)
+	v := reflect.ValueOf(n)
+	var zero reflect.Value
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	if v == zero || v.IsZero() || t.Kind() != reflect.Struct {
+		return
+	}
+
+	nf := t.NumField()
+	for i := 0; i < nf; i++ {
+		f := t.Field(i)
+		if !f.IsExported() {
+			continue
+		}
+
+		if m, ok := v.Field(i).Interface().(cc.Node); ok {
+			firstToken(m, r)
 		}
 	}
+}
+
+func docComment(s string) string {
+	return "\n" //TODO
+	if s == "" {
+		return ""
+	}
+
+	a := strings.Split(s, "\n")
+	for i := len(a) - 1; i >= 0; i-- {
+		if strings.TrimSpace(a[i]) == "" {
+			a = a[:i]
+			continue
+		}
+
+		break
+	}
+
+	for i, v := range a {
+		if strings.TrimSpace(v) != "" {
+			a = a[i:]
+			break
+		}
+	}
+	if len(a) == 0 {
+		return ""
+	}
+
+	for i, v := range a {
+		switch {
+		case strings.HasPrefix(v, "// "):
+			a[i] = "//  " + v[len("// "):]
+		case strings.HasPrefix(v, "//\t"):
+			// ok
+		case strings.HasPrefix(v, "//"):
+			a[i] = "//  " + v[len("//"):]
+		default:
+			a[i] = "//  " + v
+		}
+	}
+	return "\n" + strings.Join(a, "\n")
 }

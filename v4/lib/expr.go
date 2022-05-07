@@ -1082,9 +1082,7 @@ out:
 			case f.Parent() != nil:
 				c.err(errorf("TODO %v", n.Case))
 			default:
-				ft := n.PostfixExpression.Type().(fielder)
-				c.registerFields(ft)
-				b.w("%s%s)", tag(field), c.fieldName(ft, f))
+				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 			}
 		case exprUintpr:
 			rt, rmode = n.Type(), mode
@@ -1093,9 +1091,7 @@ out:
 			case f.Parent() != nil:
 				c.err(errorf("TODO %v", n.Case))
 			default:
-				ft := n.PostfixExpression.Type().(fielder)
-				c.registerFields(ft)
-				b.w("%s%s)))", tag(field), c.fieldName(ft, f))
+				b.w("%s%s)))", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 			}
 		case exprIndex:
 			switch x := n.Type().Undecay().(type) {
@@ -1115,9 +1111,7 @@ out:
 		case f.Parent() != nil:
 			c.err(errorf("TODO %v", n.Case))
 		default:
-			ft := n.PostfixExpression.Type().(*cc.PointerType).Elem().(fielder)
-			c.registerFields(ft)
-			b.w("%s%s)", tag(field), c.fieldName(ft, f))
+			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
 	case cc.PostfixExpressionInc: // PostfixExpression "++"
 		rt, rmode = n.Type(), mode

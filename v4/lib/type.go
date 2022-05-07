@@ -126,7 +126,6 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				case nm == "":
 					fmt.Fprintf(b, "%s__ccgo%d", tag(field), i)
 				default:
-					c.registerFields(x)
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteByte(' ')
@@ -152,7 +151,6 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				case nm == "":
 					c.err(errorf("TODO"))
 				default:
-					c.registerFields(x)
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteString(" [0]")
@@ -182,7 +180,6 @@ func (c *ctx) structLiteral(t *cc.StructType) string {
 }
 
 func (c *ctx) defineUnion(w writer, t *cc.UnionType) {
-	c.registerFields(t)
 	if t.IsIncomplete() {
 		return
 	}
@@ -201,15 +198,32 @@ type fielder interface {
 	FieldByIndex(int) *cc.Field
 }
 
-func (c *ctx) registerFields(t fielder) {
-	if _, ok := c.fields[t]; ok {
-		return
+func (c *ctx) fieldName(t cc.Type, f *cc.Field) string {
+	if ft := c.registerFields(t); ft != nil {
+		return c.fields[ft].dict[f.Name()]
+	}
+
+	return tag(field) + f.Name()
+}
+
+func (c *ctx) registerFields(t cc.Type) (ft fielder) {
+	if p, ok := t.(*cc.PointerType); ok {
+		t = p.Elem()
+	}
+	ft, ok := t.(fielder)
+	if !ok {
+		c.err(errorf("internal error: %T", t))
+		return ft
+	}
+
+	if _, ok := c.fields[ft]; ok {
+		return ft
 	}
 
 	ns := &nameSpace{}
-	c.fields[t] = ns
+	c.fields[ft] = ns
 	for i := 0; ; i++ {
-		f := t.FieldByIndex(i)
+		f := ft.FieldByIndex(i)
 		if f == nil {
 			break
 		}
@@ -220,14 +234,14 @@ func (c *ctx) registerFields(t fielder) {
 		}
 
 		ns.dict.put(nm, ns.reg.put(nm))
-		if x, ok := f.Type().(fielder); ok {
-			c.registerFields(x)
+		if _, ok := f.Type().(fielder); ok {
+			c.registerFields(f.Type())
 		}
 	}
+	return ft
 }
 
 func (c *ctx) defineStruct(w writer, t *cc.StructType) {
-	c.registerFields(t)
 	if t.IsIncomplete() {
 		return
 	}

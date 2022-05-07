@@ -59,7 +59,7 @@ func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
 func (f *fnCtx) id() int { f.nextID++; return f.nextID }
 
 func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
-	w.w("\n")
+	w.w("\n%s", docComment(sep(n)))
 	switch n.Case {
 	case cc.ExternalDeclarationFuncDef: // FunctionDefinition
 		c.functionDefinition(w, n.FunctionDefinition)
