@@ -13,15 +13,13 @@ import (
 )
 
 type declInfo struct {
-	addressTaken bool
-	bpOff        int64
+	d     *cc.Declarator
+	bpOff int64
 
-	read  int
-	sd    cc.StorageDuration
-	write int
+	addressTaken bool
 }
 
-func (n *declInfo) pinned() bool { return n.sd == cc.Automatic && n.addressTaken }
+func (n *declInfo) pinned() bool { return n.d.StorageDuration() == cc.Automatic && n.addressTaken }
 
 type declInfos map[*cc.Declarator]*declInfo
 
@@ -32,15 +30,13 @@ func (n *declInfos) info(d *cc.Declarator) (r *declInfo) {
 		*n = m
 	}
 	if r = m[d]; r == nil {
-		r = &declInfo{sd: d.StorageDuration()}
+		r = &declInfo{d: d}
 		m[d] = r
 	}
 	return r
 }
 
-func (n *declInfos) read(d *cc.Declarator)        { n.info(d).read++ }
 func (n *declInfos) takeAddress(d *cc.Declarator) { n.info(d).addressTaken = true }
-func (n *declInfos) write(d *cc.Declarator)       { n.info(d).write++ }
 
 type fnCtx struct {
 	c         *ctx
