@@ -59,7 +59,6 @@ func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
 func (f *fnCtx) id() int { f.nextID++; return f.nextID }
 
 func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
-	w.w("\n%s", docComment(sep(n)))
 	switch n.Case {
 	case cc.ExternalDeclarationFuncDef: // FunctionDefinition
 		c.functionDefinition(w, n.FunctionDefinition)
@@ -75,10 +74,10 @@ func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
 }
 
 func (c *ctx) functionDefinition(w writer, n *cc.FunctionDefinition) {
-	c.functionDefinition0(w, n.Declarator, n.CompoundStatement, false)
+	c.functionDefinition0(w, sep(n), n.Declarator, n.CompoundStatement, false)
 }
 
-func (c *ctx) functionDefinition0(w writer, d *cc.Declarator, cs *cc.CompoundStatement, local bool) {
+func (c *ctx) functionDefinition0(w writer, sep string, d *cc.Declarator, cs *cc.CompoundStatement, local bool) {
 	ft, ok := d.Type().(*cc.FunctionType)
 	if !ok {
 		c.err(errorf("%v: internal error %v", d.Position(), d.Type()))
@@ -108,16 +107,16 @@ func (c *ctx) functionDefinition0(w writer, d *cc.Declarator, cs *cc.CompoundSta
 	}
 	c.pass = 2
 	isMain := d.Linkage() == cc.External && d.Name() == "main"
+	if isMain {
+		c.hasMain = true
+	}
 	switch {
 	case local:
-		w.w("\n%s%s := func%s", c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
+		w.w("%s%s%s := func%s", sep, c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
 	default:
-		w.w("\nfunc %s%s%s ", c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
+		w.w("%sfunc %s%s%s ", sep, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
 	}
 	c.compoundStatement(w, cs, true)
-	if isMain && c.task.tlsQualifier != "" { //TODO move to linker
-		w.w("\n\nfunc main() { %s%sStart(%smain) }\n", c.task.tlsQualifier, tag(preserve), tag(external))
-	}
 }
 
 func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
@@ -197,7 +196,7 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 			}
 		default:
 			for l := n.InitDeclaratorList; l != nil; l = l.InitDeclaratorList {
-				c.initDeclarator(w, l.InitDeclarator, external)
+				c.initDeclarator(w, sep(n), l.InitDeclarator, external)
 			}
 		}
 	case cc.DeclarationAssert: // StaticAssertDeclaration
@@ -209,14 +208,14 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 	}
 }
 
-func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
+func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, external bool) {
 	d := n.Declarator
 	if d.Type().Kind() == cc.Function || d.IsExtern() && d.Type().IsIncomplete() {
 		return
 	}
 
 	if n.Asm != nil {
-		w.w("\n//TODO %s %s // %v:", cc.NodeSource(d), cc.NodeSource(n.Asm), c.pos(n))
+		w.w("//TODO %s %s // %v:", cc.NodeSource(d), cc.NodeSource(n.Asm), c.pos(n))
 		if d.LexicalScope().Parent == nil {
 			return
 		}
@@ -234,7 +233,7 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 		switch {
 		case d.IsTypename():
 			if external && c.typenames.add(nm) {
-				w.w("\ntype %s%s = %s", tag(typename), nm, c.typedef(d.Type()))
+				w.w("%stype %s%s = %s;", sep, tag(typename), nm, c.typedef(d.Type()))
 				c.defineEnumStructUnion(w, d.Type())
 			}
 			if !external {
@@ -246,37 +245,30 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 			}
 
 			c.defineEnumStructUnion(w, d.Type())
-			// s := ""
-			// if info != nil && info.escapes() {
-			// 	s = "// "
-			// }
-			// w.w("\n%svar %s%s %s", s, c.declaratorTag(d), nm, c.typ(d.Type()))
 			switch {
 			case info != nil && info.pinned():
-				var b buf
-				b.w("\nvar %s%s %s", c.declaratorTag(d), nm, c.typ(d.Type()))
-				w.w("%s", strings.ReplaceAll(string(b.bytes()), "\n", "\n// "))
+				w.w("%svar _ /* %s */ %s;", sep, nm, c.typ(d.Type()))
 			default:
-				w.w("\nvar %s%s %s", c.declaratorTag(d), nm, c.typ(d.Type()))
+				w.w("%svar %s%s %s;", sep, c.declaratorTag(d), nm, c.typ(d.Type()))
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
 		c.defineEnumStructUnion(w, d.Type())
 		switch {
 		case d.Linkage() == cc.Internal:
-			w.w("\nvar %s%s = %s", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 		case d.IsStatic():
-			w.w("\nvar %s%s = %s", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 		default:
 			switch {
 			case info != nil && info.pinned():
-				w.w("\n*(*%s)(unsafe.Pointer(%s)) = %s", c.typ(d.Type()), bpOff(info.bpOff), c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("\n*(*%s)(unsafe.Pointer(%s)) = %s;", c.typ(d.Type()), bpOff(info.bpOff), c.initializerOuter(w, n.Initializer, d.Type()))
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:
-					w.w("\nvar %s%s = %s", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 				default:
-					w.w("\n%s%s := %s", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("\n%s%s := %s;", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 				}
 			}
 		}
@@ -284,11 +276,10 @@ func (c *ctx) initDeclarator(w writer, n *cc.InitDeclarator, external bool) {
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
-	w.w(" // %v:", c.pos(d))
 	if info != nil {
-		w.w(" read: %d, write: %d, escapes %v", info.read, info.write, info.pinned()) //TODO-
-		if d.StorageDuration() == cc.Automatic && info.read == 0 && !info.pinned() {
-			w.w("\n_ = %s%s", c.declaratorTag(d), nm)
+		w.w("\n// %p  %q read: %d, write: %d, address taken %v\n", d, d.Name(), d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
+		if d.StorageDuration() == cc.Automatic && d.ReadCount() == 0 && !info.pinned() {
+			w.w("\n_ = %s%s;", c.declaratorTag(d), nm)
 		}
 	}
 }

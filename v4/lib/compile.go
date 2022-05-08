@@ -159,7 +159,8 @@ type ctx struct {
 	nextID int
 	pass   int // 0: out of function, 1: func 1st pass, 2: func 2nd pass.
 
-	closed bool
+	closed  bool
+	hasMain bool
 }
 
 func newCtx(task *Task, eh errHandler) *ctx {
@@ -234,6 +235,10 @@ func (c *ctx) compile(ifn, ofn string) error {
 	c.defines(c)
 	for n := c.ast.TranslationUnit; n != nil; n = n.TranslationUnit {
 		c.externalDeclaration(c, n.ExternalDeclaration)
+	}
+	c.w("%s", sep(c.ast.EOF))
+	if c.hasMain && c.task.tlsQualifier != "" {
+		c.w("\n\nfunc main() { %s%sStart(%smain) }\n", c.task.tlsQualifier, tag(preserve), tag(external))
 	}
 	return nil
 }

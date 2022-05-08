@@ -205,12 +205,14 @@ func TestCompile(t *testing.T) {
 		"20010118-1.c":                 {}, //TODO
 		"20010122-1.c":                 {}, //TODO
 		"20010123-1.c":                 {}, //TODO
+		"20010129-1.c":                 {}, //TODO
 		"20010206-1.c":                 {}, //TODO
 		"20010209-1.c":                 {}, //TODO
 		"20010226-1.c":                 {}, //TODO
 		"20010325-1.c":                 {}, //TODO
 		"20010518-2.c":                 {}, //TODO
 		"20010605-2.c":                 {}, //TODO
+		"20010723-1.c":                 {}, //TODO
 		"20010910-1.c":                 {}, //TODO
 		"20010924-1.c":                 {}, //TODO
 		"20011008-3.c":                 {}, //TODO
@@ -298,6 +300,7 @@ func TestCompile(t *testing.T) {
 		"20070824-1.c":                 {}, //TODO
 		"20070919-1.c":                 {}, //TODO
 		"20071029-1.c":                 {}, //TODO
+		"20071030-1.c":                 {}, //TODO
 		"20071120-1.c":                 {}, //TODO
 		"20071202-1.c":                 {}, //TODO
 		"20071210-1.c":                 {}, //TODO
@@ -326,6 +329,7 @@ func TestCompile(t *testing.T) {
 		"20120111-1.c":                 {}, //TODO
 		"20120427-1.c":                 {}, //TODO
 		"20120427-2.c":                 {}, //TODO
+		"20121108-1.c":                 {}, //TODO
 		"20131127-1.c":                 {}, //TODO
 		"20140212-1.c":                 {}, //TODO
 		"20141022-1.c":                 {}, //TODO
@@ -353,6 +357,7 @@ func TestCompile(t *testing.T) {
 		"920625-1.c":                   {}, //TODO
 		"920721-4.c":                   {}, //TODO
 		"920728-1.c":                   {}, //TODO
+		"920731-1.c":                   {}, //TODO
 		"921019-1.c":                   {}, //TODO
 		"921113-1.c":                   {}, //TODO
 		"921204-1.c":                   {}, //TODO
@@ -388,6 +393,7 @@ func TestCompile(t *testing.T) {
 		"960405-1.c":                   {}, //TODO
 		"960512-1.c":                   {}, //TODO
 		"960513-1.c":                   {}, //TODO
+		"960909-1.c":                   {}, //TODO
 		"961125-1.c":                   {}, //TODO
 		"961213-1.c":                   {}, //TODO
 		"961223-1.c":                   {}, //TODO
@@ -467,6 +473,7 @@ func TestCompile(t *testing.T) {
 		"inf-3.c":                      {}, //TODO
 		"ipa-sra-2.c":                  {}, //TODO
 		"longlong.c":                   {}, //TODO
+		"loop-13.c":                    {}, //TODO
 		"loop-14.c":                    {}, //TODO
 		"loop-15.c":                    {}, //TODO
 		"loop-2c.c":                    {}, //TODO
@@ -475,7 +482,11 @@ func TestCompile(t *testing.T) {
 		"lto-tbaa-1.c":                 {}, //TODO
 		"mayalias-3.c":                 {}, //TODO
 		"medce-1.c":                    {}, //TODO
+		"memcpy-2.c":                   {}, //TODO
 		"memcpy-bi.c":                  {}, //TODO
+		"memset-1.c":                   {}, //TODO
+		"memset-2.c":                   {}, //TODO
+		"memset-3.c":                   {}, //TODO
 		"mul-subnormal-single-1.c":     {}, //TODO
 		"nestfunc-5.c":                 {}, //TODO
 		"nestfunc-6.c":                 {}, //TODO
@@ -735,6 +746,7 @@ func TestCompile(t *testing.T) {
 		"stdarg-1.c":                   {}, //TODO
 		"stdarg-2.c":                   {}, //TODO
 		"stkalign.c":                   {}, //TODO
+		"strcpy-1.c":                   {}, //TODO
 		"strcpy-2.c":                   {}, //TODO
 		"strct-pack-2.c":               {}, //TODO
 		"strct-pack-3.c":               {}, //TODO
@@ -751,6 +763,7 @@ func TestCompile(t *testing.T) {
 		"struct-ret-1.c":               {}, //TODO
 		"unsafe-fp-assoc.c":            {}, //TODO
 		"usad-run.c":                   {}, //TODO
+		"va-arg-15.c":                  {}, //TODO
 		"va-arg-23.c":                  {}, //TODO
 		"va-arg-24.c":                  {}, //TODO
 		"va-arg-4.c":                   {}, //TODO
@@ -1057,6 +1070,7 @@ func TestExec(t *testing.T) {
 			"20010118-1.c":                 {}, //TODO
 			"20010122-1.c":                 {}, //TODO
 			"20010123-1.c":                 {}, //TODO
+			"20010129-1.c":                 {}, //TODO
 			"20010206-1.c":                 {}, //TODO
 			"20010209-1.c":                 {}, //TODO
 			"20010226-1.c":                 {}, //TODO
@@ -1065,6 +1079,7 @@ func TestExec(t *testing.T) {
 			"20010518-2.c":                 {}, //TODO
 			"20010605-1.c":                 {}, //TODO
 			"20010605-2.c":                 {}, //TODO
+			"20010723-1.c":                 {}, //TODO
 			"20010904-1.c":                 {}, //TODO
 			"20010904-2.c":                 {}, //TODO
 			"20010910-1.c":                 {}, //TODO

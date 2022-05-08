@@ -553,7 +553,7 @@ func nodeTokens(n cc.Node, a *[]cc.Token) {
 func sep(n cc.Node) string {
 	var t cc.Token
 	firstToken(n, &t)
-	return string(t.Sep())
+	return strings.ReplaceAll(string(t.Sep()), "\f", "")
 }
 
 func firstToken(n cc.Node, r *cc.Token) {
@@ -590,45 +590,4 @@ func firstToken(n cc.Node, r *cc.Token) {
 			firstToken(m, r)
 		}
 	}
-}
-
-func docComment(s string) string {
-	return "\n" //TODO
-	if s == "" {
-		return ""
-	}
-
-	a := strings.Split(s, "\n")
-	for i := len(a) - 1; i >= 0; i-- {
-		if strings.TrimSpace(a[i]) == "" {
-			a = a[:i]
-			continue
-		}
-
-		break
-	}
-
-	for i, v := range a {
-		if strings.TrimSpace(v) != "" {
-			a = a[i:]
-			break
-		}
-	}
-	if len(a) == 0 {
-		return ""
-	}
-
-	for i, v := range a {
-		switch {
-		case strings.HasPrefix(v, "// "):
-			a[i] = "//  " + v[len("// "):]
-		case strings.HasPrefix(v, "//\t"):
-			// ok
-		case strings.HasPrefix(v, "//"):
-			a[i] = "//  " + v[len("//"):]
-		default:
-			a[i] = "//  " + v
-		}
-	}
-	return "\n" + strings.Join(a, "\n")
 }
