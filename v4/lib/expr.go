@@ -903,7 +903,7 @@ out:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					w.w("\n%s := %s", v2, c.expr(w, n.UnaryExpression, n.UnaryExpression.Type().Pointer(), exprUintpr))
 					w.w("\n(*(*%s)(unsafe.Pointer(%s)))--", c.typ(n.UnaryExpression.Type()), v2)
-					w.w("\n%s := (*(*%s)(unsafe.Pointer(%s)))", v, c.typ(n.UnaryExpression.Type()), v2)
+					w.w("\n%s := (*(*%s)(unsafe.Pointer(%s)));", v, c.typ(n.UnaryExpression.Type()), v2)
 					b.w("%s", v)
 				}
 			default:
@@ -1181,7 +1181,7 @@ out:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					w.w("\n%s := %s", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
 					w.w("\n%s := (*(*%s)(unsafe.Pointer(%s)))", v, c.typ(n.PostfixExpression.Type()), v2)
-					w.w("\n(*(*%s)(unsafe.Pointer(%s))) -= %d", c.typ(n.PostfixExpression.Type()), v2, sz)
+					w.w("\n(*(*%s)(unsafe.Pointer(%s))) -= %d;", c.typ(n.PostfixExpression.Type()), v2, sz)
 					b.w("%s", v)
 				}
 			default:
@@ -1205,7 +1205,7 @@ out:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					w.w("\n%s := %s", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
 					w.w("\n%s := (*(*%s)(unsafe.Pointer(%s)))", v, c.typ(n.PostfixExpression.Type()), v2)
-					w.w("\n(*(*%s)(unsafe.Pointer(%s)))--", c.typ(n.PostfixExpression.Type()), v2)
+					w.w("\n(*(*%s)(unsafe.Pointer(%s)))--;", c.typ(n.PostfixExpression.Type()), v2)
 					b.w("%s", v)
 				}
 			default:

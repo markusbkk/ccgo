@@ -273,7 +273,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	if info != nil {
-		w.w("\n// %p  %q read: %d, write: %d, address taken %v\n", d, d.Name(), d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
+		// w.w("\n// %p  %q read: %d, write: %d, address taken %v\n", d, d.Name(), d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
 		if d.StorageDuration() == cc.Automatic && d.ReadCount() == 0 && !info.pinned() {
 			w.w("\n_ = %s%s;", c.declaratorTag(d), nm)
 		}
