@@ -70,10 +70,10 @@ func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
 }
 
 func (c *ctx) functionDefinition(w writer, n *cc.FunctionDefinition) {
-	c.functionDefinition0(w, sep(n), n.Declarator, n.CompoundStatement, false)
+	c.functionDefinition0(w, sep(n), n, n.Declarator, n.CompoundStatement, false)
 }
 
-func (c *ctx) functionDefinition0(w writer, sep string, d *cc.Declarator, cs *cc.CompoundStatement, local bool) {
+func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Declarator, cs *cc.CompoundStatement, local bool) {
 	ft, ok := d.Type().(*cc.FunctionType)
 	if !ok {
 		c.err(errorf("%v: internal error %v", d.Position(), d.Type()))
@@ -108,9 +108,9 @@ func (c *ctx) functionDefinition0(w writer, sep string, d *cc.Declarator, cs *cc
 	}
 	switch {
 	case local:
-		w.w("%s%s%s := func%s", sep, c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
+		w.w("%s%s%s%s := func%s", sep, c.posComment(pos), c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
 	default:
-		w.w("%sfunc %s%s%s ", sep, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
+		w.w("%s%sfunc %s%s%s ", sep, c.posComment(pos), c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
 	}
 	c.compoundStatement(w, cs, true)
 }
@@ -139,7 +139,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 					}
 				}
 			}
-			b.WriteString(c.typ(v.Type()))
+			b.WriteString(c.typ(v.Type().Decay()))
 		}
 	}
 	switch {
@@ -182,17 +182,19 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 				break
 			}
 
+			sep := sep(n)
 			switch x := n.DeclarationSpecifiers.Type().(type) {
 			case *cc.EnumType:
-				c.defineEnum(w, x)
+				c.defineEnum(w, sep, n, x)
 			case *cc.StructType:
-				c.defineStruct(w, x)
+				c.defineStruct(w, sep, n, x)
 			case *cc.UnionType:
 				c.defineUnion(w, x)
 			}
 		default:
+			w.w("%s", sep(n))
 			for l := n.InitDeclaratorList; l != nil; l = l.InitDeclaratorList {
-				c.initDeclarator(w, sep(n), l.InitDeclarator, external)
+				c.initDeclarator(w, sep(l.InitDeclarator), l.InitDeclarator, external)
 			}
 		}
 	case cc.DeclarationAssert: // StaticAssertDeclaration
@@ -229,8 +231,8 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		switch {
 		case d.IsTypename():
 			if external && c.typenames.add(nm) {
-				w.w("%stype %s%s = %s;", sep, tag(typename), nm, c.typedef(d.Type()))
-				c.defineEnumStructUnion(w, d.Type())
+				w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d.Type()))
+				c.defineEnumStructUnion(w, sep, n, d.Type())
 			}
 			if !external {
 				return
@@ -240,31 +242,35 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 				return
 			}
 
-			c.defineEnumStructUnion(w, d.Type())
+			c.defineEnumStructUnion(w, sep, n, d.Type())
 			switch {
 			case info != nil && info.pinned():
-				w.w("%svar _ /* %s */ %s;", sep, nm, c.typ(d.Type()))
+				w.w("%s%svar _ /* %s */ %s;", sep, c.posComment(n), nm, c.typ(d.Type()))
 			default:
-				w.w("%svar %s%s %s;", sep, c.declaratorTag(d), nm, c.typ(d.Type()))
+				if d.WriteCount()+d.ReadCount() == 0 {
+					return
+				}
+
+				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d.Type()))
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
-		c.defineEnumStructUnion(w, d.Type())
+		c.defineEnumStructUnion(w, sep, n, d.Type())
 		switch {
 		case d.Linkage() == cc.Internal:
-			w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 		case d.IsStatic():
-			w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 		default:
 			switch {
 			case info != nil && info.pinned():
-				w.w("\n*(*%s)(unsafe.Pointer(%s)) = %s;", c.typ(d.Type()), bpOff(info.bpOff), c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%s*(*%s)(unsafe.Pointer(%s)) = %s;", sep, c.posComment(n), c.typ(d.Type()), bpOff(info.bpOff), c.initializerOuter(w, n.Initializer, d.Type()))
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:
-					w.w("%svar %s%s = %s;", sep, c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 				default:
-					w.w("\n%s%s := %s;", c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%s%s%s := %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 				}
 			}
 		}
@@ -273,7 +279,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	if info != nil {
-		// w.w("\n// %p  %q read: %d, write: %d, address taken %v\n", d, d.Name(), d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
+		// w.w("\n// read: %d, write: %d, address taken %v\n", d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
 		if d.StorageDuration() == cc.Automatic && d.ReadCount() == 0 && !info.pinned() {
 			w.w("\n_ = %s%s;", c.declaratorTag(d), nm)
 		}

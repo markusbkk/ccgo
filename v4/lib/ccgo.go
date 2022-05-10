@@ -63,13 +63,15 @@ type Task struct {
 	stdout                io.Writer
 	tlsQualifier          string
 
-	E              bool // -E
-	c              bool // -c
-	fullPaths      bool // -full-paths
-	nostdinc       bool // -nostdinc
-	nostdlib       bool // -nostdlib
-	packageNameSet bool
-	pthread        bool // -pthread
+	E               bool // -E
+	c               bool // -c
+	fullPaths       bool // -full-paths
+	keepObjectFiles bool // -keep-object-files
+	nostdinc        bool // -nostdinc
+	nostdlib        bool // -nostdlib
+	packageNameSet  bool
+	positions       bool // -positions
+	pthread         bool // -pthread
 }
 
 // NewTask returns a newly created Task. args[0] is the command name.
@@ -133,8 +135,10 @@ func (t *Task) Main() (err error) {
 	set.Opt("c", func(opt string) error { t.c = true; return nil })
 	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; return nil })
 	set.Opt("full-paths", func(opt string) error { t.fullPaths = true; return nil })
+	set.Opt("keep-object-files", func(opt string) error { t.keepObjectFiles = true; return nil })
 	set.Opt("nostdinc", func(opt string) error { t.nostdinc = true; return nil })
 	set.Opt("nostdlib", func(opt string) error { t.nostdlib = true; return nil })
+	set.Opt("positions", func(opt string) error { t.positions = true; return nil })
 	set.Opt("pthread", func(opt string) error { t.pthread = true; t.cfgArgs = append(t.cfgArgs, opt); return nil })
 
 	// Ignored

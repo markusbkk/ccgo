@@ -7,7 +7,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 import (
 	"fmt"
 	"go/ast"
-	"go/printer"
+	"go/format"
 	"go/token"
 	"strings"
 
@@ -241,7 +241,7 @@ func (c *ctx) registerFields(t cc.Type) (ft fielder) {
 	return ft
 }
 
-func (c *ctx) defineStruct(w writer, t *cc.StructType) {
+func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -252,11 +252,11 @@ func (c *ctx) defineStruct(w writer, t *cc.StructType) {
 			return
 		}
 
-		w.w("\ntype %s%s = %s;", tag(taggedStruct), nm, c.structLiteral(t))
+		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(t))
 	}
 }
 
-func (c *ctx) defineEnum(w writer, t *cc.EnumType) {
+func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -267,7 +267,7 @@ func (c *ctx) defineEnum(w writer, t *cc.EnumType) {
 			return
 		}
 
-		w.w("\ntype %s%s = %s;", tag(taggedEum), nm, c.typ(t.UnderlyingType()))
+		w.w("%s%stype %s%s = %s;", sepStr, c.posComment(n), tag(taggedEum), nm, c.typ(t.UnderlyingType()))
 	}
 	enums := t.Enumerators()
 	if len(enums) == 0 {
@@ -282,17 +282,17 @@ func (c *ctx) defineEnum(w writer, t *cc.EnumType) {
 	for _, v := range enums {
 		nm := v.Token.SrcStr()
 		c.enumerators.add(nm)
-		w.w("\n\t%s%s = %v // %v:", tag(enumConst), nm, v.Value(), c.pos(v))
+		w.w("%s%s%s%s = %v;", sep(v), c.posComment(v), tag(enumConst), nm, v.Value())
 	}
 	w.w("\n)\n")
 }
 
-func (c *ctx) defineEnumStructUnion(w writer, t cc.Type) {
+func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) {
 	switch x := t.(type) {
 	case *cc.EnumType:
-		c.defineEnum(w, x)
+		c.defineEnum(w, sep, n, x)
 	case *cc.StructType:
-		c.defineStruct(w, x)
+		c.defineStruct(w, sep, n, x)
 	case *cc.UnionType:
 		c.defineUnion(w, x)
 	}
@@ -354,7 +354,7 @@ func typeID0(b *strings.Builder, fset *token.FileSet, in map[string]ast.Expr, ou
 		b.WriteByte('}')
 	case *ast.ArrayType:
 		fmt.Fprintf(b, "[")
-		printer.Fprint(b, fset, x.Len)
+		format.Node(b, fset, x.Len)
 		b.WriteByte(']')
 		if err = typeID0(b, fset, in, out, x.Elt, m); err != nil {
 			return err

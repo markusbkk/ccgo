@@ -261,28 +261,36 @@ func (c *ctx) defines(w writer) {
 		r := m.ReplacementList()[0].SrcStr()
 		switch x := m.Value().(type) {
 		case cc.Int64Value:
-			b = append(b, fmt.Sprintf("\n%s%s = %v // %v:", tag(macro), m.Name.Src(), x, c.pos(m.Name)))
+			b = append(b, fmt.Sprintf("%s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x))
 		case cc.UInt64Value:
-			b = append(b, fmt.Sprintf("\n%s%s = %v // %v:", tag(macro), m.Name.Src(), x, c.pos(m.Name)))
+			b = append(b, fmt.Sprintf("%s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x))
 		case cc.Float64Value:
 			if s := fmt.Sprint(x); s == r {
-				b = append(b, fmt.Sprintf("\n%s%s = %s // %v:", tag(macro), m.Name.Src(), s, c.pos(m.Name)))
+				b = append(b, fmt.Sprintf("%s%s%s%s = %s;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), s))
 			}
 		case cc.StringValue:
-			b = append(b, fmt.Sprintf("\n%s%s = %q // %v:", tag(macro), m.Name.Src(), x[:len(x)-1], c.pos(m.Name)))
+			b = append(b, fmt.Sprintf("%s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x[:len(x)-1]))
 		}
 
-		w.w("\n%s%s = %q // %v:", tag(define), m.Name.Src(), r, c.pos(m.Name))
+		w.w("%s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
 	}
-	w.w("\n)")
+	w.w("\n)\n\n")
 	if len(b) == 0 {
 		return
 	}
 
-	w.w("\n\nconst (\n%s\n)", strings.Join(b, "\n"))
+	w.w("\n\nconst (%s\n)\n\n", strings.Join(b, "\n"))
 }
 
 var home = os.Getenv("HOME")
+
+func (c *ctx) posComment(n cc.Node) string {
+	if !c.task.positions {
+		return ""
+	}
+
+	return fmt.Sprintf("\n//  %s:\n", c.pos(n))
+}
 
 func (c *ctx) pos(n cc.Node) (r token.Position) {
 	if r = token.Position(n.Position()); r.IsValid() {

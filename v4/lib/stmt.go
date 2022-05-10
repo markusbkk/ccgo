@@ -11,20 +11,30 @@ import (
 )
 
 func (c *ctx) statement(w writer, n *cc.Statement) {
+	sep := sep(n)
+	if c.task.positions {
+		sep = strings.TrimRight(sep, "\n\r\t ")
+	}
 	switch n.Case {
 	case cc.StatementLabeled: // LabeledStatement
+		w.w("%s%s", sep, c.posComment(n))
 		c.labeledStatement(w, n.LabeledStatement)
 	case cc.StatementCompound: // CompoundStatement
 		c.compoundStatement(w, n.CompoundStatement, false)
 	case cc.StatementExpr: // ExpressionStatement
+		w.w("%s%s", sep, c.posComment(n))
 		c.expressionStatement(w, n.ExpressionStatement)
 	case cc.StatementSelection: // SelectionStatement
+		w.w("%s%s", sep, c.posComment(n))
 		c.selectionStatement(w, n.SelectionStatement)
 	case cc.StatementIteration: // IterationStatement
+		w.w("%s%s", sep, c.posComment(n))
 		c.iterationStatement(w, n.IterationStatement)
 	case cc.StatementJump: // JumpStatement
+		w.w("%s%s", sep, c.posComment(n))
 		c.jumpStatement(w, n.JumpStatement)
 	case cc.StatementAsm: // AsmStatement
+		w.w("%s%s", sep, c.posComment(n))
 		a := strings.Split(nodeSource(n.AsmStatement), "\n")
 		w.w("\n// %s", strings.Join(a, "\n// "))
 		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
@@ -39,20 +49,20 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
-			w.w("\nfallthrough;")
+			w.w("fallthrough;")
 		}
-		w.w("%scase %s:", sep(n), c.expr(nil, n.ConstantExpression, nil, exprDefault))
+		w.w("case %s:", c.expr(nil, n.ConstantExpression, nil, exprDefault))
 		c.statement(w, n.Statement)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
-			w.w("\nfallthrough;")
+			w.w("fallthrough;")
 		}
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LabeledStatementDefault: // "default" ':' Statement
 		if n.CaseOrdinal() != 0 {
-			w.w("\nfallthrough;")
+			w.w("fallthrough;")
 		}
-		w.w("%sdefault:", sep(n))
+		w.w("default:")
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -60,18 +70,18 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 }
 
 func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool) {
-	w.w(" {")
+	w.w(" { %s%s", sep(n.Token), c.posComment(n))
 	if fnBlock && c.f.tlsAllocs+int64(c.f.maxValist) != 0 {
 		c.f.tlsAllocs = roundup(c.f.tlsAllocs, 8)
 		v := c.f.tlsAllocs
 		if c.f.maxValist != 0 {
 			v += 8 * int64((c.f.maxValist + 1))
 		}
-		w.w("\n%sbp := %[1]stls.Alloc(%d) // tlsAllocs %v maxValist %v", tag(ccgo), v, c.f.tlsAllocs, c.f.maxValist)
-		w.w("\ndefer %stls.Free(%d);", tag(ccgo), v)
+		w.w("%sbp := %[1]stls.Alloc(%d); /* tlsAllocs %v maxValist %v */", tag(ccgo), v, c.f.tlsAllocs, c.f.maxValist)
+		w.w("defer %stls.Free(%d);", tag(ccgo), v)
 		for _, v := range c.f.t.Parameters() {
 			if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
-				w.w("\n*(*%s)(unsafe.Pointer(%s)) = %s_%s;", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
+				w.w("*(*%s)(unsafe.Pointer(%s)) = %s_%s;", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
 			}
 		}
 	}
@@ -80,9 +90,16 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 		bi = l.BlockItem
 		c.blockItem(w, bi)
 	}
-	w.w("%s", sep(n.Token2))
-	if fnBlock && c.f.t.Result().Kind() != cc.Void && !c.isReturn(bi) {
-		w.w("return %sr", tag(ccgo))
+	switch {
+	case fnBlock && c.f.t.Result().Kind() != cc.Void && !c.isReturn(bi):
+		s := sep(n.Token2)
+		if strings.Contains(s, "\n") {
+			w.w("%s", s)
+			s = ""
+		}
+		w.w("return %sr;%s", tag(ccgo), s)
+	default:
+		w.w("%s", sep(n.Token2))
 	}
 	w.w("};")
 }
@@ -105,7 +122,7 @@ func (c *ctx) blockItem(w writer, n *cc.BlockItem) {
 		c.statement(w, n.Statement)
 	case cc.BlockItemFuncDef: // DeclarationSpecifiers Declarator CompoundStatement
 		if c.pass == 2 {
-			c.functionDefinition0(w, sep(n), n.Declarator, n.CompoundStatement, true) //TODO does not really work yet
+			c.functionDefinition0(w, sep(n), n, n.Declarator, n.CompoundStatement, true) //TODO does not really work yet
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -115,16 +132,16 @@ func (c *ctx) blockItem(w writer, n *cc.BlockItem) {
 func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 	switch n.Case {
 	case cc.SelectionStatementIf: // "if" '(' ExpressionList ')' Statement
-		w.w("%sif %s", sep(n), c.expr(w, n.ExpressionList, nil, exprBool))
+		w.w("if %s", c.expr(w, n.ExpressionList, nil, exprBool))
 		c.bracedStatement(w, n.Statement)
 	case cc.SelectionStatementIfElse: // "if" '(' ExpressionList ')' Statement "else" Statement
-		w.w("%sif %s {", sep(n), c.expr(w, n.ExpressionList, nil, exprBool))
+		w.w("if %s {", c.expr(w, n.ExpressionList, nil, exprBool))
 		c.statement(w, n.Statement)
-		w.w("\n} else {")
+		w.w("} else {")
 		c.statement(w, n.Statement2)
-		w.w("\n};")
+		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		w.w("%sswitch %s", sep(n), c.expr(w, n.ExpressionList, nil, exprDefault))
+		w.w("switch %s", c.expr(w, n.ExpressionList, nil, exprDefault))
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -138,7 +155,7 @@ func (c *ctx) bracedStatement(w writer, n *cc.Statement) {
 	default:
 		w.w("{")
 		c.statement(w, n)
-		w.w("\n};")
+		w.w("};")
 	}
 }
 
@@ -159,26 +176,26 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		var a buf
 		switch b := c.expr(&a, n.ExpressionList, nil, exprBool); {
 		case a.len() != 0:
-			w.w("%sfor {", sep(n))
+			w.w("for {")
 			w.w("%s", a.bytes())
 			w.w("\nif !(%s) { break };", b)
 			c.unbracedStatement(w, n.Statement)
 			w.w("\n};")
 		default:
-			w.w("%sfor %s", sep(n), b)
+			w.w("for %s", b)
 			c.bracedStatement(w, n.Statement)
 		}
 	case cc.IterationStatementDo: // "do" Statement "while" '(' ExpressionList ')' ';'
 		var a buf
 		switch b := c.expr(&a, n.ExpressionList, nil, exprBool); {
 		case a.len() != 0:
-			w.w("%sfor {", sep(n))
+			w.w("for {")
 			c.unbracedStatement(w, n.Statement)
 			w.w("%s", a.bytes())
 			w.w("\nif !(%s) { break };", b)
 			w.w("\n};")
 		default:
-			w.w("%sfor %scond := true; %[2]scond; %[2]scond = %s", sep(n), tag(ccgo), b)
+			w.w("for %scond := true; %[1]scond; %[1]scond = %s", tag(ccgo), b)
 			c.bracedStatement(w, n.Statement)
 		}
 	case cc.IterationStatementFor: // "for" '(' ExpressionList ';' ExpressionList ';' ExpressionList ')' Statement
@@ -189,7 +206,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		}
 		switch b, b3 := c.expr(&a, n.ExpressionList, nil, exprVoid), c.expr(&a3, n.ExpressionList3, nil, exprVoid); {
 		case a.len() == 0 && a2.len() == 0 && a3.len() == 0:
-			w.w("%sfor %s; %s; %s", sep(n), b, b2, b3)
+			w.w("for %s; %s; %s", b, b2, b3)
 			c.bracedStatement(w, n.Statement)
 		default:
 			c.err(errorf("TODO"))
@@ -208,15 +225,15 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	case cc.JumpStatementGotoExpr: // "goto" '*' ExpressionList ';'
 		c.err(errorf("TODO %v", n.Case))
 	case cc.JumpStatementContinue: // "continue" ';'
-		w.w("%scontinue;", sep(n))
+		w.w("continue;")
 	case cc.JumpStatementBreak: // "break" ';'
-		w.w("%sbreak;", sep(n))
+		w.w("break;")
 	case cc.JumpStatementReturn: // "return" ExpressionList ';'
 		switch {
 		case n.ExpressionList != nil:
-			w.w("%sreturn %s;", sep(n), c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
+			w.w("return %s;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
 		default:
-			w.w("%sreturn;", sep(n))
+			w.w("return;")
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -224,5 +241,5 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 }
 
 func (c *ctx) expressionStatement(w writer, n *cc.ExpressionStatement) {
-	w.w("%s%s;", sep(n), c.expr(w, n.ExpressionList, nil, exprVoid))
+	w.w("%s;", c.expr(w, n.ExpressionList, nil, exprVoid))
 }

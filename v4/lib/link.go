@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -146,8 +147,8 @@ func (o *object) collectConsts(file *ast.File) (consts map[string]string, err er
 					}
 
 					var b strings.Builder
-					b.WriteByte('C')
-					printer.Fprint(&b, o.fset, &printer.CommentedNode{vs.Values[i], file.Comments})
+					b.WriteByte('C') //TODO ?
+					format.Node(&b, o.fset, vs.Values[i])
 					in[ident.Name] = b.String()
 					a = append(a, ident.Name)
 				}
@@ -167,11 +168,13 @@ func (t *Task) link() (err error) {
 		return errorf("no input files")
 	}
 
-	defer func() {
-		for _, v := range t.compiledfFiles {
-			os.Remove(v)
-		}
-	}()
+	if !t.keepObjectFiles {
+		defer func() {
+			for _, v := range t.compiledfFiles {
+				os.Remove(v)
+			}
+		}()
+	}
 
 	if len(t.inputFiles) != 0 {
 		if err := t.compile(""); err != nil {
@@ -738,14 +741,14 @@ func (l *linker) funcDecl(file *ast.File, object *object, n *ast.FuncDecl) (err 
 	}
 	n.Body.List = n.Body.List[:w]
 	ast.Walk(&renamer{info}, n)
-	if err = printer.Fprint(l.out, l.fset, &printer.CommentedNode{n, file.Comments}); err != nil {
+	if err = format.Node(l.out, l.fset, &printer.CommentedNode{n, file.Comments}); err != nil {
 		return err
 	}
 
 	for _, v := range static {
 		ast.Walk(&renamer{info}, v)
 		l.w("\n\n")
-		if err = printer.Fprint(l.out, l.fset, &printer.CommentedNode{v, file.Comments}); err != nil {
+		if err = format.Node(l.out, l.fset, &printer.CommentedNode{v, file.Comments}); err != nil {
 			return err
 		}
 	}
@@ -895,50 +898,20 @@ func (l *linker) stringLit(s string) string {
 func (l *linker) genDecl(file *ast.File, n *ast.GenDecl) error {
 	switch n.Tok {
 	case token.CONST:
-		l.w("\n\nconst (")
-		for _, spec := range n.Specs {
-			if err := l.constSpec(file, spec.(*ast.ValueSpec)); err != nil {
-				return err
-			}
-		}
-		l.w("\n)")
+		ast.Walk(&renamer{l.newFnInfo(nil)}, n)
 	case token.VAR:
-		for _, spec := range n.Specs {
-			if err := l.varSpec(file, spec.(*ast.ValueSpec)); err != nil {
-				return err
-			}
-		}
+		ast.Walk(&renamer{l.newFnInfo(n)}, n)
 	case token.TYPE:
-		if len(n.Specs) != 1 {
-			panic(todo(""))
+		ast.Walk(&renamer{l.newFnInfo(nil)}, n)
+		for _, spec := range n.Specs {
+			n := spec.(*ast.TypeSpec)
+			if _, ok := l.goTypeNamesEmited[n.Name.Name]; ok {
+				return nil
+			}
+
+			l.goTypeNamesEmited.add(n.Name.Name)
 		}
-
-		return l.typeSpec(file, n.Specs[0].(*ast.TypeSpec))
 	}
-	return nil
-}
-
-func (l *linker) typeSpec(file *ast.File, n *ast.TypeSpec) error {
-	ast.Walk(&renamer{l.newFnInfo(nil)}, n)
-	if _, ok := l.goTypeNamesEmited[n.Name.Name]; ok {
-		return nil
-	}
-
-	l.goTypeNamesEmited.add(n.Name.Name)
-	l.w("\n\ntype ")
-	printer.Fprint(l.out, l.fset, &printer.CommentedNode{n, file.Comments})
-	return nil
-}
-
-func (l *linker) varSpec(file *ast.File, n *ast.ValueSpec) error {
-	ast.Walk(&renamer{l.newFnInfo(n)}, n)
-	l.w("\n\nvar ")
-	printer.Fprint(l.out, l.fset, &printer.CommentedNode{n, file.Comments})
-	return nil
-}
-
-func (l *linker) constSpec(file *ast.File, n *ast.ValueSpec) error {
-	ast.Walk(&renamer{l.newFnInfo(nil)}, n)
-	printer.Fprint(l.out, l.fset, &printer.CommentedNode{n, file.Comments})
-	return nil
+	fmt.Fprintf(l.out, "\n\n")
+	return format.Node(l.out, l.fset, n)
 }
