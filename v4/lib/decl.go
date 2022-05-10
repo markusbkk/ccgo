@@ -106,11 +106,16 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	if isMain {
 		c.hasMain = true
 	}
+	s := strings.TrimRight(sep, "\n\r\t ")
+	s += c.posComment(pos)
+	if !strings.HasSuffix(s, "\n") {
+		s += "\n"
+	}
 	switch {
 	case local:
-		w.w("%s%s%s%s := func%s", sep, c.posComment(pos), c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
+		w.w("%s%s%s := func%s", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
 	default:
-		w.w("%s%sfunc %s%s%s ", sep, c.posComment(pos), c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
+		w.w("%sfunc %s%s%s ", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
 	}
 	c.compoundStatement(w, cs, true)
 }
