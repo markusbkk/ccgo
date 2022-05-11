@@ -70,20 +70,29 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 }
 
 func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool) {
-	w.w(" { %s%s", sep(n.Token), c.posComment(n))
-	if fnBlock && c.f.tlsAllocs+int64(c.f.maxValist) != 0 {
-		c.f.tlsAllocs = roundup(c.f.tlsAllocs, 8)
-		v := c.f.tlsAllocs
-		if c.f.maxValist != 0 {
-			v += 8 * int64((c.f.maxValist + 1))
-		}
-		w.w("%sbp := %[1]stls.Alloc(%d); /* tlsAllocs %v maxValist %v */", tag(ccgo), v, c.f.tlsAllocs, c.f.maxValist)
-		w.w("defer %stls.Free(%d);", tag(ccgo), v)
-		for _, v := range c.f.t.Parameters() {
-			if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
-				w.w("*(*%s)(unsafe.Pointer(%s)) = %s_%s;", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
+	switch {
+	case fnBlock:
+		w.w(" {")
+		switch {
+		case c.f.tlsAllocs+int64(c.f.maxValist) != 0:
+			c.f.tlsAllocs = roundup(c.f.tlsAllocs, 8)
+			v := c.f.tlsAllocs
+			if c.f.maxValist != 0 {
+				v += 8 * int64((c.f.maxValist + 1))
 			}
+			w.w("%sbp := %[1]stls.Alloc(%d); /* tlsAllocs %v maxValist %v */", tag(ccgo), v, c.f.tlsAllocs, c.f.maxValist)
+			w.w("defer %stls.Free(%d);", tag(ccgo), v)
+			for _, v := range c.f.t.Parameters() {
+				if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
+					w.w("*(*%s)(unsafe.Pointer(%s)) = %s_%s;", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
+				}
+			}
+			w.w("%s%s", sep(n.Token), c.posComment(n))
+		default:
+			w.w("%s%s", strings.TrimSpace(sep(n.Token)), c.posComment(n))
 		}
+	default:
+		w.w(" { %s%s", sep(n.Token), c.posComment(n))
 	}
 	var bi *cc.BlockItem
 	for l := n.BlockItemList; l != nil; l = l.BlockItemList {
@@ -136,9 +145,9 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.bracedStatement(w, n.Statement)
 	case cc.SelectionStatementIfElse: // "if" '(' ExpressionList ')' Statement "else" Statement
 		w.w("if %s {", c.expr(w, n.ExpressionList, nil, exprBool))
-		c.statement(w, n.Statement)
+		c.unbracedStatement(w, n.Statement)
 		w.w("} else {")
-		c.statement(w, n.Statement2)
+		c.unbracedStatement(w, n.Statement2)
 		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
 		w.w("switch %s", c.expr(w, n.ExpressionList, nil, exprDefault))
@@ -206,8 +215,9 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		}
 		switch b, b3 := c.expr(&a, n.ExpressionList, nil, exprVoid), c.expr(&a3, n.ExpressionList3, nil, exprVoid); {
 		case a.len() == 0 && a2.len() == 0 && a3.len() == 0:
-			w.w("for %s; %s; %s", b, b2, b3)
-			c.bracedStatement(w, n.Statement)
+			w.w("for %s; %s; %s {", b, b2, b3)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
 		default:
 			c.err(errorf("TODO"))
 		}

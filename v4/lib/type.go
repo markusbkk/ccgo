@@ -140,12 +140,16 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 			fmt.Fprintf(b, "%s%s", tag(taggedUnion), nm)
 		default:
 			fmt.Fprintf(b, "struct {")
+			var sz1 int64
 			for i := 0; ; i++ {
 				f := x.FieldByIndex(i)
 				if f == nil {
 					break
 				}
 
+				if i == 0 {
+					sz1 = f.Type().Size()
+				}
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -153,10 +157,16 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				default:
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
-				b.WriteString(" [0]")
+				b.WriteByte(' ')
+				if i != 0 {
+					b.WriteString("[0]")
+				}
 				c.typ0(b, f.Type(), true, true, true)
 			}
-			fmt.Fprintf(b, "\n%s__ccgo [%d]byte\n}", tag(field), t.Size())
+			if n := t.Size() - sz1; n != 0 {
+				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
+			}
+			b.WriteString("\n}")
 		}
 	case *cc.ArrayType:
 		fmt.Fprintf(b, "[%d]", x.Len())
@@ -179,7 +189,7 @@ func (c *ctx) structLiteral(t *cc.StructType) string {
 	return b.String()
 }
 
-func (c *ctx) defineUnion(w writer, t *cc.UnionType) {
+func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -190,7 +200,7 @@ func (c *ctx) defineUnion(w writer, t *cc.UnionType) {
 			return
 		}
 
-		w.w("\ntype %s%s = %s;", tag(taggedUnion), nm, c.unionLiteral(t))
+		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(t))
 	}
 }
 
@@ -294,7 +304,7 @@ func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) 
 	case *cc.StructType:
 		c.defineStruct(w, sep, n, x)
 	case *cc.UnionType:
-		c.defineUnion(w, x)
+		c.defineUnion(w, sep, n, x)
 	}
 }
 

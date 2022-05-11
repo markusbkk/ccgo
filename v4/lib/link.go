@@ -59,40 +59,41 @@ func (o *object) load(fset *token.FileSet) (file *ast.File, err error) {
 		return nil, err
 	}
 
-	if err := o.audit(fset, file); err != nil {
-		return nil, err
-	}
+	// No more usable, union fields are accessed, when possible, directly w/o pinning.
+	// if err := o.audit(fset, file); err != nil {
+	// 	return nil, err
+	// }
 
 	return file, nil
 }
 
-func (o *object) audit(fset *token.FileSet, file *ast.File) (err error) {
-	var errors errors
-	ast.Inspect(file, func(n ast.Node) bool {
-		switch x := n.(type) {
-		case *ast.UnaryExpr:
-			if x.Op == token.AND {
-				switch y := x.X.(type) {
-				case *ast.Ident:
-					switch symKind(y.Name) {
-					case automatic, ccgoAutomatic:
-						errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(y.Pos(), true), y.Name))
-					}
-				case *ast.SelectorExpr:
-					switch z := y.X.(type) {
-					case *ast.Ident:
-						switch symKind(z.Name) {
-						case automatic, ccgoAutomatic:
-							errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(z.Pos(), true), z.Name))
-						}
-					}
-				}
-			}
-		}
-		return true
-	})
-	return errors.err()
-}
+// func (o *object) audit(fset *token.FileSet, file *ast.File) (err error) {
+// 	var errors errors
+// 	ast.Inspect(file, func(n ast.Node) bool {
+// 		switch x := n.(type) {
+// 		case *ast.UnaryExpr:
+// 			if x.Op == token.AND {
+// 				switch y := x.X.(type) {
+// 				case *ast.Ident:
+// 					switch symKind(y.Name) {
+// 					case automatic, ccgoAutomatic:
+// 						errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(y.Pos(), true), y.Name))
+// 					}
+// 				case *ast.SelectorExpr:
+// 					switch z := y.X.(type) {
+// 					case *ast.Ident:
+// 						switch symKind(z.Name) {
+// 						case automatic, ccgoAutomatic:
+// 							errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(z.Pos(), true), z.Name))
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+// 		return true
+// 	})
+// 	return errors.err()
+// }
 
 // link name -> type ID
 func (o *object) collectTypes(file *ast.File) (types map[string]string, err error) {
@@ -681,7 +682,7 @@ type float128 = struct { __ccgo [2]float64 }`)
 		}
 
 		for _, decl := range file.Decls {
-			if err := l.decl(file, object, decl); err != nil {
+			if err := l.decl(file, decl); err != nil {
 				return err
 			}
 		}
@@ -717,18 +718,18 @@ package %[7]s
 	)
 }
 
-func (l *linker) decl(file *ast.File, object *object, n ast.Decl) error {
+func (l *linker) decl(file *ast.File, n ast.Decl) error {
 	switch x := n.(type) {
 	case *ast.GenDecl:
 		return l.genDecl(file, x)
 	case *ast.FuncDecl:
-		return l.funcDecl(file, object, x)
+		return l.funcDecl(file, x)
 	default:
 		return errorf("TODO %T", x)
 	}
 }
 
-func (l *linker) funcDecl(file *ast.File, object *object, n *ast.FuncDecl) (err error) {
+func (l *linker) funcDecl(file *ast.File, n *ast.FuncDecl) (err error) {
 	l.w("\n\n")
 	info := l.newFnInfo(n)
 	var static []ast.Stmt

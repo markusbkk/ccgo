@@ -2049,7 +2049,7 @@ func testExec(t *testing.T, dir string, blacklist map[string]struct{}, g *golden
 				defer os.Remove(ofn)
 
 				var out bytes.Buffer
-				if err := NewTask(goos, goarch, []string{"ccgo", "-o", ofn, apth}, &out, &out, cfs).Main(); err != nil {
+				if err := NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "--prefix-field=F", apth}, &out, &out, cfs).Main(); err != nil {
 					p.err(errorf("%s: %s: FAIL: %v", filepath.Base(apth), out.Bytes(), err))
 					p.fail()
 					return

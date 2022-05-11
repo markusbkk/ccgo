@@ -110,6 +110,9 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	s += c.posComment(pos)
 	if !strings.HasSuffix(s, "\n") {
 		s += "\n"
+		if s == "\n" {
+			s = "\n\n"
+		}
 	}
 	switch {
 	case local:
@@ -129,12 +132,12 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 		fmt.Fprintf(&b, "(*%s%sTLS", c.task.tlsQualifier, tag(preserve))
 	}
 	if f.MaxArgs() != 0 {
-		for _, v := range f.Parameters() {
+		for i, v := range f.Parameters() {
 			b.WriteString(", ")
 			if names {
 				switch nm := v.Name(); {
 				case nm == "":
-					fmt.Fprintf(&b, "%sp ", tag(ccgo))
+					fmt.Fprintf(&b, "%sp%d ", tag(ccgo), i)
 				default:
 					switch info := c.f.declInfos.info(v.Declarator); {
 					case info.pinned():
@@ -194,7 +197,7 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 			case *cc.StructType:
 				c.defineStruct(w, sep, n, x)
 			case *cc.UnionType:
-				c.defineUnion(w, x)
+				c.defineUnion(w, sep, n, x)
 			}
 		default:
 			w.w("%s", sep(n))
