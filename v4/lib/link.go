@@ -7,15 +7,12 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 import (
 	"bufio"
 	"fmt"
-	"go/ast"
-	"go/format"
-	"go/parser"
-	"go/printer"
 	"go/token"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -32,9 +29,8 @@ const (
 
 type object struct {
 	externs   nameSet
-	fset      *token.FileSet //TODO-
-	id        string         // file name or import path
-	pkgName   string         // for kind == objectPkg
+	id        string // file name or import path
+	pkgName   string // for kind == objectPkg
 	qualifier string
 	static    nameSet
 
@@ -48,24 +44,6 @@ func newObject(kind int, id string) *object {
 		kind: kind,
 		id:   id,
 	}
-}
-
-func (o *object) load0(fset *token.FileSet) (file *ast.File, err error) { //TODO-
-	if o.kind == objectPkg {
-		return nil, errorf("object.load: internal error: wrong kind")
-	}
-
-	o.fset = fset
-	if file, err = parser.ParseFile(fset, o.id, nil, parser.DeclarationErrors|parser.ParseComments); err != nil {
-		return nil, err
-	}
-
-	// No more usable, union fields are accessed, when possible, directly w/o pinning.
-	// if err := o.audit(fset, file); err != nil {
-	// 	return nil, err
-	// }
-
-	return file, nil
 }
 
 // func (o *object) audit(fset *token.FileSet, file *ast.File) (err error) {
@@ -662,11 +640,6 @@ type float128 = struct { __ccgo [2]float64 }`)
 			continue
 		}
 
-		file0, err := object.load0(l.fset) //TODO-
-		if err != nil {
-			return errorf("loading %s: %v", object.id, err)
-		}
-
 		file, err := object.load()
 		if err != nil {
 			return errorf("loading %s: %v", object.id, err)
@@ -735,14 +708,74 @@ type float128 = struct { __ccgo [2]float64 }`)
 			l.fileLinkNames2GoNames[linkName] = goName
 		}
 
-		for _, decl := range file0.Decls {
-			if err := l.decl(file0, decl); err != nil {
-				return err
+		for _, n := range file.TopLevelDecls {
+			switch x := n.(type) {
+			case *gc.ConstDecl:
+				l.print(l.newFnInfo(nil), n)
+			case *gc.VarDecl:
+				l.print(l.newFnInfo(n), n)
+			case *gc.TypeDecl:
+				if len(x.TypeSpecs) != 1 {
+					panic(todo(""))
+				}
+
+				spec := x.TypeSpecs[0]
+				nm := spec.(*gc.AliasDecl).Ident.Src()
+				if _, ok := l.goTypeNamesEmited[nm]; ok {
+					break
+				}
+
+				l.goTypeNamesEmited.add(nm)
+				l.print(l.newFnInfo(nil), n)
+			case *gc.FunctionDecl:
+				l.funcDecl(x)
+			default:
+				l.err(errorf("TODO %T", x))
 			}
 		}
 	}
 	l.epilogue()
 	return l.errors.err()
+}
+
+func (l *linker) funcDecl(n *gc.FunctionDecl) {
+	l.w("\n\n")
+	info := l.newFnInfo(n)
+	var static []gc.Node
+	w := 0
+	for _, stmt := range n.FunctionBody.StatementList {
+		if stmt := l.stmtPrune(stmt, info, &static); stmt != nil {
+			n.FunctionBody.StatementList[w] = stmt
+			w++
+		}
+	}
+	n.FunctionBody.StatementList = n.FunctionBody.StatementList[:w]
+	l.print(info, n)
+	for _, v := range static {
+		l.w("\n\n")
+		l.print(info, v)
+	}
+}
+
+func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
+	switch x := n.(type) {
+	case *gc.VarDecl:
+		if len(x.VarSpecs) != 1 {
+			return n
+		}
+
+		vs := x.VarSpecs[0]
+		if len(vs.IdentifierList) != 1 {
+			return n
+		}
+
+		switch nm := vs.IdentifierList[0].Ident.Src(); symKind(nm) {
+		case staticInternal, staticNone:
+			*static = append(*static, n)
+			return nil
+		}
+	}
+	return n
 }
 
 func (l *linker) epilogue() {
@@ -772,102 +805,33 @@ package %[7]s
 	)
 }
 
-func (l *linker) decl(file *ast.File, n ast.Decl) error {
-	switch x := n.(type) {
-	case *ast.GenDecl:
-		return l.genDecl(file, x)
-	case *ast.FuncDecl:
-		return l.funcDecl(file, x)
-	default:
-		return errorf("TODO %T", x)
-	}
-}
-
-func (l *linker) funcDecl(file *ast.File, n *ast.FuncDecl) (err error) {
-	l.w("\n\n")
-	info := l.newFnInfo(n)
-	var static []ast.Stmt
-	w := 0
-	for _, stmt := range n.Body.List {
-		if stmt := l.stmtPrune(stmt, info, &static); stmt != nil {
-			n.Body.List[w] = stmt
-			w++
-		}
-	}
-	n.Body.List = n.Body.List[:w]
-	ast.Walk(&renamer{info}, n)
-	if err = format.Node(l.out, l.fset, &printer.CommentedNode{n, file.Comments}); err != nil {
-		return err
-	}
-
-	for _, v := range static {
-		ast.Walk(&renamer{info}, v)
-		l.w("\n\n")
-		if err = format.Node(l.out, l.fset, &printer.CommentedNode{v, file.Comments}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-var _ ast.Visitor = (*renamer)(nil)
-
-type renamer struct {
-	info *fnInfo
-}
-
-func (r *renamer) Visit(n ast.Node) ast.Visitor {
-	if x, ok := n.(*ast.Ident); ok {
-		if nm := r.info.name(x.Name); nm != "" {
-			if symKind(x.Name) == external {
-				obj := r.info.linker.externs[x.Name]
-				if obj.kind == objectPkg {
-					x.Name = fmt.Sprintf("%s.%s", obj.qualifier, nm)
-					return r
-				}
-			}
-
-			x.Name = nm
-		}
-	}
-	return r
-}
-
-func (l *linker) stmtPrune(n ast.Stmt, info *fnInfo, static *[]ast.Stmt) ast.Stmt {
-	switch x := n.(type) {
-	case *ast.DeclStmt:
-		gd := x.Decl.(*ast.GenDecl)
-		if gd.Tok != token.VAR || len(gd.Specs) != 1 {
-			return n
-		}
-
-		vs := gd.Specs[0].(*ast.ValueSpec)
-		if len(vs.Names) != 1 {
-			return n
-		}
-
-		switch nm := vs.Names[0].Name; symKind(nm) {
-		case staticInternal, staticNone:
-			*static = append(*static, n)
-			return nil
-		}
-	}
-	return n
-}
-
-var _ ast.Visitor = (*fnInfo)(nil)
-
 type fnInfo struct {
 	ns        nameSpace
 	linkNames nameSet
 	linker    *linker
 }
 
-func (l *linker) newFnInfo(n ast.Node) (r *fnInfo) {
+func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 	r = &fnInfo{linker: l}
 	if n != nil {
-		ast.Walk(r, n)
+		walk(n, func(n gc.Node) {
+			tok, ok := n.(gc.Token)
+			if !ok {
+				return
+			}
+
+			switch tok.Ch {
+			case gc.IDENTIFIER:
+				switch nm := tok.Src(); symKind(nm) {
+				case staticInternal, field:
+					// nop
+				default:
+					r.linkNames.add(nm)
+				}
+			case gc.STRING_LIT:
+				r.linker.stringLit(tok.Src(), true)
+			}
+		})
 	}
 	var linkNames []string
 	for k := range r.linkNames {
@@ -909,27 +873,8 @@ func (fi *fnInfo) name(linkName string) string {
 	return linkName
 }
 
-func (fi *fnInfo) Visit(n ast.Node) ast.Visitor {
-	switch x := n.(type) {
-	case *ast.Ident:
-		switch symKind(x.Name) {
-		case staticInternal, field:
-			// nop
-		default:
-			fi.linkNames.add(x.Name)
-		}
-	case *ast.BasicLit:
-		if x.Kind != token.STRING {
-			break
-		}
-
-		x.Value = fi.linker.stringLit(x.Value)
-	}
-	return fi
-}
-
-func (l *linker) stringLit(s string) string {
-	s, err := strconv.Unquote(s)
+func (l *linker) stringLit(s0 string, reg bool) string {
+	s, err := strconv.Unquote(s0)
 	if err != nil {
 		l.err(errorf("internal error: %v", err))
 	}
@@ -938,6 +883,10 @@ func (l *linker) stringLit(s string) string {
 	case ok:
 		off = x
 	default:
+		if !reg {
+			return s0
+		}
+
 		l.stringLiterals[s] = off
 		l.textSegment.WriteString(s)
 		l.textSegmentOff += int64(len(s))
@@ -950,23 +899,74 @@ func (l *linker) stringLit(s string) string {
 	}
 }
 
-func (l *linker) genDecl(file *ast.File, n *ast.GenDecl) error {
-	switch n.Tok {
-	case token.CONST:
-		ast.Walk(&renamer{l.newFnInfo(nil)}, n)
-	case token.VAR:
-		ast.Walk(&renamer{l.newFnInfo(n)}, n)
-	case token.TYPE:
-		ast.Walk(&renamer{l.newFnInfo(nil)}, n)
-		for _, spec := range n.Specs {
-			n := spec.(*ast.TypeSpec)
-			if _, ok := l.goTypeNamesEmited[n.Name.Name]; ok {
-				return nil
+func (l *linker) print(fi *fnInfo, n interface{}) {
+	if n == nil {
+		return
+	}
+
+	if x, ok := n.(gc.Token); ok && x.IsValid() {
+		l.w("%s", x.Sep())
+		switch x.Ch {
+		case gc.IDENTIFIER:
+			id := x.Src()
+			nm := fi.name(id)
+			if nm == "" {
+				l.w("%s", id)
+				return
 			}
 
-			l.goTypeNamesEmited.add(n.Name.Name)
+			if symKind(id) != external {
+				l.w("%s", nm)
+				return
+			}
+
+			obj := fi.linker.externs[id]
+			if obj.kind == objectPkg {
+				l.w("%s.%s", obj.qualifier, nm)
+				return
+			}
+
+			l.w("%s", nm)
+		case gc.STRING_LIT:
+			l.w("%s", l.stringLit(x.Src(), false))
+		default:
+			l.w("%s", x.Src())
+		}
+		return
+	}
+
+	t := reflect.TypeOf(n)
+	v := reflect.ValueOf(n)
+	var zero reflect.Value
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+		v = v.Elem()
+		if v == zero {
+			return
 		}
 	}
-	fmt.Fprintf(l.out, "\n\n")
-	return format.Node(l.out, l.fset, n)
+
+	switch t.Kind() {
+	case reflect.Struct:
+		nf := t.NumField()
+		for i := 0; i < nf; i++ {
+			f := t.Field(i)
+			if !f.IsExported() {
+				continue
+			}
+
+			if v == zero || v.IsZero() {
+				continue
+			}
+
+			l.print(fi, v.Field(i).Interface())
+		}
+	case reflect.Slice:
+		ne := v.Len()
+		for i := 0; i < ne; i++ {
+			l.print(fi, v.Index(i).Interface())
+		}
+	default:
+		panic(todo("", t.Kind()))
+	}
 }
