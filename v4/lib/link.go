@@ -22,6 +22,7 @@ import (
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/tools/go/packages"
+	"modernc.org/gc/v2"
 )
 
 const (
@@ -31,9 +32,9 @@ const (
 
 type object struct {
 	externs   nameSet
-	fset      *token.FileSet
-	id        string // file name or import path
-	pkgName   string // for kind == objectPkg
+	fset      *token.FileSet //TODO-
+	id        string         // file name or import path
+	pkgName   string         // for kind == objectPkg
 	qualifier string
 	static    nameSet
 
@@ -49,7 +50,7 @@ func newObject(kind int, id string) *object {
 	}
 }
 
-func (o *object) load(fset *token.FileSet) (file *ast.File, err error) {
+func (o *object) load0(fset *token.FileSet) (file *ast.File, err error) { //TODO-
 	if o.kind == objectPkg {
 		return nil, errorf("object.load: internal error: wrong kind")
 	}
@@ -95,25 +96,43 @@ func (o *object) load(fset *token.FileSet) (file *ast.File, err error) {
 // 	return errors.err()
 // }
 
-// link name -> type ID
-func (o *object) collectTypes(file *ast.File) (types map[string]string, err error) {
-	var a []string
-	in := map[string]ast.Expr{}
-	for _, decl := range file.Decls {
-		switch x := decl.(type) {
-		case *ast.GenDecl:
-			if x.Tok != token.TYPE {
-				break
-			}
+func (o *object) load() (file *gc.SourceFile, err error) {
+	if o.kind == objectPkg {
+		return nil, errorf("object.load: internal error: wrong kind")
+	}
 
-			for _, spec := range x.Specs {
-				ts := spec.(*ast.TypeSpec)
-				if _, ok := in[ts.Name.Name]; ok {
-					return nil, errorf("%v: type %s redeclared", o.id, ts.Name.Name)
+	b, err := os.ReadFile(o.id)
+	if err != nil {
+		return nil, err
+	}
+
+	if file, err = gc.ParseSourceFile(&gc.ParseSourceFileConfig{}, o.id, b); err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+// link name -> type ID
+func (o *object) collectTypes(file *gc.SourceFile) (types map[string]string, err error) {
+	var a []string
+	in := map[string]gc.Node{}
+	for _, decl := range file.TopLevelDecls {
+		switch x := decl.(type) {
+		case *gc.TypeDecl:
+			for _, spec := range x.TypeSpecs {
+				ts, ok := spec.(*gc.AliasDecl)
+				if !ok {
+					continue
 				}
 
-				in[ts.Name.Name] = ts.Type
-				a = append(a, ts.Name.Name)
+				nm := ts.Ident.Src()
+				if _, ok := in[nm]; ok {
+					return nil, errorf("%v: type %s redeclared", o.id, nm)
+				}
+
+				in[nm] = ts.Type
+				a = append(a, nm)
 			}
 		}
 	}
@@ -121,7 +140,7 @@ func (o *object) collectTypes(file *ast.File) (types map[string]string, err erro
 	types = map[string]string{}
 	for _, linkName := range a {
 		if _, ok := types[linkName]; !ok {
-			if types[linkName], err = typeID(o.fset, in, types, in[linkName]); err != nil {
+			if types[linkName], err = typeID(in, types, in[linkName]); err != nil {
 				return nil, err
 			}
 		}
@@ -130,28 +149,24 @@ func (o *object) collectTypes(file *ast.File) (types map[string]string, err erro
 }
 
 // link name -> const value
-func (o *object) collectConsts(file *ast.File) (consts map[string]string, err error) {
+func (o *object) collectConsts(file *gc.SourceFile) (consts map[string]string, err error) {
 	var a []string
 	in := map[string]string{}
-	for _, decl := range file.Decls {
+	for _, decl := range file.TopLevelDecls {
 		switch x := decl.(type) {
-		case *ast.GenDecl:
-			if x.Tok != token.CONST {
-				break
-			}
-
-			for _, spec := range x.Specs {
-				vs := spec.(*ast.ValueSpec)
-				for i, ident := range vs.Names {
-					if _, ok := in[ident.Name]; ok {
-						return nil, errorf("%v: const %s redeclared", o.id, ident.Name)
+		case *gc.ConstDecl:
+			for _, spec := range x.ConstSpecs {
+				for i, ident := range spec.IdentifierList {
+					nm := ident.Ident.Src()
+					if _, ok := in[nm]; ok {
+						return nil, errorf("%v: const %s redeclared", o.id, nm)
 					}
 
 					var b strings.Builder
 					b.WriteByte('C') //TODO ?
-					format.Node(&b, o.fset, vs.Values[i])
-					in[ident.Name] = b.String()
-					a = append(a, ident.Name)
+					b.Write(spec.ExpressionList[i].Expression.Source(true))
+					in[nm] = b.String()
+					a = append(a, nm)
 				}
 			}
 		}
@@ -510,20 +525,19 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	for _, linkFile := range linkFiles {
 		switch object := objects[linkFile]; {
 		case object.kind == objectFile:
-			file, err := object.load(l.fset)
+			file, err := object.load()
 			if err != nil {
 				return errorf("loading %s: %v", object.id, err)
 			}
 
-			for _, ident := range file.Unresolved {
-				nm := ident.Name
+			for nm, pos := range unresolvedSymbols(file) {
 				if !strings.HasPrefix(nm, tag(external)) {
 					continue
 				}
 
 				lib, ok := l.externs[nm]
 				if !ok {
-					return errorf("%v: undefined reference to '%s'", object.fset.PositionFor(ident.Pos(), true), l.rawName(nm))
+					return errorf("%v: undefined reference to '%s'", pos, l.rawName(nm))
 				}
 
 				if lib.kind == objectFile {
@@ -613,7 +627,12 @@ type float128 = struct { __ccgo [2]float64 }`)
 			continue
 		}
 
-		file, err := object.load(l.fset)
+		file0, err := object.load0(l.fset) //TODO-
+		if err != nil {
+			return errorf("loading %s: %v", object.id, err)
+		}
+
+		file, err := object.load()
 		if err != nil {
 			return errorf("loading %s: %v", object.id, err)
 		}
@@ -681,8 +700,8 @@ type float128 = struct { __ccgo [2]float64 }`)
 			l.fileLinkNames2GoNames[linkName] = goName
 		}
 
-		for _, decl := range file.Decls {
-			if err := l.decl(file, decl); err != nil {
+		for _, decl := range file0.Decls {
+			if err := l.decl(file0, decl); err != nil {
 				return err
 			}
 		}

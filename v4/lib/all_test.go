@@ -1812,6 +1812,7 @@ func testExec(t *testing.T, dir string, blacklist map[string]struct{}, g *golden
 				goOut = bytes.TrimSpace(goOut)
 				if bytes.Equal(cOut, goOut) {
 					p.ok()
+					g.w("%s\n", apth)
 					return
 				}
 
@@ -1823,6 +1824,7 @@ func testExec(t *testing.T, dir string, blacklist map[string]struct{}, g *golden
 				}
 				if bytes.Equal(cOut, goOut) {
 					p.ok()
+					g.w("%s\n", apth)
 					return
 				}
 

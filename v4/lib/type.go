@@ -6,12 +6,10 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"fmt"
-	"go/ast"
-	"go/format"
-	"go/token"
 	"strings"
 
 	"modernc.org/cc/v4"
+	"modernc.org/gc/v2"
 )
 
 func (c *ctx) typedef(t cc.Type) string {
@@ -60,7 +58,6 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					b.WriteByte('u')
 				}
 				fmt.Fprintf(b, "int%d", 8*t.Size())
-				break
 			case t.Size() == 16:
 				b.WriteString("[2]uint64")
 			default:
@@ -308,69 +305,77 @@ func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) 
 	}
 }
 
-func typeID(fset *token.FileSet, in map[string]ast.Expr, out map[string]string, typ ast.Expr) (r string, err error) {
+func typeID(in map[string]gc.Node, out map[string]string, typ gc.Node) (r string, err error) {
 	var b strings.Builder
-	if err = typeID0(&b, fset, in, out, typ, map[string]struct{}{}); err != nil {
+	if err = typeID0(&b, in, out, typ, map[string]struct{}{}); err != nil {
 		return "", err
 	}
 
 	return "T" + b.String(), nil
 }
 
-func typeID0(b *strings.Builder, fset *token.FileSet, in map[string]ast.Expr, out map[string]string, typ ast.Expr, m map[string]struct{}) (err error) {
+func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, typ gc.Node, m map[string]struct{}) (err error) {
 	switch x := typ.(type) {
-	case *ast.Ident:
-		switch symKind(x.Name) {
+	case *gc.StructType:
+		b.WriteString("struct{")
+		for _, f := range x.FieldDecls {
+			switch y := f.(type) {
+			case *gc.FieldDecl:
+				ft, err := typeID(in, out, y.Type)
+				if err != nil {
+					return err
+				}
+
+				for _, nm := range y.IdentifierList {
+					fmt.Fprintf(b, "%s %s;", nm.Ident.Src(), ft)
+				}
+			default:
+				panic(todo("%T", y))
+			}
+		}
+		b.WriteByte('}')
+	case *gc.ArrayType:
+		fmt.Fprintf(b, "[%s]", x.ArrayLength.Source(true))
+		if err = typeID0(b, in, out, x.ElementType, m); err != nil {
+			return err
+		}
+	case *gc.TypeName:
+		if x.TypeArgs != nil || x.Name.PackageName.IsValid() {
+			panic(todo("%T %s", x, x.Source(true)))
+		}
+
+		nm := x.Name.Ident.Src()
+		switch symKind(nm) {
 		case -1:
-			b.WriteString(x.Name)
+			b.WriteString(nm)
 		case typename, taggedStruct, taggedUnion, taggedEum:
-			if id, ok := out[x.Name]; ok {
+			if id, ok := out[nm]; ok {
 				b.WriteString(id)
 				break
 			}
 
-			t2, ok := in[x.Name]
+			t2, ok := in[nm]
 			if !ok {
-				return errorf("undefined type %s", x.Name)
+				return errorf("undefined type %s", nm)
 			}
 
-			if _, ok := m[x.Name]; ok {
-				return errorf("invalid recursive type %s", x.Name)
+			if _, ok := m[nm]; ok {
+				return errorf("invalid recursive type %s", nm)
 			}
 
-			m[x.Name] = struct{}{}
-			id, err := typeID(fset, in, out, t2)
+			m[nm] = struct{}{}
+			id, err := typeID(in, out, t2)
 			if err != nil {
 				return err
 			}
 
-			out[x.Name] = id
+			out[nm] = id
 			b.WriteString(id)
 		default:
-			panic(todo("", x.Name, symKind(x.Name)))
-		}
-	case *ast.StructType:
-		b.WriteString("struct{")
-		for _, f := range x.Fields.List {
-			ft, err := typeID(fset, in, out, f.Type)
-			if err != nil {
-				return err
-			}
-
-			for _, nm := range f.Names {
-				fmt.Fprintf(b, "%s %s;", nm, ft)
-			}
-		}
-		b.WriteByte('}')
-	case *ast.ArrayType:
-		fmt.Fprintf(b, "[")
-		format.Node(b, fset, x.Len)
-		b.WriteByte(']')
-		if err = typeID0(b, fset, in, out, x.Elt, m); err != nil {
-			return err
+			panic(todo("%T %s", x, x.Source(true)))
 		}
 	default:
-		panic(todo("%T", x))
+		panic(todo("%T %s", x, x.Source(false)))
 	}
 	return nil
 }

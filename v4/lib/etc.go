@@ -19,6 +19,7 @@ import (
 	"unicode/utf8"
 
 	"modernc.org/cc/v4"
+	"modernc.org/gc/v2"
 )
 
 var (
@@ -589,5 +590,80 @@ func firstToken(n cc.Node, r *cc.Token) {
 		if m, ok := v.Field(i).Interface().(cc.Node); ok {
 			firstToken(m, r)
 		}
+	}
+}
+
+func unresolvedSymbols(ast *gc.SourceFile) (r map[string]token.Position) {
+	r = map[string]token.Position{}
+	def := map[string]struct{}{}
+	walk(ast, func(n gc.Node) {
+		switch x := n.(type) {
+		case *gc.FunctionDecl:
+			def[x.FunctionName.Src()] = struct{}{}
+		case *gc.VarSpec:
+			for _, v := range x.IdentifierList {
+				def[v.Ident.Src()] = struct{}{}
+			}
+		case gc.Token:
+			nm := x.Src()
+			if _, ok := r[nm]; !ok {
+				r[nm] = x.Position()
+			}
+		}
+	})
+	for k := range def {
+		delete(r, k)
+	}
+	return r
+}
+
+func walk(n interface{}, fn func(gc.Node)) {
+	if n == nil {
+		return
+	}
+
+	if x, ok := n.(gc.Token); ok {
+		if x.IsValid() {
+			fn(x)
+		}
+		return
+	}
+
+	t := reflect.TypeOf(n)
+	v := reflect.ValueOf(n)
+	var zero reflect.Value
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+		v = v.Elem()
+		if v == zero {
+			return
+		}
+	}
+
+	switch t.Kind() {
+	case reflect.Struct:
+		if x, ok := n.(gc.Node); ok {
+			fn(x)
+		}
+		nf := t.NumField()
+		for i := 0; i < nf; i++ {
+			f := t.Field(i)
+			if !f.IsExported() {
+				continue
+			}
+
+			if v == zero || v.IsZero() {
+				continue
+			}
+
+			walk(v.Field(i).Interface(), fn)
+		}
+	case reflect.Slice:
+		ne := v.Len()
+		for i := 0; i < ne; i++ {
+			walk(v.Index(i).Interface(), fn)
+		}
+	default:
+		panic(todo("", t.Kind()))
 	}
 }
