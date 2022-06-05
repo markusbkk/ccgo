@@ -294,118 +294,153 @@ func (t *Task) getPkgSymbols(importPath, mode string) (r *object, err error) {
 		return nil, errorf("%s: file %s not found", importPath, base)
 	}
 
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, fn, nil, 0)
+	b, err := os.ReadFile(fn)
 	if err != nil {
 		return nil, errorf("%s: %v", importPath, err)
 	}
 
-	obj, ok := file.Scope.Objects["CAPI"]
-	if !ok {
+	file, err := gc.ParseSourceFile(&gc.ParseSourceFileConfig{}, fn, b)
+	if err != nil {
+		return nil, errorf("%s: %v", importPath, err)
+	}
+
+	var capi gc.Node
+out:
+	for _, v := range file.TopLevelDecls {
+		if x, ok := v.(*gc.VarDecl); ok {
+			for _, v := range x.VarSpecs {
+				for i, id := range v.IdentifierList {
+					if nm := id.Ident.Src(); nm == "CAPI" {
+						capi = v.ExpressionList[i].Expression
+						break out
+					}
+				}
+			}
+		}
+	}
+
+	if capi == nil {
 		return nil, errorf("%s: CAPI not declared in %s", importPath, fn)
 	}
 
-	switch obj.Kind {
-	case ast.Var:
-		// ok
-	default:
-		return nil, errorf("%s: unexpected CAPI object kind: %v", importPath, obj.Kind)
-	}
-
-	spec, ok := obj.Decl.(*ast.ValueSpec)
+	lit, ok := capi.(*gc.CompositeLit)
 	if !ok {
-		return nil, errorf("%s: unexpected CAPI object type: %T", importPath, obj.Decl)
+		return nil, errorf("%s: unexpected CAPI node type: %T", importPath, capi)
 	}
 
-	if len(spec.Values) != 1 {
-		return nil, errorf("%s: expected one CAPI expression, got %v", importPath, len(spec.Values))
+	if _, ok := lit.LiteralType.(*gc.MapType); !ok {
+		return nil, errorf("%s: unexpected CAPI literal type: %T", importPath, lit.LiteralType)
 	}
 
-	r.pkgName = file.Name.String()
-	ast.Inspect(spec.Values[0], func(n ast.Node) bool {
-		if x, ok := n.(*ast.BasicLit); ok {
+	r.pkgName = file.PackageClause.PackageName.Src()
+	for _, v := range lit.LiteralValue.ElementList {
+		switch x := v.Key.(type) {
+		case gc.Token:
+			if x.Ch != gc.STRING_LIT {
+				return nil, errorf("%s: invalid CAPI key type: %s", importPath, x)
+			}
+
 			var key string
-			if key, err = strconv.Unquote(x.Value); err != nil {
-				err = errorf("%s: invalid CAPI key value: %s", importPath, x.Value)
-				return false
+			if key, err = strconv.Unquote(x.Src()); err != nil {
+				return nil, errorf("%s: invalid CAPI key value: %s", importPath, x.Src)
 			}
 
 			r.externs.add(tag(external) + key)
+		default:
+			trc("", x)
+			panic(todo("%T", x))
 		}
-		return true
-	})
-	return r, err
+	}
+	return r, nil
 }
 
 func (t *Task) getFileSymbols(fset *token.FileSet, fn string) (r *object, err error) {
-	file, err := parser.ParseFile(fset, fn, nil, parser.DeclarationErrors|parser.ParseComments)
+	b, err := os.ReadFile(fn)
 	if err != nil {
 		return nil, err
 	}
 
-	pkgName := file.Name.String()
-	if !strings.HasPrefix(pkgName, objectFilePackageNamePrefix) {
-		return nil, errorf("%s: package %s is not a ccgo object file", fn, pkgName)
+	var pkgName string
+	file, err := gc.ParseSourceFile(&gc.ParseSourceFileConfig{
+		Accept: func(file *gc.SourceFile) error {
+			pkgName = file.PackageClause.PackageName.Src()
+			if !strings.HasPrefix(pkgName, objectFilePackageNamePrefix) {
+				return errorf("%s: package %s is not a ccgo object file", fn, pkgName)
+			}
+
+			version := pkgName[len(objectFilePackageNamePrefix):]
+			if !semver.IsValid(version) {
+				return errorf("%s: package %s has invalid semantic version", fn, pkgName)
+			}
+
+			if semver.Compare(version, objectFileSemver) != 0 {
+				return errorf("%s: package %s has incompatible semantic version compared to %s", fn, pkgName, objectFileSemver)
+			}
+
+			return nil
+		},
+	}, fn, b)
+	if err != nil {
+		return nil, err
 	}
 
-	version := pkgName[len(objectFilePackageNamePrefix):]
-	if !semver.IsValid(version) {
-		return nil, errorf("%s: package %s has invalid semantic version", fn, pkgName)
-	}
+	for _, line := range strings.Split(file.PackageClause.Package.Sep(), "\n") {
+		if !strings.HasPrefix(line, "//") {
+			continue
+		}
 
-	if semver.Compare(version, objectFileSemver) != 0 {
-		return nil, errorf("%s: package %s has incompatible semantic version compared to %s", fn, pkgName, objectFileSemver)
-	}
+		x := strings.Index(line, generatedFilePrefix)
+		if x < 0 {
+			continue
+		}
 
-	for _, v := range file.Comments {
-		for _, w := range v.List {
-			if w.Slash > file.Package {
-				break
-			}
+		s := line[x+len(generatedFilePrefix):]
+		if len(s) == 0 {
+			continue
+		}
 
-			line := w.Text
-			x := strings.Index(line, generatedFilePrefix)
-			if x < 0 {
-				continue
-			}
-
-			s := line[x+len(generatedFilePrefix):]
-			if len(s) == 0 {
-				continue
-			}
-
-			if !strings.HasPrefix(s, fmt.Sprintf("%s/%s", t.goos, t.goarch)) {
-				return nil, errorf("%s: object file was compiled for different target: %s", fn, line)
-			}
+		if !strings.HasPrefix(s, fmt.Sprintf("%s/%s", t.goos, t.goarch)) {
+			return nil, errorf("%s: object file was compiled for different target: %s", fn, line)
 		}
 	}
 
 	r = newObject(objectFile, fn)
-	x := tag(external)
+	ex := tag(external)
 	si := tag(staticInternal)
-	for k, v := range file.Scope.Objects {
-		switch symKind(k) {
-		case external:
-			if _, ok := r.externs[k]; ok {
-				return nil, errorf("invalid object file: multiple defintions of %s", k[len(x):])
+	for k, v := range file.TopLevelDecls {
+		var a []gc.Token
+		switch x := v.(type) {
+		case *gc.ConstDecl, *gc.TypeDecl:
+			continue
+		case *gc.VarDecl:
+			for _, v := range x.VarSpecs {
+				for _, id := range v.IdentifierList {
+					a = append(a, id.Ident)
+				}
 			}
+		case *gc.FunctionDecl:
+			a = append(a, x.FunctionName)
+		default:
+			_ = ex
+			_ = si
+			_ = k
+			panic(todo("%T", x))
+		}
+		for _, id := range a {
+			k := id.Src()
+			switch symKind(k) {
+			case external:
+				if _, ok := r.externs[k]; ok {
+					return nil, errorf("invalid object file: multiple defintions of %s", k[len(ex):])
+				}
 
-			switch v.Kind {
-			case ast.Var, ast.Fun:
 				r.externs.add(k)
-			default:
-				return nil, errorf("invalid object file: symbol %s of kind %v", k[len(x):], v.Kind)
-			}
-		case staticInternal:
-			if _, ok := r.static[k]; ok {
-				return nil, errorf("invalid object file: multiple defintions of %s", k[len(si):])
-			}
+			case staticInternal:
+				if _, ok := r.static[k]; ok {
+					return nil, errorf("invalid object file: multiple defintions of %s", k[len(si):])
+				}
 
-			switch v.Kind {
-			case ast.Var, ast.Fun:
 				r.static.add(k)
-			default:
-				return nil, errorf("invalid object file: symbol %s of kind %v", k[len(si):], v.Kind)
 			}
 		}
 	}
