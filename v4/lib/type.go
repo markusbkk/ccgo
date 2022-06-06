@@ -118,6 +118,9 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					break
 				}
 
+				if f.IsBitfield() {
+					c.err(errorf("TODO"))
+				}
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -144,6 +147,9 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					break
 				}
 
+				if f.IsBitfield() {
+					c.err(errorf("TODO"))
+				}
 				if i == 0 {
 					sz1 = f.Type().Size()
 				}

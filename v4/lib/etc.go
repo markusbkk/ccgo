@@ -196,7 +196,7 @@ func errorf(s string, args ...interface{}) error {
 	}
 	switch {
 	case extendedErrors:
-		return fmt.Errorf("%s (%v: %v)", s, origin(3), origin(2))
+		return fmt.Errorf("%s (%v: %v: %v)", s, origin(4), origin(3), origin(2))
 	default:
 		return fmt.Errorf("%s", s)
 	}

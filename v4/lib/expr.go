@@ -55,7 +55,7 @@ func (c *ctx) expr(w writer, n cc.ExpressionNode, to cc.Type, toMode mode) *buf 
 	r, from, fromMode := c.expr0(w, n, to, toMode)
 	if from == nil || fromMode == 0 {
 		// trc("", cpos(n))
-		c.err(errorf("TODO %T %v %v", n, from, fromMode))
+		c.err(errorf("TODO %T %v %v -> %v %v", n, from, fromMode, to, toMode))
 		return r
 	}
 
@@ -1045,7 +1045,22 @@ out:
 		case *cc.PredefinedType:
 			switch {
 			case x.VectorSize() < 0:
-				c.err(errorf("TODO %v", x))
+				switch mode {
+				case exprDefault:
+					switch y := n.ExpressionList.Type().Undecay().(type) {
+					case *cc.PointerType:
+						rt, rmode = n.Type(), mode
+						var s string
+						if v := y.Elem().Size(); v != 1 {
+							s = fmt.Sprintf("*%v", v)
+						}
+						b.w("(*(*%s)(unsafe.%sAdd(unsafe.Pointer(%s), (%s)%s)))", c.typ(y.Elem()), tag(preserve), c.expr(w, n.ExpressionList, nil, exprDefault), c.expr(w, n.PostfixExpression, nil, exprDefault), s)
+					default:
+						c.err(errorf("TODO %T", y))
+					}
+				default:
+					c.err(errorf("TODO %v %v", x, mode))
+				}
 			default:
 				c.err(errorf("TODO %v", x))
 			}
@@ -1363,7 +1378,7 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 		var t cc.Type
 		switch {
 		case i < len(params):
-			t = params[i].Type()
+			t = params[i].Type().Decay()
 		default:
 			switch t = v.Type(); {
 			case cc.IsIntegerType(t):

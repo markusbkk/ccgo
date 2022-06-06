@@ -150,7 +150,7 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.unbracedStatement(w, n.Statement2)
 		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		w.w("switch %s", c.expr(w, n.ExpressionList, nil, exprDefault))
+		w.w("switch %s", c.expr(w, n.ExpressionList, cc.IntegerPromotion(n.ExpressionList.Type()), exprDefault))
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -218,7 +218,48 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("for %s; %s; %s {", b, b2, b3)
 			c.unbracedStatement(w, n.Statement)
 			w.w("};")
+		case a.len() == 0 && a2.len() == 0 && a3.len() != 0:
+			w.w("for %s; %s;  {", b, b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+			w.w("};")
+		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
+			w.w("for %s; ; %s {", b, b3)
+			w.w("\n%s", a2.bytes())
+			w.w("\nif !(%s) { break };", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
+		case a.len() == 0 && a2.len() != 0 && a3.len() != 0:
+			w.w("for %s; ; {", b)
+			w.w("\n%s", a2.bytes())
+			w.w("\nif !(%s) { break };", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
+			w.w("for %s; ; %s {", b, b3)
+			w.w("\n%s", a2.bytes())
+			w.w("\nif !(%s) { break };", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
+		case a.len() != 0 && a2.len() == 0 && a3.len() == 0:
+			w.w("%s%s", a.bytes(), b.bytes())
+			w.w("\nfor ;%s; %s{", b2, b3)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
+		case a.len() != 0 && a2.len() == 0 && a3.len() != 0:
+			w.w("%s%s", a.bytes(), b.bytes())
+			w.w("\nfor %s {", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+		case a.len() != 0 && a2.len() != 0 && a3.len() == 0:
+			w.w("%s%s", a.bytes(), b.bytes())
+			w.w("\nfor ; ; %s {", b3)
+			w.w("\n%s", a2.bytes())
+			w.w("\nif !(%s) { break };", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
 		default:
+			trc("", c.pos(n))
 			c.err(errorf("TODO"))
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
@@ -241,7 +282,15 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	case cc.JumpStatementReturn: // "return" ExpressionList ';'
 		switch {
 		case n.ExpressionList != nil:
-			w.w("return %s;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
+			switch {
+			case c.f.t.Result().Kind() == cc.Void:
+				if n.ExpressionList.Type().Kind() != cc.Void {
+					w.w("_ = ")
+				}
+				w.w("%s; return;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
+			default:
+				w.w("return %s;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
+			}
 		default:
 			w.w("return;")
 		}
