@@ -192,9 +192,11 @@ func TestCompile(t *testing.T) {
 		"20000726-1.c":                 {}, //TODO
 		"20000801-3.c":                 {}, //TODO
 		"20000815-1.c":                 {}, //TODO
+		"20000822-1.c":                 {}, //TODO
 		"20000910-1.c":                 {}, //TODO
 		"20000914-1.c":                 {}, //TODO
 		"20000917-1.c":                 {}, //TODO
+		"20001009-2.c":                 {}, //TODO
 		"20001013-1.c":                 {}, //TODO
 		"20001024-1.c":                 {}, //TODO
 		"20001101.c":                   {}, //TODO
@@ -204,13 +206,16 @@ func TestCompile(t *testing.T) {
 		"20010118-1.c":                 {}, //TODO
 		"20010122-1.c":                 {}, //TODO
 		"20010123-1.c":                 {}, //TODO
+		"20010209-1.c":                 {}, //TODO
 		"20010325-1.c":                 {}, //TODO
 		"20010518-2.c":                 {}, //TODO
+		"20010605-1.c":                 {}, //TODO
 		"20010605-2.c":                 {}, //TODO
 		"20010924-1.c":                 {}, //TODO
 		"20011008-3.c":                 {}, //TODO
 		"20011113-1.c":                 {}, //TODO
 		"20011121-1.c":                 {}, //TODO
+		"20020107-1.c":                 {}, //TODO
 		"20020129-1.c":                 {}, //TODO
 		"20020206-1.c":                 {}, //TODO
 		"20020206-2.c":                 {}, //TODO
@@ -221,6 +226,7 @@ func TestCompile(t *testing.T) {
 		"20020402-3.c":                 {}, //TODO
 		"20020404-1.c":                 {}, //TODO
 		"20020411-1.c":                 {}, //TODO
+		"20020412-1.c":                 {}, //TODO
 		"20020418-1.c":                 {}, //TODO
 		"20020529-1.c":                 {}, //TODO
 		"20020611-1.c":                 {}, //TODO
@@ -232,10 +238,12 @@ func TestCompile(t *testing.T) {
 		"20021024-1.c":                 {}, //TODO
 		"20021118-1.c":                 {}, //TODO
 		"20030109-1.c":                 {}, //TODO
+		"20030222-1.c":                 {}, //TODO
 		"20030224-2.c":                 {}, //TODO
 		"20030313-1.c":                 {}, //TODO
 		"20030401-1.c":                 {}, //TODO
 		"20030408-1.c":                 {}, //TODO
+		"20030501-1.c":                 {}, //TODO
 		"20030626-2.c":                 {}, //TODO
 		"20030714-1.c":                 {}, //TODO
 		"20030909-1.c":                 {}, //TODO
@@ -250,6 +258,7 @@ func TestCompile(t *testing.T) {
 		"20040307-1.c":                 {}, //TODO
 		"20040308-1.c":                 {}, //TODO
 		"20040331-1.c":                 {}, //TODO
+		"20040520-1.c":                 {}, //TODO
 		"20040629-1.c":                 {}, //TODO
 		"20040703-1.c":                 {}, //TODO
 		"20040704-1.c":                 {}, //TODO
@@ -265,6 +274,7 @@ func TestCompile(t *testing.T) {
 		"20041218-1.c":                 {}, //TODO
 		"20050106-1.c":                 {}, //TODO
 		"20050121-1.c":                 {}, //TODO
+		"20050203-1.c":                 {}, //TODO
 		"20050316-1.c":                 {}, //TODO
 		"20050316-2.c":                 {}, //TODO
 		"20050316-3.c":                 {}, //TODO
@@ -279,6 +289,7 @@ func TestCompile(t *testing.T) {
 		"20060420-1.c":                 {}, //TODO
 		"20060930-2.c":                 {}, //TODO
 		"20061031-1.c":                 {}, //TODO
+		"20061220-1.c":                 {}, //TODO
 		"20070212-1.c":                 {}, //TODO
 		"20070212-3.c":                 {}, //TODO
 		"20070424-1.c":                 {}, //TODO
@@ -301,6 +312,7 @@ func TestCompile(t *testing.T) {
 		"20090113-1.c":                 {}, //TODO
 		"20090113-2.c":                 {}, //TODO
 		"20090113-3.c":                 {}, //TODO
+		"20090219-1.c":                 {}, //TODO
 		"20100316-1.c":                 {}, //TODO
 		"20100416-1.c":                 {}, //TODO
 		"20100430-1.c":                 {}, //TODO
@@ -327,15 +339,19 @@ func TestCompile(t *testing.T) {
 		"920501-5.c":                   {}, //TODO
 		"920501-6.c":                   {}, //TODO
 		"920501-7.c":                   {}, //TODO
+		"920612-2.c":                   {}, //TODO
 		"920625-1.c":                   {}, //TODO
 		"920721-4.c":                   {}, //TODO
 		"920728-1.c":                   {}, //TODO
 		"920731-1.c":                   {}, //TODO
+		"920908-1.c":                   {}, //TODO
 		"920908-2.c":                   {}, //TODO
 		"921016-1.c":                   {}, //TODO
+		"921017-1.c":                   {}, //TODO
 		"921019-1.c":                   {}, //TODO
 		"921113-1.c":                   {}, //TODO
 		"921204-1.c":                   {}, //TODO
+		"921215-1.c":                   {}, //TODO
 		"921218-1.c":                   {}, //TODO
 		"930126-1.c":                   {}, //TODO
 		"930406-1.c":                   {}, //TODO
@@ -343,6 +359,14 @@ func TestCompile(t *testing.T) {
 		"930630-1.c":                   {}, //TODO
 		"930718-1.c":                   {}, //TODO
 		"930930-1.c":                   {}, //TODO
+		"931002-1.c":                   {}, //TODO
+		"931004-10.c":                  {}, //TODO
+		"931004-12.c":                  {}, //TODO
+		"931004-14.c":                  {}, //TODO
+		"931004-2.c":                   {}, //TODO
+		"931004-4.c":                   {}, //TODO
+		"931004-6.c":                   {}, //TODO
+		"931004-8.c":                   {}, //TODO
 		"931031-1.c":                   {}, //TODO
 		"931110-1.c":                   {}, //TODO
 		"941202-1.c":                   {}, //TODO
@@ -354,6 +378,7 @@ func TestCompile(t *testing.T) {
 		"950906-1.c":                   {}, //TODO
 		"960117-1.c":                   {}, //TODO
 		"960301-1.c":                   {}, //TODO
+		"960312-1.c":                   {}, //TODO
 		"960317-1.c":                   {}, //TODO
 		"960326-1.c":                   {}, //TODO
 		"960512-1.c":                   {}, //TODO
@@ -368,9 +393,11 @@ func TestCompile(t *testing.T) {
 		"980612-1.c":                   {}, //TODO
 		"980929-1.c":                   {}, //TODO
 		"981130-1.c":                   {}, //TODO
+		"990130-1.c":                   {}, //TODO
 		"990208-1.c":                   {}, //TODO
 		"990222-1.c":                   {}, //TODO
 		"990326-1.c":                   {}, //TODO
+		"990413-2.c":                   {}, //TODO
 		"990524-1.c":                   {}, //TODO
 		"990525-1.c":                   {}, //TODO
 		"991014-1.c":                   {}, //TODO
@@ -428,8 +455,6 @@ func TestCompile(t *testing.T) {
 		"fp-cmp-4l.c":                  {}, //TODO
 		"fp-cmp-5.c":                   {}, //TODO
 		"fp-cmp-8.c":                   {}, //TODO
-		"fp-cmp-8f.c":                  {}, //TODO
-		"fp-cmp-8l.c":                  {}, //TODO
 		"ipa-sra-2.c":                  {}, //TODO
 		"loop-15.c":                    {}, //TODO
 		"loop-8.c":                     {}, //TODO
@@ -441,8 +466,14 @@ func TestCompile(t *testing.T) {
 		"memset-2.c":                   {}, //TODO
 		"memset-3.c":                   {}, //TODO
 		"mul-subnormal-single-1.c":     {}, //TODO
+		"nest-align-1.c":               {}, //TODO
+		"nest-stdar-1.c":               {}, //TODO
+		"nestfunc-1.c":                 {}, //TODO
+		"nestfunc-2.c":                 {}, //TODO
+		"nestfunc-3.c":                 {}, //TODO
 		"nestfunc-5.c":                 {}, //TODO
 		"nestfunc-6.c":                 {}, //TODO
+		"nestfunc-7.c":                 {}, //TODO
 		"p18298.c":                     {}, //TODO
 		"packed-aligned.c":             {}, //TODO
 		"pr15262-1.c":                  {}, //TODO
@@ -452,6 +483,8 @@ func TestCompile(t *testing.T) {
 		"pr19515.c":                    {}, //TODO
 		"pr19687.c":                    {}, //TODO
 		"pr19689.c":                    {}, //TODO
+		"pr22061-3.c":                  {}, //TODO
+		"pr22061-4.c":                  {}, //TODO
 		"pr22098-1.c":                  {}, //TODO
 		"pr22098-2.c":                  {}, //TODO
 		"pr22098-3.c":                  {}, //TODO
@@ -485,12 +518,14 @@ func TestCompile(t *testing.T) {
 		"pr38051.c":                    {}, //TODO
 		"pr38151.c":                    {}, //TODO
 		"pr38422.c":                    {}, //TODO
+		"pr38533.c":                    {}, //TODO
 		"pr38969.c":                    {}, //TODO
 		"pr39100.c":                    {}, //TODO
 		"pr39339.c":                    {}, //TODO
 		"pr40022.c":                    {}, //TODO
 		"pr40404.c":                    {}, //TODO
 		"pr40493.c":                    {}, //TODO
+		"pr40657.c":                    {}, //TODO
 		"pr41239.c":                    {}, //TODO
 		"pr41395-2.c":                  {}, //TODO
 		"pr41463.c":                    {}, //TODO
@@ -500,11 +535,15 @@ func TestCompile(t *testing.T) {
 		"pr42691.c":                    {}, //TODO
 		"pr43220.c":                    {}, //TODO
 		"pr43269.c":                    {}, //TODO
+		"pr43385.c":                    {}, //TODO
 		"pr43560.c":                    {}, //TODO
 		"pr43987.c":                    {}, //TODO
 		"pr44164.c":                    {}, //TODO
 		"pr44468.c":                    {}, //TODO
 		"pr44555.c":                    {}, //TODO
+		"pr44575.c":                    {}, //TODO
+		"pr44852.c":                    {}, //TODO
+		"pr45695.c":                    {}, //TODO
 		"pr46309.c":                    {}, //TODO
 		"pr47148.c":                    {}, //TODO
 		"pr47155.c":                    {}, //TODO
@@ -515,21 +554,32 @@ func TestCompile(t *testing.T) {
 		"pr49073.c":                    {}, //TODO
 		"pr49123.c":                    {}, //TODO
 		"pr49161.c":                    {}, //TODO
+		"pr49218.c":                    {}, //TODO
+		"pr49279.c":                    {}, //TODO
 		"pr49390.c":                    {}, //TODO
 		"pr49419.c":                    {}, //TODO
 		"pr49644.c":                    {}, //TODO
 		"pr49768.c":                    {}, //TODO
+		"pr50310.c":                    {}, //TODO
 		"pr51447.c":                    {}, //TODO
+		"pr51581-1.c":                  {}, //TODO
+		"pr51581-2.c":                  {}, //TODO
+		"pr51877.c":                    {}, //TODO
+		"pr51933.c":                    {}, //TODO
 		"pr52129.c":                    {}, //TODO
 		"pr52209.c":                    {}, //TODO
+		"pr52286.c":                    {}, //TODO
 		"pr52760.c":                    {}, //TODO
 		"pr52979-1.c":                  {}, //TODO
 		"pr52979-2.c":                  {}, //TODO
 		"pr53645-2.c":                  {}, //TODO
 		"pr53645.c":                    {}, //TODO
 		"pr54985.c":                    {}, //TODO
+		"pr55750.c":                    {}, //TODO
 		"pr56205.c":                    {}, //TODO
 		"pr56837.c":                    {}, //TODO
+		"pr56866.c":                    {}, //TODO
+		"pr56982.c":                    {}, //TODO
 		"pr57130.c":                    {}, //TODO
 		"pr57344-1.c":                  {}, //TODO
 		"pr57344-2.c":                  {}, //TODO
@@ -539,6 +589,7 @@ func TestCompile(t *testing.T) {
 		"pr57861.c":                    {}, //TODO
 		"pr57876.c":                    {}, //TODO
 		"pr57877.c":                    {}, //TODO
+		"pr58277-1.c":                  {}, //TODO
 		"pr58277-2.c":                  {}, //TODO
 		"pr58385.c":                    {}, //TODO
 		"pr58419.c":                    {}, //TODO
@@ -553,10 +604,13 @@ func TestCompile(t *testing.T) {
 		"pr60960.c":                    {}, //TODO
 		"pr63641.c":                    {}, //TODO
 		"pr64756.c":                    {}, //TODO
+		"pr65053-1.c":                  {}, //TODO
+		"pr65053-2.c":                  {}, //TODO
 		"pr65215-3.c":                  {}, //TODO
 		"pr65215-4.c":                  {}, //TODO
 		"pr65215-5.c":                  {}, //TODO
 		"pr65427.c":                    {}, //TODO
+		"pr65648.c":                    {}, //TODO
 		"pr65956.c":                    {}, //TODO
 		"pr66556.c":                    {}, //TODO
 		"pr67037.c":                    {}, //TODO
@@ -567,6 +621,7 @@ func TestCompile(t *testing.T) {
 		"pr68249.c":                    {}, //TODO
 		"pr68250.c":                    {}, //TODO
 		"pr68321.c":                    {}, //TODO
+		"pr68328.c":                    {}, //TODO
 		"pr68506.c":                    {}, //TODO
 		"pr68532.c":                    {}, //TODO
 		"pr68911.c":                    {}, //TODO
@@ -592,27 +647,35 @@ func TestCompile(t *testing.T) {
 		"pr78477.c":                    {}, //TODO
 		"pr78559.c":                    {}, //TODO
 		"pr78675.c":                    {}, //TODO
+		"pr78726.c":                    {}, //TODO
 		"pr79286.c":                    {}, //TODO
+		"pr79354.c":                    {}, //TODO
 		"pr79737-1.c":                  {}, //TODO
 		"pr79737-2.c":                  {}, //TODO
+		"pr80421.c":                    {}, //TODO
 		"pr80692.c":                    {}, //TODO
 		"pr81423.c":                    {}, //TODO
 		"pr81555.c":                    {}, //TODO
 		"pr81556.c":                    {}, //TODO
+		"pr81588.c":                    {}, //TODO
 		"pr82192.c":                    {}, //TODO
 		"pr82387.c":                    {}, //TODO
 		"pr82388.c":                    {}, //TODO
 		"pr82524.c":                    {}, //TODO
+		"pr82954.c":                    {}, //TODO
 		"pr83362.c":                    {}, //TODO
 		"pr83383.c":                    {}, //TODO
 		"pr84235.c":                    {}, //TODO
 		"pr84339.c":                    {}, //TODO
+		"pr84478.c":                    {}, //TODO
 		"pr84524.c":                    {}, //TODO
+		"pr85156.c":                    {}, //TODO
 		"pr85169.c":                    {}, //TODO
 		"pr85331.c":                    {}, //TODO
 		"pr85529-1.c":                  {}, //TODO
 		"pr85582-1.c":                  {}, //TODO
 		"pr85756.c":                    {}, //TODO
+		"pr86492.c":                    {}, //TODO
 		"pr86659-1.c":                  {}, //TODO
 		"pr86659-2.c":                  {}, //TODO
 		"pr87053.c":                    {}, //TODO
@@ -628,8 +691,10 @@ func TestCompile(t *testing.T) {
 		"pr91137.c":                    {}, //TODO
 		"pr91597.c":                    {}, //TODO
 		"pr92618.c":                    {}, //TODO
+		"pr92904.c":                    {}, //TODO
 		"pr93434.c":                    {}, //TODO
 		"pr93908.c":                    {}, //TODO
+		"pr93945.c":                    {}, //TODO
 		"pr94130.c":                    {}, //TODO
 		"pr94412.c":                    {}, //TODO
 		"pr94524-1.c":                  {}, //TODO
@@ -652,9 +717,12 @@ func TestCompile(t *testing.T) {
 		"simd-5.c":                     {}, //TODO
 		"simd-6.c":                     {}, //TODO
 		"ssad-run.c":                   {}, //TODO
+		"stdarg-3.c":                   {}, //TODO
 		"stkalign.c":                   {}, //TODO
 		"strcpy-1.c":                   {}, //TODO
 		"strcpy-2.c":                   {}, //TODO
+		"strct-stdarg-1.c":             {}, //TODO
+		"strct-varg-1.c":               {}, //TODO
 		"strlen-4.c":                   {}, //TODO
 		"strlen-5.c":                   {}, //TODO
 		"strlen-6.c":                   {}, //TODO
@@ -667,6 +735,7 @@ func TestCompile(t *testing.T) {
 		"struct-ret-1.c":               {}, //TODO
 		"usad-run.c":                   {}, //TODO
 		"va-arg-15.c":                  {}, //TODO
+		"va-arg-22.c":                  {}, //TODO
 		"va-arg-23.c":                  {}, //TODO
 		"va-arg-4.c":                   {}, //TODO
 		"va-arg-pack-1.c":              {}, //TODO
@@ -937,13 +1006,11 @@ func TestExec(t *testing.T) {
 			"20000217-1.c":                 {}, //TODO
 			"20000412-5.c":                 {}, //TODO
 			"20000419-1.c":                 {}, //TODO
-			"20000519-1.c":                 {}, //TODO
 			"20000519-2.c":                 {}, //TODO
 			"20000605-3.c":                 {}, //TODO
 			"20000703-1.c":                 {}, //TODO
 			"20000707-1.c":                 {}, //TODO
 			"20000717-1.c":                 {}, //TODO
-			"20000717-4.c":                 {}, //TODO
 			"20000717-5.c":                 {}, //TODO
 			"20000722-1.c":                 {}, //TODO
 			"20000726-1.c":                 {}, //TODO
@@ -957,7 +1024,6 @@ func TestExec(t *testing.T) {
 			"20001013-1.c":                 {}, //TODO
 			"20001024-1.c":                 {}, //TODO
 			"20001101.c":                   {}, //TODO
-			"20001124-1.c":                 {}, //TODO
 			"20001203-1.c":                 {}, //TODO
 			"20001203-2.c":                 {}, //TODO
 			"20010114-1.c":                 {}, //TODO
@@ -971,7 +1037,6 @@ func TestExec(t *testing.T) {
 			"20010605-2.c":                 {}, //TODO
 			"20010904-1.c":                 {}, //TODO
 			"20010904-2.c":                 {}, //TODO
-			"20010915-1.c":                 {}, //TODO
 			"20010924-1.c":                 {}, //TODO
 			"20011008-3.c":                 {}, //TODO
 			"20011019-1.c":                 {}, //TODO
@@ -1040,13 +1105,11 @@ func TestExec(t *testing.T) {
 			"20040411-1.c":                 {}, //TODO
 			"20040423-1.c":                 {}, //TODO
 			"20040520-1.c":                 {}, //TODO
-			"20040625-1.c":                 {}, //TODO
 			"20040703-1.c":                 {}, //TODO
 			"20040704-1.c":                 {}, //TODO
 			"20040709-1.c":                 {}, //TODO
 			"20040709-2.c":                 {}, //TODO
 			"20040811-1.c":                 {}, //TODO
-			"20041113-1.c":                 {}, //TODO
 			"20041124-1.c":                 {}, //TODO
 			"20041201-1.c":                 {}, //TODO
 			"20041214-1.c":                 {}, //TODO
@@ -1086,7 +1149,6 @@ func TestExec(t *testing.T) {
 			"20071202-1.c":                 {}, //TODO
 			"20071210-1.c":                 {}, //TODO
 			"20071211-1.c":                 {}, //TODO
-			"20071213-1.c":                 {}, //TODO
 			"20071219-1.c":                 {}, //TODO
 			"20071220-1.c":                 {}, //TODO
 			"20071220-2.c":                 {}, //TODO
@@ -1134,12 +1196,10 @@ func TestExec(t *testing.T) {
 			"920501-5.c":                   {}, //TODO
 			"920501-6.c":                   {}, //TODO
 			"920501-7.c":                   {}, //TODO
-			"920501-8.c":                   {}, //TODO
 			"920612-2.c":                   {}, //TODO
 			"920625-1.c":                   {}, //TODO
 			"920721-2.c":                   {}, //TODO
 			"920721-4.c":                   {}, //TODO
-			"920726-1.c":                   {}, //TODO
 			"920728-1.c":                   {}, //TODO
 			"920730-1.c":                   {}, //TODO
 			"920731-1.c":                   {}, //TODO
@@ -1196,14 +1256,12 @@ func TestExec(t *testing.T) {
 			"970214-1.c":                   {}, //TODO
 			"970214-2.c":                   {}, //TODO
 			"970217-1.c":                   {}, //TODO
-			"980205.c":                     {}, //TODO
 			"980223.c":                     {}, //TODO
 			"980506-1.c":                   {}, //TODO
 			"980506-3.c":                   {}, //TODO
 			"980526-1.c":                   {}, //TODO
 			"980602-2.c":                   {}, //TODO
 			"980612-1.c":                   {}, //TODO
-			"980716-1.c":                   {}, //TODO
 			"980929-1.c":                   {}, //TODO
 			"981130-1.c":                   {}, //TODO
 			"990130-1.c":                   {}, //TODO
@@ -1216,7 +1274,6 @@ func TestExec(t *testing.T) {
 			"991014-1.c":                   {}, //TODO
 			"991118-1.c":                   {}, //TODO
 			"991201-1.c":                   {}, //TODO
-			"991216-2.c":                   {}, //TODO
 			"991228-1.c":                   {}, //TODO
 			"alias-2.c":                    {}, //TODO
 			"alias-3.c":                    {}, //TODO
@@ -1279,7 +1336,6 @@ func TestExec(t *testing.T) {
 			"fp-cmp-5.c":                   {}, //TODO
 			"fp-cmp-8.c":                   {}, //TODO
 			"fprintf-2.c":                  {}, //TODO
-			"fprintf-chk-1.c":              {}, //TODO
 			"frame-address.c":              {}, //TODO
 			"inf-1.c":                      {}, //TODO
 			"inf-3.c":                      {}, //TODO
@@ -1297,7 +1353,6 @@ func TestExec(t *testing.T) {
 			"memset-3.c":                   {}, //TODO
 			"memset-4.c":                   {}, //TODO
 			"mul-subnormal-single-1.c":     {}, //TODO
-			"multi-ix.c":                   {}, //TODO
 			"mzero4.c":                     {}, //TODO
 			"nest-align-1.c":               {}, //TODO
 			"nest-stdar-1.c":               {}, //TODO
@@ -1391,7 +1446,6 @@ func TestExec(t *testing.T) {
 			"pr44555.c":                    {}, //TODO
 			"pr44575.c":                    {}, //TODO
 			"pr44852.c":                    {}, //TODO
-			"pr44942.c":                    {}, //TODO
 			"pr45695.c":                    {}, //TODO
 			"pr46309.c":                    {}, //TODO
 			"pr47148.c":                    {}, //TODO
@@ -1469,7 +1523,7 @@ func TestExec(t *testing.T) {
 			"pr64006.c":                    {}, //TODO
 			"pr64242.c":                    {}, //TODO
 			"pr64756.c":                    {}, //TODO
-			"pr64979.c":                    {}, //TODO
+			"pr65053-1.c":                  {}, //TODO
 			"pr65053-2.c":                  {}, //TODO
 			"pr65170.c":                    {}, //TODO
 			"pr65215-3.c":                  {}, //TODO
@@ -1599,7 +1653,6 @@ func TestExec(t *testing.T) {
 			"pr94734.c":                    {}, //TODO
 			"pr94809.c":                    {}, //TODO
 			"pr96549.c":                    {}, //TODO
-			"pr97073.c":                    {}, //TODO
 			"pr97325.c":                    {}, //TODO
 			"pr97421-1.c":                  {}, //TODO
 			"pr97764.c":                    {}, //TODO
@@ -1607,14 +1660,12 @@ func TestExec(t *testing.T) {
 			"pr98474.c":                    {}, //TODO
 			"pr98853-1.c":                  {}, //TODO
 			"printf-2.c":                   {}, //TODO
-			"printf-chk-1.c":               {}, //TODO
 			"ptr-arith-1.c":                {}, //TODO
 			"pushpop_macro.c":              {}, //TODO
 			"return-addr.c":                {}, //TODO
 			"scal-to-vec1.c":               {}, //TODO
 			"scal-to-vec2.c":               {}, //TODO
 			"scal-to-vec3.c":               {}, //TODO
-			"scope-1.c":                    {}, //TODO
 			"simd-1.c":                     {}, //TODO
 			"simd-2.c":                     {}, //TODO
 			"simd-4.c":                     {}, //TODO
@@ -1622,9 +1673,7 @@ func TestExec(t *testing.T) {
 			"simd-6.c":                     {}, //TODO
 			"ssad-run.c":                   {}, //TODO
 			"stdarg-1.c":                   {}, //TODO
-			"stdarg-2.c":                   {}, //TODO
 			"stdarg-3.c":                   {}, //TODO
-			"stdarg-4.c":                   {}, //TODO
 			"stkalign.c":                   {}, //TODO
 			"strcmp-1.c":                   {}, //TODO
 			"strcpy-1.c":                   {}, //TODO
@@ -1650,30 +1699,15 @@ func TestExec(t *testing.T) {
 			"unsafe-fp-assoc-1.c":          {}, //TODO
 			"usad-run.c":                   {}, //TODO
 			"user-printf.c":                {}, //TODO
-			"va-arg-1.c":                   {}, //TODO
 			"va-arg-10.c":                  {}, //TODO
-			"va-arg-11.c":                  {}, //TODO
-			"va-arg-12.c":                  {}, //TODO
-			"va-arg-13.c":                  {}, //TODO
 			"va-arg-14.c":                  {}, //TODO
 			"va-arg-15.c":                  {}, //TODO
-			"va-arg-16.c":                  {}, //TODO
-			"va-arg-17.c":                  {}, //TODO
-			"va-arg-18.c":                  {}, //TODO
-			"va-arg-19.c":                  {}, //TODO
-			"va-arg-2.c":                   {}, //TODO
-			"va-arg-20.c":                  {}, //TODO
 			"va-arg-21.c":                  {}, //TODO
 			"va-arg-22.c":                  {}, //TODO
 			"va-arg-23.c":                  {}, //TODO
 			"va-arg-24.c":                  {}, //TODO
-			"va-arg-26.c":                  {}, //TODO
 			"va-arg-4.c":                   {}, //TODO
-			"va-arg-5.c":                   {}, //TODO
-			"va-arg-6.c":                   {}, //TODO
-			"va-arg-9.c":                   {}, //TODO
 			"va-arg-pack-1.c":              {}, //TODO
-			"va-arg-trap-1.c":              {}, //TODO
 			"vla-dealloc-1.c":              {}, //TODO
 			"vrp-7.c":                      {}, //TODO
 			"wchar_t-1.c":                  {}, //TODO

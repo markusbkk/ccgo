@@ -22,8 +22,15 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 	case cc.StatementCompound: // CompoundStatement
 		c.compoundStatement(w, n.CompoundStatement, false)
 	case cc.StatementExpr: // ExpressionStatement
-		w.w("%s%s", sep, c.posComment(n))
-		c.expressionStatement(w, n.ExpressionStatement)
+		var a buf
+		b := c.expr(&a, n.ExpressionStatement.ExpressionList, nil, exprVoid)
+		if a.len() != 0 || b.len() != 0 {
+			w.w("%s%s", sep, c.posComment(n))
+			if a.len() != 0 {
+				w.w("%s;", a.bytes())
+			}
+			w.w("%s;", b.bytes())
+		}
 	case cc.StatementSelection: // SelectionStatement
 		w.w("%s%s", sep, c.posComment(n))
 		c.selectionStatement(w, n.SelectionStatement)
@@ -38,6 +45,7 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 		a := strings.Split(nodeSource(n.AsmStatement), "\n")
 		w.w("\n// %s", strings.Join(a, "\n// "))
 		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
+		c.err(errorf("%v: assembler statements not supported", c.pos(n)))
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -84,7 +92,7 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 			w.w("defer %stls.Free(%d);", tag(ccgo), v)
 			for _, v := range c.f.t.Parameters() {
 				if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
-					w.w("*(*%s)(unsafe.Pointer(%s)) = %s_%s;", c.typ(d.Type()), bpOff(c.f.declInfos.info(d).bpOff), tag(ccgo), d.Name())
+					w.w("*(*%s)(%s) = %s_%s;", c.typ(d.Type()), unsafePointer(bpOff(c.f.declInfos.info(d).bpOff)), tag(ccgo), d.Name())
 				}
 			}
 			w.w("%s%s", sep(n.Token), c.posComment(n))
@@ -106,7 +114,7 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 			w.w("%s", s)
 			s = ""
 		}
-		w.w("return %sr;%s", tag(ccgo), s)
+		w.w("return %s%s;%s", tag(ccgo), retvalName, s)
 	default:
 		w.w("%s", sep(n.Token2))
 	}
@@ -131,7 +139,8 @@ func (c *ctx) blockItem(w writer, n *cc.BlockItem) {
 		c.statement(w, n.Statement)
 	case cc.BlockItemFuncDef: // DeclarationSpecifiers Declarator CompoundStatement
 		if c.pass == 2 {
-			c.functionDefinition0(w, sep(n), n, n.Declarator, n.CompoundStatement, true) //TODO does not really work yet
+			c.err(errorf("%v: nested functions not supported", c.pos(n.Declarator)))
+			// c.functionDefinition0(w, sep(n), n, n.Declarator, n.CompoundStatement, true) //TODO does not really work yet
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -297,8 +306,4 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
-}
-
-func (c *ctx) expressionStatement(w writer, n *cc.ExpressionStatement) {
-	w.w("%s;", c.expr(w, n.ExpressionList, nil, exprVoid))
 }

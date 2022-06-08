@@ -321,15 +321,18 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 	for nm := range set {
 		linkNames = append(linkNames, nm)
 	}
-
 	sort.Slice(linkNames, func(i, j int) bool {
-		return symKind(linkNames[i]) < symKind(linkNames[j]) || linkNames[i] < linkNames[j]
+		a, b := linkNames[i], linkNames[j]
+		x, y := symKind(a), symKind(b)
+		return x < y || x == y && a < b
 	})
 	for _, linkName := range linkNames {
 		switch k := symKind(linkName); k {
 		case external:
-			if !tld {
-				break
+			n.registerName(l, linkName)
+		case typename, taggedEum, taggedStruct, taggedUnion, enumConst:
+			if tld {
+				panic(todo("", linkName))
 			}
 
 			n.registerName(l, linkName)
@@ -347,11 +350,9 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 			if _, ok := n.dict[linkName]; !ok {
 				n.registerName(l, linkName)
 			}
-		case preserve:
-			// nop
 		case field:
 			// nop
-		case typename, taggedEum, taggedStruct, taggedUnion, enumConst:
+		case preserve:
 			// nop
 		default:
 			if k >= 0 {
@@ -666,4 +667,21 @@ func walk(n interface{}, fn func(gc.Node)) {
 	default:
 		panic(todo("", t.Kind()))
 	}
+}
+
+func argumentExpressionListLen(n *cc.ArgumentExpressionList) (r int) {
+	for ; n != nil; n = n.ArgumentExpressionList {
+		r++
+	}
+	return r
+}
+
+func unsafe(fn string, arg interface{}) string {
+	return fmt.Sprintf("%sunsafe.%[1]s%s(%s)", tag(preserve), fn, arg)
+}
+
+func unsafePointer(arg interface{}) string { return unsafe("Pointer", arg) }
+
+func unsafeAddr(arg interface{}) string {
+	return fmt.Sprintf("%sunsafe.%[1]sPointer(&(%s))", tag(preserve), arg)
 }

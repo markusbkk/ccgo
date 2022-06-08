@@ -140,21 +140,22 @@ func tag(nm name) string {
 type errHandler func(msg string, args ...interface{})
 
 type ctx struct {
-	ast           *cc.AST
-	cfg           *cc.Config
-	eh            errHandler
-	enumerators   nameSet
-	f             *fnCtx
-	fields        map[fielder]*nameSpace
-	ifn           string
-	imports       map[string]string // import path: qualifier
-	out           io.Writer
-	taggedEnums   nameSet
-	taggedStructs nameSet
-	taggedUnions  nameSet
-	task          *Task
-	typenames     nameSet
-	void          cc.Type
+	ast                 *cc.AST
+	cfg                 *cc.Config
+	defineTaggedStructs map[string]*cc.StructType
+	eh                  errHandler
+	enumerators         nameSet
+	f                   *fnCtx
+	fields              map[fielder]*nameSpace
+	ifn                 string
+	imports             map[string]string // import path: qualifier
+	out                 io.Writer
+	taggedEnums         nameSet
+	taggedStructs       nameSet
+	taggedUnions        nameSet
+	task                *Task
+	typenames           nameSet
+	void                cc.Type
 
 	nextID int
 	pass   int // 0: out of function, 1: func 1st pass, 2: func 2nd pass.
@@ -165,11 +166,12 @@ type ctx struct {
 
 func newCtx(task *Task, eh errHandler) *ctx {
 	return &ctx{
-		cfg:     task.cfg,
-		eh:      eh,
-		fields:  map[fielder]*nameSpace{},
-		imports: map[string]string{},
-		task:    task,
+		cfg:                 task.cfg,
+		eh:                  eh,
+		defineTaggedStructs: map[string]*cc.StructType{},
+		fields:              map[fielder]*nameSpace{},
+		imports:             map[string]string{},
+		task:                task,
 	}
 }
 
@@ -235,6 +237,17 @@ func (c *ctx) compile(ifn, ofn string) error {
 	c.defines(c)
 	for n := c.ast.TranslationUnit; n != nil; n = n.TranslationUnit {
 		c.externalDeclaration(c, n.ExternalDeclaration)
+	}
+	for len(c.defineTaggedStructs) != 0 {
+		var a []string
+		for k := range c.defineTaggedStructs {
+			a = append(a, k)
+		}
+		sort.Strings(a)
+		for k, t := range c.defineTaggedStructs {
+			c.defineStruct(c, "\n\n", nil, t)
+			delete(c.defineTaggedStructs, k)
+		}
 	}
 	c.w("%s", sep(c.ast.EOF))
 	if c.hasMain && c.task.tlsQualifier != "" {

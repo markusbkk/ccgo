@@ -21,20 +21,13 @@ func (c *ctx) typedef(t cc.Type) string {
 func (c *ctx) helper(t cc.Type) string {
 	var b strings.Builder
 	c.typ0(&b, t, false, false, false)
-	return c.export(b.String())
+	return c.export(b.String()[len(tag(preserve)):])
 }
 
 func (c *ctx) typ(t cc.Type) string {
 	var b strings.Builder
 	c.typ0(&b, t, true, true, false)
 	return b.String()
-}
-
-func (c *ctx) typeSuffix(t cc.Type) string {
-	if !cc.IsIntegerType(t) {
-		c.err(errorf("TODO"))
-	}
-	return c.export(c.typ(t))
 }
 
 func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag, isField bool) {
@@ -45,6 +38,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 
 	switch x := t.(type) {
 	case *cc.PointerType, *cc.FunctionType:
+		b.WriteString(tag(preserve))
 		b.WriteString("uintptr")
 	case *cc.PredefinedType:
 		if t.VectorSize() > 0 {
@@ -54,13 +48,15 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		case cc.IsIntegerType(t):
 			switch {
 			case t.Size() <= 8:
+				b.WriteString(tag(preserve))
 				if !cc.IsSignedInteger(t) {
 					b.WriteByte('u')
 				}
 				fmt.Fprintf(b, "int%d", 8*t.Size())
 			case t.Size() == 16:
-				b.WriteString("[2]uint64")
+				fmt.Fprintf(b, "[2]%suint64", tag(preserve))
 			default:
+				b.WriteString(tag(preserve))
 				b.WriteString("int")
 				c.err(errorf("TODO %T %v", x, t))
 			}
@@ -70,16 +66,19 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 			if t.Size() != 4 {
 				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			}
+			b.WriteString(tag(preserve))
 			b.WriteString("float32")
 		case t.Kind() == cc.Double:
 			if t.Size() != 8 {
 				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			}
+			b.WriteString(tag(preserve))
 			b.WriteString("float64")
 		case t.Kind() == cc.LongDouble:
 			// if t.Size() != 8 {
 			// 	c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			// }
+			b.WriteString(tag(preserve))
 			switch t.Size() {
 			case 8:
 				b.WriteString("float64")
@@ -94,6 +93,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			}
 		default:
+			b.WriteString(tag(preserve))
 			b.WriteString("int")
 			c.err(errorf("TODO %T %v %v", x, x, x.Kind()))
 		}
@@ -110,6 +110,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		switch nm := nmTag.SrcStr(); {
 		case nm != "" && x.LexicalScope().Parent == nil && useStructUnionTag:
 			fmt.Fprintf(b, "%s%s", tag(taggedStruct), nm)
+			c.defineTaggedStructs[nm] = x
 		default:
 			b.WriteString("struct {")
 			for i := 0; ; i++ {
@@ -301,6 +302,10 @@ func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 }
 
 func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) {
+	c.defineEnumStructUnion0(w, sep, n, t)
+}
+
+func (c *ctx) defineEnumStructUnion0(w writer, sep string, n cc.Node, t cc.Type) {
 	switch x := t.(type) {
 	case *cc.EnumType:
 		c.defineEnum(w, sep, n, x)
@@ -317,6 +322,7 @@ func typeID(in map[string]gc.Node, out map[string]string, typ gc.Node) (r string
 		return "", err
 	}
 
+	// trc("%s -> T%s", typ.Source(false), b.String())
 	return "T" + b.String(), nil
 }
 
@@ -352,7 +358,7 @@ func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, t
 
 		nm := x.Name.Ident.Src()
 		switch symKind(nm) {
-		case -1:
+		case -1, preserve:
 			b.WriteString(nm)
 		case typename, taggedStruct, taggedUnion, taggedEum:
 			if id, ok := out[nm]; ok {

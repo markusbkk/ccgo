@@ -12,6 +12,11 @@ import (
 	"modernc.org/cc/v4"
 )
 
+const (
+	retvalName = "r"
+	vaArgName  = "va"
+)
+
 type declInfo struct {
 	d     *cc.Declarator
 	bpOff int64
@@ -152,21 +157,21 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 	}
 	switch {
 	case isMain && len(f.Parameters()) == 0 || isMain && len(f.Parameters()) == 1 && f.Parameters()[0].Type().Kind() == cc.Void:
-		fmt.Fprintf(&b, ", %sargc int32, %[1]sargv uintptr", tag(ccgo))
+		fmt.Fprintf(&b, ", %sargc int32, %[1]sargv %suintptr", tag(ccgo), tag(preserve))
 	case isMain && len(f.Parameters()) == 1:
-		fmt.Fprintf(&b, ", %sargv uintptr", tag(ccgo))
+		fmt.Fprintf(&b, ", %sargv %suintptr", tag(ccgo), tag(preserve))
 	case f.IsVariadic():
 		switch {
 		case names:
-			fmt.Fprintf(&b, ", %sva uintptr", tag(ccgo))
+			fmt.Fprintf(&b, ", %s%s %suintptr", tag(ccgo), vaArgName, tag(preserve))
 		default:
-			fmt.Fprintf(&b, ", uintptr")
+			fmt.Fprintf(&b, ", %suintptr", tag(preserve))
 		}
 	}
 	b.WriteByte(')')
 	if f.Result().Kind() != cc.Void {
 		if names {
-			fmt.Fprintf(&b, "(%sr ", tag(ccgo))
+			fmt.Fprintf(&b, "(%s%s ", tag(ccgo), retvalName)
 		}
 		b.WriteString(c.typ(f.Result()))
 		if names {
@@ -272,7 +277,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		default:
 			switch {
 			case info != nil && info.pinned():
-				w.w("%s%s*(*%s)(unsafe.Pointer(%s)) = %s;", sep, c.posComment(n), c.typ(d.Type()), bpOff(info.bpOff), c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%s*(*%s)(%s) = %s;", sep, c.posComment(n), c.typ(d.Type()), unsafePointer(bpOff(info.bpOff)), c.initializerOuter(w, n.Initializer, d.Type()))
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:

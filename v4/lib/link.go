@@ -833,13 +833,6 @@ func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 			}
 		})
 	}
-	var linkNames []string
-	for k := range r.linkNames {
-		linkNames = append(linkNames, k)
-	}
-	sort.Slice(linkNames, func(i, j int) bool {
-		return symKind(linkNames[i]) < symKind(linkNames[j]) || linkNames[i] < linkNames[j]
-	})
 	r.ns.registerNameSet(l, r.linkNames, false)
 	r.linkNames = nil
 	return r
