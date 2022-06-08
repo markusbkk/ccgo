@@ -20,6 +20,9 @@ func (c *ctx) typedef(t cc.Type) string {
 
 func (c *ctx) helper(t cc.Type) string {
 	var b strings.Builder
+	if t.Kind() == cc.Enum {
+		t = t.(*cc.EnumType).UnderlyingType()
+	}
 	c.typ0(&b, t, false, false, false)
 	return c.export(b.String()[len(tag(preserve)):])
 }

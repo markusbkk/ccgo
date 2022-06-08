@@ -59,7 +59,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		if n.CaseOrdinal() != 0 {
 			w.w("fallthrough;")
 		}
-		w.w("case %s:", c.expr(nil, n.ConstantExpression, nil, exprDefault))
+		w.w("case %s:", c.expr(nil, n.ConstantExpression, c.switchExpr, exprDefault))
 		c.statement(w, n.Statement)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
@@ -159,7 +159,10 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.unbracedStatement(w, n.Statement2)
 		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		w.w("switch %s", c.expr(w, n.ExpressionList, cc.IntegerPromotion(n.ExpressionList.Type()), exprDefault))
+		se := c.switchExpr
+		defer func() { c.switchExpr = se }()
+		c.switchExpr = cc.IntegerPromotion(n.ExpressionList.Type())
+		w.w("switch %s", c.expr(w, n.ExpressionList, c.switchExpr, exprDefault))
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))

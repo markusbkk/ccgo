@@ -150,6 +150,7 @@ type ctx struct {
 	ifn                 string
 	imports             map[string]string // import path: qualifier
 	out                 io.Writer
+	switchExpr          cc.Type
 	taggedEnums         nameSet
 	taggedStructs       nameSet
 	taggedUnions        nameSet
@@ -236,6 +237,7 @@ func (c *ctx) compile(ifn, ofn string) error {
 	c.prologue(c)
 	c.defines(c)
 	for n := c.ast.TranslationUnit; n != nil; n = n.TranslationUnit {
+		c.w("\n\n")
 		c.externalDeclaration(c, n.ExternalDeclaration)
 	}
 	for len(c.defineTaggedStructs) != 0 {
