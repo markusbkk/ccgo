@@ -467,6 +467,14 @@ func bpOff(n int64) string {
 	return fmt.Sprintf("%sbp", tag(ccgo))
 }
 
+func fldOff(n int64) string {
+	if n != 0 {
+		return fmt.Sprintf("%+d", n)
+	}
+
+	return ""
+}
+
 func (c *ctx) export(s string) string {
 	r, sz := utf8.DecodeRuneInString(s)
 	return strings.ToUpper(string(r)) + s[sz:]

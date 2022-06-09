@@ -25,7 +25,7 @@ const (
 	exprLvalue       //
 	exprSelect       // C struct, Go struct
 	exprUintpr       // C pointer, Go uintptr
-	exprUntyped      // C primary expr literal, Go typed literal //TODO-
+	exprUntyped      // C primary expr literal, Go typed literal
 	exprVoid         // C void, no Go equivalent
 )
 
@@ -84,6 +84,10 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 	}
 
 	if from == to || from != nil && from.IsCompatible(to) {
+		if fromMode == toMode {
+			return s
+		}
+
 		if from == c.ast.SizeT || to == c.ast.SizeT {
 			if toMode != exprVoid {
 				return c.convertType(n, s, from, to, fromMode, toMode)
@@ -142,7 +146,7 @@ func (c *ctx) pin(n cc.Node, b *buf) *buf {
 			switch symKind(string(b.bytes())) {
 			case automatic, ccgoAutomatic:
 				c.f.declInfos.takeAddress(x)
-				// trc("%v: PIN %v at %v (%v: %v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(4), origin(3), origin(2))
+				//trc("%v: PIN %v at %v (%v: %v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(4), origin(3), origin(2))
 			}
 		case 2:
 			// ok
@@ -156,7 +160,7 @@ func (c *ctx) pin(n cc.Node, b *buf) *buf {
 			switch symKind(s) {
 			case automatic, ccgoAutomatic:
 				c.f.declInfos.takeAddress(y)
-				// trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), y.Name(), c.pos(y), origin(3), origin(2))
+				//trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), y.Name(), c.pos(y), origin(3), origin(2))
 			}
 			return b
 		}
@@ -481,7 +485,7 @@ func (c *ctx) convertType(n cc.ExpressionNode, s *buf, from, to cc.Type, fromMod
 			return s
 		case
 			cc.IsFloatingPointType(from) && cc.IsFloatingPointType(to),
-			cc.IsIntegerType(from) == cc.IsIntegerType(to) && cc.IsSignedInteger(from) == cc.IsSignedInteger(to),
+			cc.IsIntegerType(from) == cc.IsIntegerType(to) && cc.IsSignedInteger(from) == cc.IsSignedInteger(to) && from.Size() <= to.Size(),
 			from.Kind() == cc.Ptr && cc.IsIntegerType(to),
 			to.Kind() == cc.Ptr && cc.IsIntegerType(from):
 
@@ -531,7 +535,7 @@ func (c *ctx) convertFromPointer(n cc.ExpressionNode, s *buf, from *cc.PointerTy
 }
 
 func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
-	// trc("%v: %T (%q), %v, %v", n.Position(), n, cc.NodeSource(n), t, mode)
+	// trc("%v: %T (%q), %v, %v (%v: %v: %v:)", n.Position(), n, cc.NodeSource(n), t, mode, origin(4), origin(3), origin(2))
 	// defer func() {
 	// 	trc("%v: %T (%q), %v, %v (RET)", n.Position(), n, cc.NodeSource(n), t, mode)
 	// }()
@@ -664,8 +668,22 @@ func (c *ctx) logicalAndExpression(w writer, n *cc.LogicalAndExpression, t cc.Ty
 	case cc.LogicalAndExpressionOr: // InclusiveOrExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LogicalAndExpressionLAnd: // LogicalAndExpression "&&" InclusiveOrExpression
-		b.w("(%s && %s)", c.expr(w, n.LogicalAndExpression, nil, exprBool), c.expr(w, n.InclusiveOrExpression, nil, exprBool))
 		rt, rmode = n.Type(), exprBool
+		rt, rmode = n.Type(), exprBool
+		var al, ar buf
+		bl := c.expr(&al, n.LogicalAndExpression, nil, exprBool)
+		br := c.expr(&ar, n.InclusiveOrExpression, nil, exprBool)
+		switch {
+		case al.len() != 0 || ar.len() != 0:
+			// Sequence point
+			// al; v := bl; ar;
+			// v || br
+			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+			w.w("%s; %s := %s; %s;", al.bytes(), v, bl, ar.bytes())
+			b.w("((%s) && (%s))", v, br)
+		default:
+			b.w("((%s) && (%s))", bl, br)
+		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -678,8 +696,21 @@ func (c *ctx) logicalOrExpression(w writer, n *cc.LogicalOrExpression, t cc.Type
 	case cc.LogicalOrExpressionLAnd: // LogicalAndExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LogicalOrExpressionLOr: // LogicalOrExpression "||" LogicalAndExpression
-		b.w("(%s || %s)", c.expr(w, n.LogicalOrExpression, nil, exprBool), c.expr(w, n.LogicalAndExpression, nil, exprBool))
 		rt, rmode = n.Type(), exprBool
+		var al, ar buf
+		bl := c.expr(&al, n.LogicalOrExpression, nil, exprBool)
+		br := c.expr(&ar, n.LogicalAndExpression, nil, exprBool)
+		switch {
+		case al.len() != 0 || ar.len() != 0:
+			// Sequence point
+			// al; v := bl; ar;
+			// v || br
+			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+			w.w("%s; %s := %s; %s;", al.bytes(), v, bl, ar.bytes())
+			b.w("((%s) || (%s))", v, br)
+		default:
+			b.w("((%s) || (%s))", bl, br)
+		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -797,10 +828,6 @@ func (c *ctx) equalityExpression(w writer, n *cc.EqualityExpression, t cc.Type, 
 	}
 
 	ct := c.usualArithmeticConversions(n.EqualityExpression.Type(), n.RelationalExpression.Type())
-	// emode := expr
-	// if x.Undecay().Kind() == cc.Array || y.Undecay().Kind() == cc.Array {
-	// 	emode = exprUintpr
-	// }
 	switch n.Case {
 	case cc.EqualityExpressionEq: // EqualityExpression "==" RelationalExpression
 		b.w("(%s == %s)", c.expr(w, n.EqualityExpression, ct, exprDefault), c.expr(w, n.RelationalExpression, ct, exprDefault))
@@ -1026,6 +1053,8 @@ out:
 		switch tn := n.TypeName.Type(); {
 		case cc.IsScalarType(tn):
 			b.w("%s(%sunsafe.%[2]sSizeof(%s(0)))", c.typ(n.Type()), tag(preserve), c.typ(tn))
+		case tn.Kind() == cc.Array && tn.(*cc.ArrayType).IsVLA():
+			c.err(errorf("TODO %v", n.Case))
 		default:
 			b.w("%s(%sunsafe.%[2]sSizeof(%s{}))", c.typ(n.Type()), tag(preserve), c.typ(tn.Undecay()))
 		}
@@ -1097,8 +1126,16 @@ out:
 				if sz := x.Elem().Size(); sz != 1 {
 					s = fmt.Sprintf("*%v", sz)
 				}
-				b.w("%suintptr(%[1]sunsafe.%[1]sAdd(%[1]sunsafe.%[1]sPointer(&(%s)), (%s%s)))", tag(preserve), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)), c.expr(w, n.ExpressionList, nil, exprDefault), s)
+				mode2 := exprUintpr
+				if x.Elem().Kind() == cc.Array {
+					switch d := c.declaratorOf(n.PostfixExpression); {
+					case d != nil && d.Type().Kind() == cc.Ptr:
+						mode2 = exprDefault
+					}
+				}
+				b.w("%suintptr(%[1]sunsafe.%[1]sAdd(%[1]sunsafe.%[1]sPointer(%s), (%s%s)))", tag(preserve), c.expr(w, n.PostfixExpression, nil, mode2), c.expr(w, n.ExpressionList, nil, exprDefault), s)
 			default:
+				//trc("", c.pos(n), mode, cc.NodeSource(n))
 				c.err(errorf("TODO %v", mode))
 			}
 		case *cc.PredefinedType:
@@ -1227,13 +1264,22 @@ out:
 			c.err(errorf("TODO %v", mode))
 		}
 	case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
-		rt, rmode = n.Type(), exprDefault
-		b.w("((*%s)(%s).", c.typ(n.PostfixExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
-		switch f := n.Field(); {
-		case f.Parent() != nil:
-			c.err(errorf("TODO %v", n.Case))
+		f := n.Field()
+		switch mode {
+		case exprDefault, exprLvalue, exprIndex:
+			rt, rmode = n.Type(), exprDefault
+			b.w("((*%s)(%s).", c.typ(n.PostfixExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
+			switch {
+			case f.Parent() != nil:
+				c.err(errorf("TODO %v", n.Case))
+			default:
+				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			}
+		case exprUintpr:
+			rt, rmode = n.Type(), mode
+			b.w("((%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), fldOff(f.Offset()))
 		default:
-			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			c.err(errorf("TODO %v", mode))
 		}
 	case cc.PostfixExpressionInc: // PostfixExpression "++"
 		rt, rmode = n.Type(), mode
@@ -1453,7 +1499,7 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 		var t cc.Type
 		switch {
 		case i < len(params):
-			t = params[i].Type().Decay()
+			t = params[i].Type()
 		default:
 			switch t = v.Type(); {
 			case cc.IsIntegerType(t):
@@ -1463,10 +1509,6 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 			}
 		}
 		switch v.Type().Undecay().Kind() {
-		case cc.Array:
-			if _, ok := v.Value().(cc.StringValue); !ok {
-				mode = exprUintpr
-			}
 		case cc.Function:
 			mode = exprUintpr
 		}
@@ -1647,11 +1689,6 @@ out:
 				case exprDefault:
 					switch x.Type().Kind() {
 					case cc.Array:
-						if x.IsParam() {
-							b.w("%s%s", c.declaratorTag(x), x.Name())
-							break
-						}
-
 						p := &buf{n: x}
 						p.w("%s%s", c.declaratorTag(x), x.Name())
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
@@ -1689,6 +1726,7 @@ out:
 					case cc.Array:
 						b.w("%s%s", c.declaratorTag(x), x.Name())
 					default:
+						panic(todo(""))
 						c.err(errorf("TODO %v", mode))
 					}
 				case exprUintpr:
@@ -1733,14 +1771,8 @@ out:
 			c.err(errorf("TODO %T", x))
 		}
 	case cc.PrimaryExpressionInt: // INTCONST
-		//TODO- rt, rmode = n.Type(), exprUntyped
-		//TODO- b.n = n
-		//TODO- b.w("%v", n.Value()) //TODO-
 		return c.primaryExpressionIntConst(w, n, t, mode)
 	case cc.PrimaryExpressionFloat: // FLOATCONST
-		//TODO- rt, rmode = n.Type(), exprUntyped
-		//TODO- b.n = n
-		//TODO- b.w("%v", n.Value()) //TODO-
 		return c.primaryExpressionFloatConst(w, n, t, mode)
 	case cc.PrimaryExpressionChar: // CHARCONST
 		rt, rmode = n.Type(), exprUntyped

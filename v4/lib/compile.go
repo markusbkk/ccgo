@@ -114,6 +114,7 @@ func (b *buf) bytes() []byte {
 	if b == nil {
 		return nil
 	}
+
 	return b.b
 }
 
@@ -150,6 +151,7 @@ type ctx struct {
 	ifn                 string
 	imports             map[string]string // import path: qualifier
 	out                 io.Writer
+	pvoid               cc.Type
 	switchExpr          cc.Type
 	taggedEnums         nameSet
 	taggedStructs       nameSet
@@ -233,6 +235,7 @@ func (c *ctx) compile(ifn, ofn string) error {
 	}
 
 	c.void = c.ast.Void
+	c.pvoid = c.ast.PVoid
 	c.ifn = ifn
 	c.prologue(c)
 	c.defines(c)

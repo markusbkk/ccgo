@@ -122,7 +122,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					break
 				}
 
-				if f.IsBitfield() {
+				if f.IsBitfield() || f.Type().Size() == 0 {
 					c.err(errorf("TODO"))
 				}
 				b.WriteByte('\n')

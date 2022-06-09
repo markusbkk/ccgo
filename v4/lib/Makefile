@@ -50,3 +50,4 @@ diff:
 	rm -f log-todo
 	diff -u0 testdata/test_compile_linux_amd64.golden testdata/test_exec_linux_amd64.golden > log-todo || true
 	sed -i -e /^@/d -e /^--/d -e /^\+\+/d -e 's|^-|~/src/modernc.org/ccorpus/|' log-todo
+	wc -l log-todo
