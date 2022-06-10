@@ -145,7 +145,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		default:
 			fmt.Fprintf(b, "struct {")
 			var sz1 int64
-			for i := 0; ; i++ {
+			for i := 1; ; i++ {
 				f := x.FieldByIndex(i)
 				if f == nil {
 					break
@@ -170,6 +170,25 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				}
 				c.typ0(b, f.Type(), true, true, true)
 			}
+			f := x.FieldByIndex(0)
+			if f == nil {
+				c.err(errorf("TODO"))
+				break
+			}
+
+			if f.IsBitfield() {
+				c.err(errorf("TODO"))
+			}
+			sz1 = f.Type().Size()
+			b.WriteByte('\n')
+			switch nm := f.Name(); {
+			case nm == "":
+				c.err(errorf("TODO"))
+			default:
+				fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
+			}
+			b.WriteByte(' ')
+			c.typ0(b, f.Type(), true, true, true)
 			if n := t.Size() - sz1; n != 0 {
 				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
 			}

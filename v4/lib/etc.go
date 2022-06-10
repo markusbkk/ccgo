@@ -98,6 +98,7 @@ var (
 
 		// Protected identifiers
 		"float128": {},
+		"init":     {},
 		"main":     {},
 		"unsafe":   {},
 	}

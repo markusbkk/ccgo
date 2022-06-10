@@ -221,6 +221,13 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 
 func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, external bool) {
 	d := n.Declarator
+	if attr := d.Type().Attributes(); attr != nil {
+		if attr.Alias() != "" {
+			c.err(errorf("TODO unsupported attribute(s)"))
+			return
+		}
+	}
+
 	if d.Type().Kind() == cc.Function || d.IsExtern() && d.Type().IsIncomplete() {
 		return
 	}

@@ -426,8 +426,8 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 		case exprCall:
 			v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 			ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
-			w.w("var %s func%s;", v, c.signature(ft, false, false))
-			w.w("*(*%suintptr)(%s) = %s;", tag(preserve), unsafeAddr(v), s) // Free pass from .pin
+			w.w("var %s func%s;/**/", v, c.signature(ft, false, false))
+			w.w("\n*(*%suintptr)(%s) = %s;", tag(preserve), unsafeAddr(v), s) // Free pass from .pin
 			var b buf
 			b.w("%s", v)
 			return &b
@@ -674,15 +674,36 @@ func (c *ctx) logicalAndExpression(w writer, n *cc.LogicalAndExpression, t cc.Ty
 		bl := c.expr(&al, n.LogicalAndExpression, nil, exprBool)
 		br := c.expr(&ar, n.InclusiveOrExpression, nil, exprBool)
 		switch {
-		case al.len() != 0 || ar.len() != 0:
-			// Sequence point
-			// al; v := bl; ar;
-			// v || br
-			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-			w.w("%s; %s := %s; %s;", al.bytes(), v, bl, ar.bytes())
-			b.w("((%s) && (%s))", v, br)
 		default:
+			// case al.len() == 0 || ar.len() == 0:
 			b.w("((%s) && (%s))", bl, br)
+		case al.len() == 0 && ar.len() != 0:
+			// Sequence point
+			// if v = bl; v { ar };
+			// v && br
+			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+			w.w("var %s %sbool;/**/", v, tag(preserve))
+			w.w("%s", ar.vars("\n"))
+			w.w("\nif %s = %s; %s { %s };", v, bl, v, ar.bytes())
+			b.w("((%s) && (%s))", v, br)
+		case al.len() != 0 && ar.len() == 0:
+			// Sequence point
+			// al;
+			// bl && br
+			w.w("%s", al.vars(""))
+			w.w("%s;", al.bytes())
+			b.w("((%s) && (%s))", bl, br)
+		case al.len() != 0 && ar.len() != 0:
+			c.err(errorf("TODO %v", n.Case))
+			// Sequence point
+			// al; if v = bl; v { ar };
+			// v && br
+			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+			w.w("var %s %sbool;/**/", v, tag(preserve))
+			w.w("%s", al.vars("\n"))
+			w.w("%s", ar.vars("\n"))
+			w.w("\nif %s = %s; %s { %s };", v, bl, v, ar.bytes())
+			b.w("((%s) && (%s))", v, br)
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -701,15 +722,36 @@ func (c *ctx) logicalOrExpression(w writer, n *cc.LogicalOrExpression, t cc.Type
 		bl := c.expr(&al, n.LogicalOrExpression, nil, exprBool)
 		br := c.expr(&ar, n.LogicalAndExpression, nil, exprBool)
 		switch {
-		case al.len() != 0 || ar.len() != 0:
+		default:
+			// case al.len() == 0 || ar.len() == 0:
+			b.w("((%s) || (%s))", bl, br)
+		case al.len() == 0 && ar.len() != 0:
 			// Sequence point
-			// al; v := bl; ar;
+			// if v = bl; !v { ar };
 			// v || br
 			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-			w.w("%s; %s := %s; %s;", al.bytes(), v, bl, ar.bytes())
+			w.w("var %s %sbool;/**/", v, tag(preserve))
+			w.w("%s", ar.vars("\n"))
+			w.w("\nif %s = %s; !%s { %s };", v, bl, v, ar.bytes())
 			b.w("((%s) || (%s))", v, br)
-		default:
+		case al.len() != 0 && ar.len() == 0:
+			// Sequence point
+			// al;
+			// bl || br
+			w.w("%s", al.vars(""))
+			w.w("%s;", al.bytes())
 			b.w("((%s) || (%s))", bl, br)
+		case al.len() != 0 && ar.len() != 0:
+			c.err(errorf("TODO %v", n.Case))
+			// Sequence point
+			// al; if v = bl; !v { ar };
+			// v || br
+			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+			w.w("var %s %sbool;/**/", v, tag(preserve))
+			w.w("%s", al.vars("\n"))
+			w.w("%s", ar.vars("\n"))
+			w.w("\nif %s = %s; !%s { %s };", v, bl, v, ar.bytes())
+			b.w("((%s) || (%s))", v, br)
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -725,8 +767,8 @@ func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.
 	case cc.ConditionalExpressionCond: // LogicalOrExpression '?' ExpressionList ':' ConditionalExpression
 		rt, rmode = n.Type(), exprDefault
 		v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-		w.w("var %s %s;", v, c.typ(n.Type()))
-		w.w("if %s {", c.expr(w, n.LogicalOrExpression, nil, exprBool))
+		w.w("var %s %s;/**/", v, c.typ(n.Type()))
+		w.w("\nif %s {", c.expr(w, n.LogicalOrExpression, nil, exprBool))
 		w.w("%s = %s;", v, c.expr(w, n.ExpressionList, n.Type(), exprDefault))
 		w.w("} else {")
 		w.w("%s = %s;", v, c.expr(w, n.ConditionalExpression, n.Type(), exprDefault))
@@ -759,11 +801,14 @@ func (c *ctx) multiplicativeExpression(w writer, n *cc.MultiplicativeExpression,
 	case cc.MultiplicativeExpressionCast: // CastExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.MultiplicativeExpressionMul: // MultiplicativeExpression '*' CastExpression
-		b.w("(%s * %s)", c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault), c.expr(w, n.CastExpression, n.Type(), exprDefault))
+		x, y := c.binopArgs(w, n.MultiplicativeExpression, n.CastExpression, n.Type())
+		b.w("(%s * %s)", x, y)
 	case cc.MultiplicativeExpressionDiv: // MultiplicativeExpression '/' CastExpression
-		b.w("(%s / %s)", c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault), c.expr(w, n.CastExpression, n.Type(), exprDefault))
+		x, y := c.binopArgs(w, n.MultiplicativeExpression, n.CastExpression, n.Type())
+		b.w("(%s / %s)", x, y)
 	case cc.MultiplicativeExpressionMod: // MultiplicativeExpression '%' CastExpression
-		b.w("(%s %% %s)", c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault), c.expr(w, n.CastExpression, n.Type(), exprDefault))
+		x, y := c.binopArgs(w, n.MultiplicativeExpression, n.CastExpression, n.Type())
+		b.w("(%s %% %s)", x, y)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -779,7 +824,8 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 	case cc.AdditiveExpressionAdd: // AdditiveExpression '+' MultiplicativeExpression
 		switch x, y := n.AdditiveExpression.Type(), n.MultiplicativeExpression.Type(); {
 		case cc.IsArithmeticType(x) && cc.IsArithmeticType(y):
-			b.w("(%s + %s)", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault))
+			x, y := c.binopArgs(w, n.AdditiveExpression, n.MultiplicativeExpression, n.Type())
+			b.w("(%s + %s)", x, y)
 		case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
 			s := ""
 			if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
@@ -798,7 +844,8 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 	case cc.AdditiveExpressionSub: // AdditiveExpression '-' MultiplicativeExpression
 		switch x, y := n.AdditiveExpression.Type(), n.MultiplicativeExpression.Type(); {
 		case cc.IsArithmeticType(x) && cc.IsArithmeticType(y):
-			b.w("(%s - %s)", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault))
+			x, y := c.binopArgs(w, n.AdditiveExpression, n.MultiplicativeExpression, n.Type())
+			b.w("(%s - %s)", x, y)
 		case x.Kind() == cc.Ptr && y.Kind() == cc.Ptr:
 			b.w("((%s - %s)", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault))
 			if v := x.(*cc.PointerType).Elem().Size(); v > 1 {
@@ -818,6 +865,19 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	return &b, rt, rmode
+}
+
+func (c *ctx) binopArgs(w writer, a, b cc.ExpressionNode, t cc.Type) (x, y *buf) {
+	x = c.expr(w, a, t, exprDefault)
+	y = c.expr(w, b, t, exprDefault)
+	if !cc.IsIntegerType(t) || a.Value() == cc.Unknown || b.Value() == cc.Unknown {
+		return x, y
+	}
+
+	var p, q buf
+	p.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), x)
+	q.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), y)
+	return &p, &q
 }
 
 func (c *ctx) equalityExpression(w writer, n *cc.EqualityExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
@@ -953,9 +1013,11 @@ out:
 				default:
 					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-					w.w("%s := %s;", v2, c.expr(w, n.UnaryExpression, n.UnaryExpression.Type().Pointer(), exprUintpr))
+					w.w("var %s %s;/**/", v, c.typ(n.UnaryExpression.Type()))
+					w.w("\nvar %s %s;/**/", v2, c.typ(n.UnaryExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.UnaryExpression, n.UnaryExpression.Type().Pointer(), exprUintpr))
 					w.w("(*(*%s)(%s))--;", c.typ(n.UnaryExpression.Type()), unsafePointer(v2))
-					w.w("%s := (*(*%s)(%s));", v, c.typ(n.UnaryExpression.Type()), unsafePointer(v2))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n.UnaryExpression.Type()), unsafePointer(v2))
 					b.w("%s", v)
 				}
 			default:
@@ -1126,14 +1188,14 @@ out:
 				if sz := x.Elem().Size(); sz != 1 {
 					s = fmt.Sprintf("*%v", sz)
 				}
-				mode2 := exprUintpr
 				if x.Elem().Kind() == cc.Array {
-					switch d := c.declaratorOf(n.PostfixExpression); {
-					case d != nil && d.Type().Kind() == cc.Ptr:
-						mode2 = exprDefault
+					if d := c.declaratorOf(n.PostfixExpression); d != nil && d.Type().Kind() == cc.Ptr {
+						b.w("((%s)+(%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, c.pvoid, exprDefault), s)
+						break
 					}
 				}
-				b.w("%suintptr(%[1]sunsafe.%[1]sAdd(%[1]sunsafe.%[1]sPointer(%s), (%s%s)))", tag(preserve), c.expr(w, n.PostfixExpression, nil, mode2), c.expr(w, n.ExpressionList, nil, exprDefault), s)
+
+				b.w("%suintptr(%[1]sunsafe.%[1]sAdd(%[1]sunsafe.%[1]sPointer(%s), (%s%s)))", tag(preserve), c.expr(w, n.PostfixExpression, nil, exprUintpr), c.expr(w, n.ExpressionList, nil, exprDefault), s)
 			default:
 				//trc("", c.pos(n), mode, cc.NodeSource(n))
 				c.err(errorf("TODO %v", mode))
@@ -1167,6 +1229,7 @@ out:
 		//TODO __builtin_object_size 28_strings.c on darwin/amd64
 		switch c.declaratorOf(n.PostfixExpression).Name() {
 		case "__builtin_constant_p":
+			w.w("_ = %s;", c.expr(w, n.ArgumentExpressionList.AssignmentExpression, nil, exprDefault))
 			switch mode {
 			case exprBool:
 				rt, rmode = n.Type(), mode
@@ -1294,13 +1357,16 @@ out:
 				switch d := c.declaratorOf(n.PostfixExpression); {
 				case d != nil:
 					ds := c.expr(w, n.PostfixExpression, nil, exprDefault)
-					w.w("%s := %s;", v, ds)
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\n%s = %s;", v, ds)
 					w.w("%s += %d;", ds, sz)
 					b.w("%s", v)
 				default:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-					w.w("%s := %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
-					w.w("%s := (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\nvar %v %s;/**/", v2, c.typ(n.PostfixExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					w.w("(*(*%s)(%s)) += %d;", c.typ(n.PostfixExpression.Type()), unsafePointer(v2), sz)
 					b.w("%s", v)
 				}
@@ -1316,13 +1382,16 @@ out:
 				switch d := c.declaratorOf(n.PostfixExpression); {
 				case d != nil:
 					ds := c.expr(w, n.PostfixExpression, nil, exprDefault)
-					w.w("%s := %s;", v, ds)
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\n%s = %s;", v, ds)
 					w.w("%s++;", ds)
 					b.w("%s", v)
 				default:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-					w.w("%s := %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
-					w.w("%s := (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\nvar %v %s;/**/", v2, c.typ(n.PostfixExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					w.w("(*(*%s)(%s))++;", c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					b.w("%s", v)
 				}
@@ -1342,13 +1411,16 @@ out:
 				switch d := c.declaratorOf(n.PostfixExpression); {
 				case d != nil:
 					ds := c.expr(w, n.PostfixExpression, nil, exprDefault)
-					w.w("%s := %s;", v, ds)
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\n%s = %s;/**/", v, ds)
 					w.w("%s -= %d;", ds, sz)
 					b.w("%s", v)
 				default:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-					w.w("%s := %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
-					w.w("%s := (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\nvar %v %s;/**/", v2, c.typ(n.PostfixExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					w.w("(*(*%s)(%s)) -= %d;", c.typ(n.PostfixExpression.Type()), unsafePointer(v2), sz)
 					b.w("%s", v)
 				}
@@ -1366,13 +1438,16 @@ out:
 				switch d := c.declaratorOf(n.PostfixExpression); {
 				case d != nil:
 					ds := c.expr(w, n.PostfixExpression, nil, exprDefault)
-					w.w("%s := %s;", v, ds)
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\n%s = %s;", v, ds)
 					w.w("%s--;", ds)
 					b.w("%s", v)
 				default:
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-					w.w("%s := %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
-					w.w("%s := (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
+					w.w("var %v %s;/**/", v, c.typ(n.PostfixExpression.Type()))
+					w.w("\nvar %v %s;/**/", v2, c.typ(n.PostfixExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintpr))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					w.w("(*(*%s)(%s))--;", c.typ(n.PostfixExpression.Type()), unsafePointer(v2))
 					b.w("%s", v)
 				}
@@ -1514,7 +1589,12 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 		}
 		xargs = append(xargs, c.expr(w, v, t, mode))
 	}
-	b.w("%s(%stls", c.expr(w, n.PostfixExpression, nil, exprCall), tag(ccgo))
+	switch {
+	case c.f == nil:
+		b.w("%s(%snil", c.expr(w, n.PostfixExpression, nil, exprCall), tag(preserve))
+	default:
+		b.w("%s(%stls", c.expr(w, n.PostfixExpression, nil, exprCall), tag(ccgo))
+	}
 	switch {
 	case ft.IsVariadic():
 		for _, v := range xargs[:ft.MinArgs()] {
@@ -1556,7 +1636,8 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		case exprDefault:
 			rt, rmode = n.Type(), exprDefault
 			v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
-			w.w("%s := %s;", v, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault))
+			w.w("var %v %s;/**/", v, c.typ(n.UnaryExpression.Type()))
+			w.w("\n%s = %s;", v, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault))
 			w.w("%s = %s;", c.expr(w, n.UnaryExpression, nil, exprDefault), v)
 			b.w("%s", v)
 		case exprVoid:
@@ -1615,7 +1696,8 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			default:
 				p := fmt.Sprintf("%sp%d", tag(ccgo), c.id())
 				ut := n.UnaryExpression.Type()
-				w.w("%s := %s;", p, c.expr(w, n.UnaryExpression, ut.Pointer(), exprUintpr))
+				w.w("var %s %s;/**/", p, c.typ(ut.Pointer()))
+				w.w("\n%s = %s;", p, c.expr(w, n.UnaryExpression, ut.Pointer(), exprUintpr))
 				var b2 buf
 				p2 := newBufFromtring(fmt.Sprintf("(*(*%s)(%s))", c.typ(ut), unsafePointer(p)))
 				b2.w("((%s %s (%s%s))%s)", c.convert(n, w, p2, n.UnaryExpression.Type(), ct, exprDefault, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul, div)

@@ -6,6 +6,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"go/token"
 	"io"
@@ -116,6 +117,23 @@ func (b *buf) bytes() []byte {
 	}
 
 	return b.b
+}
+
+var varTag = []byte(";/**/\n")
+
+func (b *buf) vars(prefix string) (r string) {
+	if !bytes.Contains(b.b, varTag) {
+		return ""
+	}
+
+	a := strings.Split(string(b.bytes()), "\n")
+	for i, v := range a {
+		if !strings.HasPrefix(v, "var") || !strings.HasSuffix(v, ";/**/") {
+			b.b = []byte(strings.Join(a[i:], "\n"))
+			return prefix + strings.Join(a[:i], "\n")
+		}
+	}
+	panic(todo("unrechable"))
 }
 
 func (b *buf) Format(f fmt.State, verb rune) {
