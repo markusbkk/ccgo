@@ -97,6 +97,7 @@ var (
 		"uintptr":    {},
 
 		// Protected identifiers
+		"_":        {},
 		"float128": {},
 		"init":     {},
 		"main":     {},
@@ -353,7 +354,7 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 			}
 		case field:
 			// nop
-		case preserve:
+		case preserve, meta:
 			// nop
 		default:
 			if k >= 0 {

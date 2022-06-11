@@ -1068,7 +1068,7 @@ out:
 			b.w("(*(*%s)(%s))", c.typ(n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprVoid:
 			rt, rmode = n.Type(), mode
-			b.w("_ = (*(*%s)(%s))", c.typ(n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
+			b.w("%s_ = (*(*%s)(%s))", tag(preserve), c.typ(n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprUintpr:
 			rt, rmode = n.CastExpression.Type(), mode
 			b.w("%s", c.expr(w, n.CastExpression, nil, exprDefault))
@@ -1229,7 +1229,7 @@ out:
 		//TODO __builtin_object_size 28_strings.c on darwin/amd64
 		switch c.declaratorOf(n.PostfixExpression).Name() {
 		case "__builtin_constant_p":
-			w.w("_ = %s;", c.expr(w, n.ArgumentExpressionList.AssignmentExpression, nil, exprDefault))
+			w.w("%s_ = %s;", tag(preserve), c.expr(w, n.ArgumentExpressionList.AssignmentExpression, nil, exprDefault))
 			switch mode {
 			case exprBool:
 				rt, rmode = n.Type(), mode
@@ -1736,6 +1736,11 @@ func (c *ctx) expressionList(w writer, n *cc.ExpressionList, t cc.Type, mode mod
 	return r, rt, rmode
 }
 
+const (
+	externMentioned = 1 << iota
+	externDefined
+)
+
 func (c *ctx) primaryExpression(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 out:
@@ -1744,6 +1749,9 @@ out:
 		rt, rmode = n.Type(), mode
 		switch x := n.ResolvedTo().(type) {
 		case *cc.Declarator:
+			if x.Linkage() == cc.External {
+				c.externsMentioned[x.Name()] = struct{}{}
+			}
 			b.n = x
 			var info *declInfo
 			if c.f != nil {

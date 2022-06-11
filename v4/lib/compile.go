@@ -52,6 +52,7 @@ const (
 	ccgoAutomatic  // storage class automatic, linkage none, must be pinned if address taken
 	ccgo           // not visible to transpiled C code, taking address is ok
 	field          // field name
+	meta           // linker metadata
 
 	//TODO unpinned
 	preserve
@@ -66,6 +67,7 @@ var (
 	// The concatenation of a tag and a valid C identifier must not create a Go
 	// keyword neither it can be a prefix of a Go predefined identifier.
 	tags = [...]string{
+		meta:            "_",
 		ccgo:            "aa",
 		ccgoAutomatic:   "cc",
 		define:          "df", // #define
@@ -164,6 +166,9 @@ type ctx struct {
 	defineTaggedStructs map[string]*cc.StructType
 	eh                  errHandler
 	enumerators         nameSet
+	externsDeclared     map[string]*cc.Declarator
+	externsDefined      map[string]struct{}
+	externsMentioned    map[string]struct{}
 	f                   *fnCtx
 	fields              map[fielder]*nameSpace
 	ifn                 string
@@ -188,8 +193,11 @@ type ctx struct {
 func newCtx(task *Task, eh errHandler) *ctx {
 	return &ctx{
 		cfg:                 task.cfg,
-		eh:                  eh,
 		defineTaggedStructs: map[string]*cc.StructType{},
+		eh:                  eh,
+		externsDeclared:     map[string]*cc.Declarator{},
+		externsDefined:      map[string]struct{}{},
+		externsMentioned:    map[string]struct{}{},
 		fields:              map[fielder]*nameSpace{},
 		imports:             map[string]string{},
 		task:                task,
@@ -275,6 +283,24 @@ func (c *ctx) compile(ifn, ofn string) error {
 	c.w("%s", sep(c.ast.EOF))
 	if c.hasMain && c.task.tlsQualifier != "" {
 		c.w("\n\nfunc main() { %s%sStart(%smain) }\n", c.task.tlsQualifier, tag(preserve), tag(external))
+	}
+	var a []string
+	for k := range c.externsDefined {
+		delete(c.externsDeclared, k)
+	}
+	for k := range c.externsDeclared {
+		if _, ok := c.externsMentioned[k]; ok {
+			a = append(a, k)
+		}
+	}
+	sort.Strings(a)
+	for _, k := range a {
+		switch d := c.externsDeclared[k]; t := d.Type().(type) {
+		case *cc.FunctionType:
+			c.w("\n\nfunc %s%s%s", tag(meta), k, c.signature(t, false, false))
+		default:
+			c.w("\n\nvar %s%s %s", tag(meta), k, c.typ(t))
+		}
 	}
 	return nil
 }

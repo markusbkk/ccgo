@@ -35,8 +35,8 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-modernc.org/cc/v4 v4.0.0-20220610170121-d20e950177de h1:yZpZmWvJqzdgURiJn+xqD8R6nNOdhlvc8LTTmW/EzFU=
-modernc.org/cc/v4 v4.0.0-20220610170121-d20e950177de/go.mod h1:VR89mVO5qSox+O9mmUPgKkUlQWxZPi3OjR1oc6+dLTs=
+modernc.org/cc/v4 v4.0.0-20220611115443-f1d63a7e0d80 h1:f308c2blSX5AX/YAO0UGyOU/72LiMQuycdVKD7ZBeEU=
+modernc.org/cc/v4 v4.0.0-20220611115443-f1d63a7e0d80/go.mod h1:VR89mVO5qSox+O9mmUPgKkUlQWxZPi3OjR1oc6+dLTs=
 modernc.org/ccorpus2 v0.0.15 h1:pFmjMvxYmv8yA0AZVH8/3VfDD9kn4SLGJcHcv6chKaE=
 modernc.org/ccorpus2 v0.0.15/go.mod h1:Wifvo4Q/qS/h1aRoC2TffcHsnxwTikmi1AuLANuucJQ=
 modernc.org/fileutil v1.0.0 h1:Z1AFLZwl6BO8A5NldQg/xTSjGLetp+1Ubvl4alfGx8w=

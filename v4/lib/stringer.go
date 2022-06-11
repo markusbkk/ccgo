@@ -49,12 +49,13 @@ func _() {
 	_ = x[ccgoAutomatic-12]
 	_ = x[ccgo-13]
 	_ = x[field-14]
-	_ = x[preserve-15]
+	_ = x[meta-15]
+	_ = x[preserve-16]
 }
 
-const _name_name = "externaltypenametaggedStructtaggedUniontaggedEumenumConstimportQualifiermacrodefinestaticInternalstaticNoneautomaticccgoAutomaticccgofieldpreserve"
+const _name_name = "externaltypenametaggedStructtaggedUniontaggedEumenumConstimportQualifiermacrodefinestaticInternalstaticNoneautomaticccgoAutomaticccgofieldmetapreserve"
 
-var _name_index = [...]uint8{0, 8, 16, 28, 39, 48, 57, 72, 77, 83, 97, 107, 116, 129, 133, 138, 146}
+var _name_index = [...]uint8{0, 8, 16, 28, 39, 48, 57, 72, 77, 83, 97, 107, 116, 129, 133, 138, 142, 150}
 
 func (i name) String() string {
 	if i < 0 || i >= name(len(_name_index)-1) {

@@ -845,6 +845,7 @@ func TestCompile(t *testing.T) {
 	case "linux/386":
 		// _Float128
 		blacklistGCC["nest-align-1.c"] = struct{}{}
+		blacklistGCC["pr44468.c"] = struct{}{}
 		blacklistGCC["strcmp-1.c"] = struct{}{}
 		blacklistGCC["strlen-1.c"] = struct{}{}
 		blacklistGCC["strncmp-1.c"] = struct{}{}
@@ -1778,6 +1779,7 @@ func TestExec(t *testing.T) {
 
 			// _Float128
 			blacklistGCC["nest-align-1.c"] = struct{}{}
+			blacklistGCC["pr44468.c"] = struct{}{}
 			blacklistGCC["strcmp-1.c"] = struct{}{}
 			blacklistGCC["strlen-1.c"] = struct{}{}
 			blacklistGCC["strncmp-1.c"] = struct{}{}

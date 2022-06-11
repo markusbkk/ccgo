@@ -297,7 +297,7 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 			switch {
 			case c.f.t.Result().Kind() == cc.Void:
 				if n.ExpressionList.Type().Kind() != cc.Void {
-					w.w("_ = ")
+					w.w("%s_ = ", tag(preserve))
 				}
 				w.w("%s; return;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
 			default:

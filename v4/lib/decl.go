@@ -62,6 +62,9 @@ func (f *fnCtx) id() int { f.nextID++; return f.nextID }
 func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
 	switch n.Case {
 	case cc.ExternalDeclarationFuncDef: // FunctionDefinition
+		if d := n.FunctionDefinition.Declarator; d.Linkage() == cc.External {
+			c.externsDefined[n.FunctionDefinition.Declarator.Name()] = struct{}{}
+		}
 		c.functionDefinition(w, n.FunctionDefinition)
 	case cc.ExternalDeclarationDecl: // Declaration
 		c.declaration(w, n.Declaration, true)
@@ -228,6 +231,10 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		}
 	}
 
+	if d.Type().Kind() == cc.Function && d.Linkage() == cc.External || d.IsExtern() && !d.Type().IsIncomplete() {
+		c.externsDeclared[d.Name()] = d
+	}
+
 	if d.Type().Kind() == cc.Function || d.IsExtern() && d.Type().IsIncomplete() {
 		return
 	}
@@ -265,7 +272,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			c.defineEnumStructUnion(w, sep, n, d.Type())
 			switch {
 			case info != nil && info.pinned():
-				w.w("%s%svar _ /* %s */ %s;", sep, c.posComment(n), nm, c.typ(d.Type()))
+				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d.Type()))
 			default:
 				if d.WriteCount()+d.ReadCount() == 0 {
 					return
@@ -301,7 +308,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 	if info != nil {
 		// w.w("\n// read: %d, write: %d, address taken %v\n", d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
 		if d.StorageDuration() == cc.Automatic && d.ReadCount() == 0 && !info.pinned() {
-			w.w("\n_ = %s%s;", c.declaratorTag(d), nm)
+			w.w("\n%s_ = %s%s;", tag(preserve), c.declaratorTag(d), nm)
 		}
 	}
 }

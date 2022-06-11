@@ -484,6 +484,8 @@ func newLinker(task *Task, libc *object) (*linker, error) {
 			goTags[i] = task.prefixTaggedUnion
 		case typename:
 			goTags[i] = task.prefixTypename
+		case meta:
+			// nop
 		//TODO case unpinned:
 		//TODO 	goTags[i] = task.prefixUnpinned
 		//TODO case externalUnpinned:
@@ -715,6 +717,10 @@ type float128 = struct { __ccgo [2]float64 }`)
 			case *gc.ConstDecl:
 				l.print(l.newFnInfo(nil), n)
 			case *gc.VarDecl:
+				if symKind(x.VarSpecs[0].IdentifierList[0].Ident.Src()) == meta {
+					break
+				}
+
 				l.print(l.newFnInfo(n), n)
 			case *gc.TypeDecl:
 				if len(x.TypeSpecs) != 1 {
@@ -730,6 +736,10 @@ type float128 = struct { __ccgo [2]float64 }`)
 				l.goTypeNamesEmited.add(nm)
 				l.print(l.newFnInfo(nil), n)
 			case *gc.FunctionDecl:
+				if symKind(x.FunctionName.Src()) == meta {
+					break
+				}
+
 				l.funcDecl(x)
 			default:
 				l.err(errorf("TODO %T", x))
