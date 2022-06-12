@@ -9,7 +9,7 @@ require (
 	golang.org/x/tools v0.1.10
 	modernc.org/cc/v4 v4.0.0-20220611115443-f1d63a7e0d80
 	modernc.org/ccorpus2 v0.0.15
-	modernc.org/gc/v2 v2.0.0-20220605203922-e55d64315bd6
+	modernc.org/gc/v2 v2.0.0-20220612184123-1e6d0cd3d0e9
 	modernc.org/opt v0.1.3
 )
 
