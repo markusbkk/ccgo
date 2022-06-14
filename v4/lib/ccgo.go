@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"modernc.org/cc/v4"
+	"modernc.org/gc/v2"
 	"modernc.org/opt"
 )
 
@@ -133,7 +134,7 @@ func (t *Task) Main() (err error) {
 	set.Arg("std", true, func(opt, val string) error { t.std = fmt.Sprintf("%s=%s", opt, val); return nil })
 	set.Opt("E", func(opt string) error { t.E = true; return nil })
 	set.Opt("c", func(opt string) error { t.c = true; return nil })
-	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; return nil })
+	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; gc.ExtendedErrors = true; return nil })
 	set.Opt("full-paths", func(opt string) error { t.fullPaths = true; return nil })
 	set.Opt("keep-object-files", func(opt string) error { t.keepObjectFiles = true; return nil })
 	set.Opt("nostdinc", func(opt string) error { t.nostdinc = true; return nil })

@@ -5,7 +5,6 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"go/token"
@@ -308,26 +307,25 @@ out:
 		return nil, errorf("%s: unexpected CAPI node type: %T", importPath, capi)
 	}
 
-	if _, ok := lit.LiteralType.(*gc.MapType); !ok {
+	if _, ok := lit.LiteralType.(*gc.MapTypeNode); !ok {
 		return nil, errorf("%s: unexpected CAPI literal type: %T", importPath, lit.LiteralType)
 	}
 
 	r.pkgName = file.PackageClause.PackageName.Src()
 	for _, v := range lit.LiteralValue.ElementList {
 		switch x := v.Key.(type) {
-		case gc.Token:
-			if x.Ch != gc.STRING_LIT {
-				return nil, errorf("%s: invalid CAPI key type: %s", importPath, x)
+		case *gc.BasicLit:
+			if x.Token.Ch != gc.STRING_LIT {
+				return nil, errorf("%s: invalid CAPI key type", importPath)
 			}
 
 			var key string
-			if key, err = strconv.Unquote(x.Src()); err != nil {
-				return nil, errorf("%s: invalid CAPI key value: %s", importPath, x.Src)
+			if key, err = strconv.Unquote(x.Token.Src()); err != nil {
+				return nil, errorf("%s: invalid CAPI key value: %s", importPath, x.Token.Src())
 			}
 
 			r.externs.add(tag(external) + key)
 		default:
-			trc("", x)
 			panic(todo("%T", x))
 		}
 	}
@@ -438,7 +436,9 @@ type linker struct {
 	goTypeNamesEmited     nameSet
 	imports               []*object
 	libc                  *object
+	libcDefs              map[string]gc.Node
 	out                   io.Writer
+	packages              map[string]*gc.Package
 	stringLiterals        map[string]int64
 	task                  *Task
 	textSegment           strings.Builder
@@ -499,6 +499,8 @@ func newLinker(task *Task, libc *object) (*linker, error) {
 		fset:           token.NewFileSet(),
 		goTags:         goTags[:],
 		libc:           libc,
+		libcDefs:       map[string]gc.Node{},
+		packages:       map[string]*gc.Package{},
 		stringLiterals: map[string]int64{},
 		task:           task,
 	}, nil
@@ -578,37 +580,8 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 		libc.imported = true
 	}
 
-	f, err := os.Create(ofn)
-	if err != nil {
-		return errorf("%s", err)
-	}
-
-	defer func() {
-		if e := f.Close(); e != nil {
-			l.err(errorf("%s", e))
-		}
-
-		if e := exec.Command("gofmt", "-s", "-w", "-r", "(x) -> x", ofn).Run(); e != nil {
-			l.err(errorf("%s: gofmt: %v", ofn, e))
-		}
-		if *oTraceG {
-			b, _ := os.ReadFile(ofn)
-			fmt.Fprintf(os.Stderr, "%s\n", b)
-		}
-		if err != nil {
-			l.err(err)
-		}
-		err = l.errors.err()
-	}()
-
-	out := bufio.NewWriter(f)
+	out := bytes.NewBuffer(nil)
 	l.out = out
-
-	defer func() {
-		if err := out.Flush(); err != nil {
-			l.err(errorf("%s", err))
-		}
-	}()
 
 	nm := l.task.packageName
 	if nm == "" {
@@ -717,7 +690,8 @@ type float128 = struct { __ccgo [2]float64 }`)
 			case *gc.ConstDecl:
 				l.print(l.newFnInfo(nil), n)
 			case *gc.VarDecl:
-				if symKind(x.VarSpecs[0].IdentifierList[0].Ident.Src()) == meta {
+				if ln := x.VarSpecs[0].IdentifierList[0].Ident.Src(); symKind(ln) == meta {
+					l.libcDefs[l.rawName(ln)] = x
 					break
 				}
 
@@ -736,7 +710,8 @@ type float128 = struct { __ccgo [2]float64 }`)
 				l.goTypeNamesEmited.add(nm)
 				l.print(l.newFnInfo(nil), n)
 			case *gc.FunctionDecl:
-				if symKind(x.FunctionName.Src()) == meta {
+				if ln := x.FunctionName.Src(); symKind(ln) == meta {
+					l.libcDefs[l.rawName(ln)] = x
 					break
 				}
 
@@ -747,6 +722,23 @@ type float128 = struct { __ccgo [2]float64 }`)
 		}
 	}
 	l.epilogue()
+	b, err := l.postProcess(ofn, out.Bytes())
+	if err != nil {
+		l.err(err)
+		return l.errors.err()
+	}
+
+	if err := os.WriteFile(ofn, b, 0666); err != nil {
+		return errorf("%s", err)
+	}
+
+	if e := exec.Command("gofmt", "-s", "-w", "-r", "(x) -> x", ofn).Run(); e != nil {
+		l.err(errorf("%s: gofmt: %v", ofn, e))
+	}
+	if *oTraceG {
+		b, _ := os.ReadFile(ofn)
+		fmt.Fprintf(os.Stderr, "%s\n", b)
+	}
 	return l.errors.err()
 }
 
@@ -870,6 +862,8 @@ func (fi *fnInfo) name(linkName string) string {
 		typename, taggedEum, taggedStruct, taggedUnion, define, macro, enumConst:
 
 		return fi.linker.fileLinkNames2GoNames[linkName]
+	case meta:
+		return "X" + linkName[len(tag(meta)):]
 	case -1:
 		return linkName
 	}
@@ -905,37 +899,41 @@ func (l *linker) stringLit(s0 string, reg bool) string {
 }
 
 func (l *linker) print(fi *fnInfo, n interface{}) {
+	l.print0(l, fi, n)
+}
+
+func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 	if n == nil {
 		return
 	}
 
 	if x, ok := n.(gc.Token); ok && x.IsValid() {
-		l.w("%s", x.Sep())
+		w.w("%s", x.Sep())
 		switch x.Ch {
 		case gc.IDENTIFIER:
 			id := x.Src()
 			nm := fi.name(id)
 			if nm == "" {
-				l.w("%s", id)
+				w.w("%s", id)
 				return
 			}
 
 			if symKind(id) != external {
-				l.w("%s", nm)
+				w.w("%s", nm)
 				return
 			}
 
 			obj := fi.linker.externs[id]
 			if obj.kind == objectPkg {
-				l.w("%s.%s", obj.qualifier, nm)
+				w.w("%s.%s", obj.qualifier, nm)
 				return
 			}
 
-			l.w("%s", nm)
+			w.w("%s", nm)
 		case gc.STRING_LIT:
-			l.w("%s", l.stringLit(x.Src(), false))
+			w.w("%s", l.stringLit(x.Src(), false))
 		default:
-			l.w("%s", x.Src())
+			w.w("%s", x.Src())
 		}
 		return
 	}
@@ -964,14 +962,103 @@ func (l *linker) print(fi *fnInfo, n interface{}) {
 				continue
 			}
 
-			l.print(fi, v.Field(i).Interface())
+			l.print0(w, fi, v.Field(i).Interface())
 		}
 	case reflect.Slice:
 		ne := v.Len()
 		for i := 0; i < ne; i++ {
-			l.print(fi, v.Index(i).Interface())
+			l.print0(w, fi, v.Index(i).Interface())
 		}
 	default:
 		panic(todo("", t.Kind()))
 	}
+}
+
+func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
+	return b, nil //TODO-
+	parserCfg := &gc.ParseSourceFileConfig{}
+	sf, err := gc.ParseSourceFile(parserCfg, fn, b)
+	if err != nil {
+		return nil, errorf("%s", err)
+	}
+
+	pkg, err := gc.NewPackage("", []*gc.SourceFile{sf})
+	if err != nil {
+		return nil, errorf("%s", err)
+	}
+
+	checkerCfg := &gc.CheckConfig{
+		Loader:   l.loader,
+		Resolver: l.resolver,
+	}
+	if err := pkg.Check(checkerCfg); err != nil {
+		return nil, errorf("%s", err)
+	}
+
+	return sf.Source(true), nil
+}
+
+func (l *linker) loader(importPath string) (*gc.Package, error) {
+	if p := l.packages[importPath]; p != nil {
+		return p, nil
+	}
+
+	switch importPath {
+	case "reflect", "unsafe":
+		pkg, err := gc.NewPackage(importPath, nil)
+		if err != nil {
+			return nil, errorf("%s", err)
+		}
+
+		pkg.Name = importPath
+		l.packages[importPath] = pkg
+		return pkg, nil
+	case "modernc.org/libc":
+		var a []string
+		for k := range l.libcDefs {
+			a = append(a, k)
+		}
+		sort.Strings(a)
+		var w buf
+		w.w(`package libc
+
+type TLS struct{}
+`)
+		fi := l.newFnInfo(nil)
+		for _, k := range a {
+			l.print0(&w, fi, l.libcDefs[k])
+		}
+		parserCfg := &gc.ParseSourceFileConfig{}
+		sf, err := gc.ParseSourceFile(parserCfg, "<libc>", w.bytes())
+		if err != nil {
+			panic(todo(""))
+			return nil, err
+		}
+
+		pkg, err := gc.NewPackage(importPath, []*gc.SourceFile{sf})
+		if err != nil {
+			panic(todo(""))
+			return nil, errorf("%s", err)
+		}
+		pkg.Name = sf.PackageClause.PackageName.Src()
+		checkerCfg := &gc.CheckConfig{
+			Loader:   l.loader,
+			Resolver: l.resolver,
+		}
+		if err := pkg.Check(checkerCfg); err != nil {
+			trc("\n%s\n%v", w.bytes(), err)
+			panic(todo(""))
+			return nil, errorf("%s", err)
+		}
+
+		panic(todo(""))
+		return pkg, nil
+	default:
+		panic(todo("", importPath))
+	}
+
+}
+
+func (l *linker) resolver(pkg *gc.Package, ident string) gc.Type {
+	panic(todo(""))
 }

@@ -350,7 +350,7 @@ func typeID(in map[string]gc.Node, out map[string]string, typ gc.Node) (r string
 
 func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, typ gc.Node, m map[string]struct{}) (err error) {
 	switch x := typ.(type) {
-	case *gc.StructType:
+	case *gc.StructTypeNode:
 		b.WriteString("struct{")
 		for _, f := range x.FieldDecls {
 			switch y := f.(type) {
@@ -368,12 +368,12 @@ func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, t
 			}
 		}
 		b.WriteByte('}')
-	case *gc.ArrayType:
+	case *gc.ArrayTypeNode:
 		fmt.Fprintf(b, "[%s]", x.ArrayLength.Source(true))
 		if err = typeID0(b, in, out, x.ElementType, m); err != nil {
 			return err
 		}
-	case *gc.TypeName:
+	case *gc.TypeNameNode:
 		if x.TypeArgs != nil || x.Name.PackageName.IsValid() {
 			panic(todo("%T %s", x, x.Source(true)))
 		}

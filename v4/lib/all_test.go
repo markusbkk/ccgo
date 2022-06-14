@@ -30,6 +30,7 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 	"modernc.org/cc/v4"
 	"modernc.org/ccorpus2"
+	"modernc.org/gc/v2"
 )
 
 var (
@@ -44,6 +45,7 @@ var (
 
 func TestMain(m *testing.M) {
 	extendedErrors = true
+	gc.ExtendedErrors = true
 	oRE := flag.String("re", "", "")
 	flag.Parse()
 	if *oRE != "" {
