@@ -1031,13 +1031,11 @@ type TLS struct{}
 		parserCfg := &gc.ParseSourceFileConfig{}
 		sf, err := gc.ParseSourceFile(parserCfg, "<libc>", w.bytes())
 		if err != nil {
-			panic(todo(""))
 			return nil, err
 		}
 
 		pkg, err := gc.NewPackage(importPath, []*gc.SourceFile{sf})
 		if err != nil {
-			panic(todo(""))
 			return nil, errorf("%s", err)
 		}
 		pkg.Name = sf.PackageClause.PackageName.Src()
@@ -1046,12 +1044,10 @@ type TLS struct{}
 			Resolver: l.resolver,
 		}
 		if err := pkg.Check(checkerCfg); err != nil {
-			trc("\n%s\n%v", w.bytes(), err)
-			panic(todo(""))
+			trc("\n%s\n%v", w.bytes(), err) //TODO-
 			return nil, errorf("%s", err)
 		}
 
-		panic(todo(""))
 		return pkg, nil
 	default:
 		panic(todo("", importPath))

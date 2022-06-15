@@ -52,7 +52,9 @@ func (c *ctx) expr(w writer, n cc.ExpressionNode, to cc.Type, toMode mode) *buf 
 	if to == nil {
 		to = n.Type()
 	}
+	// trc("%v: EXPR  pre call EXPR1 -> %s %s (%s) %T", c.pos(n), to, toMode, cc.NodeSource(n), n)
 	r, from, fromMode := c.expr0(w, n, to, toMode)
+	// trc("%v: EXPR post call EXPR0 %v %v -> %v %v (%s) %T", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), n)
 	if from == nil || fromMode == 0 {
 		// trc("", cpos(n))
 		c.err(errorf("TODO %T %v %v -> %v %v", n, from, fromMode, to, toMode))
@@ -73,6 +75,14 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 		return s
 	}
 
+	if assert && fromMode == exprUintpr && from.Kind() != cc.Ptr {
+		trc("%v: %v %v -> %v %v", c.pos(n), from, fromMode, to, toMode)
+		c.err(errorf("TODO assertion failed"))
+	}
+	if assert && toMode == exprUintpr && to.Kind() != cc.Ptr {
+		trc("%v: %v %v -> %v %v", c.pos(n), from, fromMode, to, toMode)
+		c.err(errorf("TODO assertion failed"))
+	}
 	if from != nil && from.Kind() == cc.Enum {
 		from = from.(*cc.EnumType).UnderlyingType()
 	}
@@ -1026,7 +1036,7 @@ out:
 		}
 	case cc.UnaryExpressionAddrof: // '&' CastExpression
 		rt, rmode = n.Type(), exprUintpr
-		b.w("%s", c.expr(w, n.CastExpression, nil, exprUintpr))
+		b.w("%s", c.expr(w, n.CastExpression, rt, exprUintpr))
 	case cc.UnaryExpressionDeref: // '*' CastExpression
 		if ce, ok := n.CastExpression.(*cc.CastExpression); ok && ce.Case == cc.CastExpressionCast {
 			if pfe, ok := ce.CastExpression.(*cc.PostfixExpression); ok && pfe.Case == cc.PostfixExpressionCall {
@@ -1183,7 +1193,7 @@ out:
 					c.err(errorf("TODO %T", x))
 				}
 			case exprUintpr:
-				rt, rmode = n.Type(), mode
+				rt, rmode = n.Type().Pointer(), mode
 				s := ""
 				if sz := x.Elem().Size(); sz != 1 {
 					s = fmt.Sprintf("*%v", sz)
@@ -1278,7 +1288,7 @@ out:
 					b.w("(*(*%s)(%s))", c.typ(f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 				}
 			case exprUintpr:
-				rt, rmode = n.Type(), mode
+				rt, rmode = n.Type().Pointer(), mode
 				switch {
 				case f.Offset() != 0:
 					b.w("%suintptr(%[1]sunsafe.%s[1]Add(%[1]sunsafe.%[1]sPointer(&(%s)), %d))", tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
@@ -1315,7 +1325,7 @@ out:
 				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 			}
 		case exprUintpr:
-			rt, rmode = n.Type(), mode
+			rt, rmode = n.Type().Pointer(), mode
 			b.w("%suintptr(%[1]sunsafe.%[1]sPointer(&(%s.", tag(preserve), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)))
 			switch {
 			case f.Parent() != nil:
@@ -1339,7 +1349,7 @@ out:
 				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 			}
 		case exprUintpr:
-			rt, rmode = n.Type(), mode
+			rt, rmode = n.Type().Pointer(), mode
 			b.w("((%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), fldOff(f.Offset()))
 		default:
 			c.err(errorf("TODO %v", mode))
@@ -1763,6 +1773,7 @@ out:
 				case exprLvalue, exprSelect, exprIndex:
 					b.w("(*(*%s)(%s))", c.typ(x.Type()), unsafePointer(bpOff(info.bpOff)))
 				case exprUintpr:
+					rt = x.Type().Pointer()
 					b.w("%s", bpOff(info.bpOff))
 				case exprDefault:
 					switch n.Type().Undecay().(type) {
@@ -1820,6 +1831,7 @@ out:
 						c.err(errorf("TODO %v", mode))
 					}
 				case exprUintpr:
+					rt = x.Type().Pointer()
 					switch {
 					case x.Type().Kind() == cc.Function:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
