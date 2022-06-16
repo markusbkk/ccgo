@@ -46,34 +46,6 @@ func newObject(kind int, id string) *object {
 	}
 }
 
-// func (o *object) audit(fset *token.FileSet, file *ast.File) (err error) {
-// 	var errors errors
-// 	ast.Inspect(file, func(n ast.Node) bool {
-// 		switch x := n.(type) {
-// 		case *ast.UnaryExpr:
-// 			if x.Op == token.AND {
-// 				switch y := x.X.(type) {
-// 				case *ast.Ident:
-// 					switch symKind(y.Name) {
-// 					case automatic, ccgoAutomatic:
-// 						errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(y.Pos(), true), y.Name))
-// 					}
-// 				case *ast.SelectorExpr:
-// 					switch z := y.X.(type) {
-// 					case *ast.Ident:
-// 						switch symKind(z.Name) {
-// 						case automatic, ccgoAutomatic:
-// 							errors.add(errorf("%v: cannot take address of %s", fset.PositionFor(z.Pos(), true), z.Name))
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 		return true
-// 	})
-// 	return errors.err()
-// }
-
 func (o *object) load() (file *gc.SourceFile, err error) {
 	if o.kind == objectPkg {
 		return nil, errorf("object.load: internal error: wrong kind")
@@ -439,6 +411,7 @@ type linker struct {
 	libcDefs              map[string]gc.Node
 	out                   io.Writer
 	packages              map[string]*gc.Package
+	reflectName           string
 	stringLiterals        map[string]int64
 	task                  *Task
 	textSegment           strings.Builder
@@ -446,6 +419,7 @@ type linker struct {
 	textSegmentNameP      string
 	textSegmentOff        int64
 	tld                   nameSpace
+	unsafeName            string
 
 	closed bool
 }
@@ -539,6 +513,8 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	l.tld.registerNameSet(l, tld, true)
 	l.textSegmentNameP = l.tld.reg.put("ts")
 	l.textSegmentName = l.tld.reg.put("ts")
+	l.reflectName = l.tld.reg.put("reflect")
+	l.unsafeName = l.tld.reg.put("unsafe")
 
 	// Check for unresolved references.
 	for _, linkFile := range linkFiles {
@@ -589,8 +565,18 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	}
 	l.prologue(nm)
 	l.w("\n\nimport (")
-	l.w("\n\t\"reflect\"")
-	l.w("\n\t\"unsafe\"")
+	switch nm := l.reflectName; nm {
+	case "reflect":
+		l.w("\n\t\"reflect\"")
+	default:
+		l.w("\n\t%s \"reflect\"", nm)
+	}
+	switch nm := l.unsafeName; nm {
+	case "unsafe":
+		l.w("\n\t\"unsafe\"")
+	default:
+		l.w("\n\t%s \"unsafe\"", nm)
+	}
 	if len(l.imports) != 0 {
 		l.w("\n")
 	}
@@ -605,11 +591,11 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	l.w(`
 
 var (
-	_ reflect.Type
-	_ unsafe.Pointer
+	_ %s.Type
+	_ %s.Pointer
 )
 
-type float128 = struct { __ccgo [2]float64 }`)
+type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 
 	for _, linkFile := range linkFiles {
 		object := objects[linkFile]
@@ -788,7 +774,8 @@ func (l *linker) epilogue() {
 	}
 
 	l.w("\n\nvar %s = %q\n", l.textSegmentName, l.textSegment.String())
-	l.w("\nvar %s = (*reflect.StringHeader)(unsafe.Pointer(&(%s))).Data\n", l.textSegmentNameP, l.textSegmentName)
+	//TODO rename unsafe
+	l.w("\nvar %s = (*%s.StringHeader)(%s.Pointer(&(%s))).Data\n", l.textSegmentNameP, l.reflectName, l.unsafeName, l.textSegmentName)
 }
 
 func (l *linker) prologue(nm string) {
@@ -864,6 +851,16 @@ func (fi *fnInfo) name(linkName string) string {
 		return fi.linker.fileLinkNames2GoNames[linkName]
 	case meta:
 		return "X" + linkName[len(tag(meta)):]
+	case importQualifier:
+		switch nm := linkName[len(tag(importQualifier)):]; nm {
+		case "libc":
+			return fi.linker.libc.qualifier
+		case "unsafe":
+			return fi.linker.unsafeName
+		default:
+			fi.linker.err(errorf("TODO %q", nm))
+			return linkName
+		}
 	case -1:
 		return linkName
 	}
@@ -988,8 +985,9 @@ func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
 	}
 
 	checkerCfg := &gc.CheckConfig{
-		Loader:   l.loader,
-		Resolver: l.resolver,
+		PackageLoader:   l.packageLoader,
+		PackageResolver: l.packageResolver,
+		SymbolResolver:  l.symbolResolver,
 	}
 	if err := pkg.Check(checkerCfg); err != nil {
 		return nil, errorf("%s", err)
@@ -998,7 +996,7 @@ func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
 	return sf.Source(true), nil
 }
 
-func (l *linker) loader(importPath string) (*gc.Package, error) {
+func (l *linker) packageLoader(pkg *gc.Package, src *gc.SourceFile, importPath string) (*gc.Package, error) {
 	if p := l.packages[importPath]; p != nil {
 		return p, nil
 	}
@@ -1040,11 +1038,11 @@ type TLS struct{}
 		}
 		pkg.Name = sf.PackageClause.PackageName.Src()
 		checkerCfg := &gc.CheckConfig{
-			Loader:   l.loader,
-			Resolver: l.resolver,
+			PackageLoader:   l.libcPackageLoader,
+			PackageResolver: l.libcPackageResolver,
+			SymbolResolver:  l.libcSymbolResolver,
 		}
 		if err := pkg.Check(checkerCfg); err != nil {
-			trc("\n%s\n%v", w.bytes(), err) //TODO-
 			return nil, errorf("%s", err)
 		}
 
@@ -1055,6 +1053,77 @@ type TLS struct{}
 
 }
 
-func (l *linker) resolver(pkg *gc.Package, ident string) gc.Type {
-	panic(todo(""))
+func (l *linker) libcPackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath string) (*gc.Package, error) {
+	return pkg, nil
+}
+
+func (l *linker) libcPackageResolver(s *gc.Scope, pkg *gc.Package, src *gc.SourceFile, id string) (string, error) {
+	if strings.HasPrefix(id, "libc") {
+		return pkg.ImportPath, nil
+	}
+
+	return "", fmt.Errorf("internal error %q (%v:)", id, origin(1))
+}
+
+func (l *linker) libcSymbolResolver(s *gc.Scope, pkg *gc.Package, src *gc.SourceFile, id string) (gc.Node, error) {
+	s, n := findSymbol(s, id)
+	if n == nil {
+		return nil, fmt.Errorf("undefined: %s", id)
+	}
+
+	if s.IsPackage() && !token.IsExported(id) {
+		return nil, fmt.Errorf("cannot refer to unexported symbol: %s", id)
+	}
+
+	return n, nil
+}
+
+func (l *linker) packageResolver(s *gc.Scope, pkg *gc.Package, src *gc.SourceFile, id string) (string, error) {
+	trc("", pkg.Name, id, s == nil, s.Parent != nil && s.Parent.IsPackage())
+	_, n := findSymbol(s, id)
+	switch x := n.(type) {
+	case *gc.Package:
+		return x.ImportPath, nil
+	default:
+		trc("", s.IsPackage())
+		panic(todo("%q %q %q %T", pkg.Name, pkg.ImportPath, id, x))
+	}
+}
+
+var reflectStringHeader = &gc.StructType{Fields: []*gc.Field{gc.NewField("Data", gc.PredefinedType(gc.Uintptr))}}
+
+func (l *linker) symbolResolver(s *gc.Scope, pkg *gc.Package, src *gc.SourceFile, id string) (gc.Node, error) {
+	switch pkg.Name {
+	case "main", "libc":
+		// ok
+	case "reflect":
+		switch id {
+		case "StringHeader":
+			return reflectStringHeader, nil
+		default:
+			panic(todo("%s.%s", pkg.Name, id))
+		}
+	default:
+		panic(todo("", pkg.Name))
+	}
+
+	s, n := findSymbol(s, id)
+	if n == nil {
+		return nil, fmt.Errorf("undefined: %s", id)
+	}
+
+	if s.IsPackage() && !token.IsExported(id) {
+		return nil, fmt.Errorf("cannot refer to unexported symbol: %s", id)
+	}
+
+	return n, nil
+}
+
+func findSymbol(s *gc.Scope, id string) (_ *gc.Scope, r gc.Node) {
+	for ; s != nil; s = s.Parent {
+		if r = s.Nodes[id]; r != nil {
+			return s, r
+		}
+	}
+	return nil, nil
 }

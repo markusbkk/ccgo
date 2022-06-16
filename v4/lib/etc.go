@@ -96,12 +96,11 @@ var (
 		"uint8":      {},
 		"uintptr":    {},
 
-		// Protected identifiers
-		"_":        {},
-		"float128": {},
-		"init":     {},
-		"main":     {},
-		"unsafe":   {},
+		// Protected identifiers. Names we cannot give up because they have special
+		// meaning in Go.
+		"_":    {},
+		"init": {},
+		"main": {},
 	}
 )
 
@@ -333,6 +332,12 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 		case external:
 			n.registerName(l, linkName)
 		case typename, taggedEum, taggedStruct, taggedUnion, enumConst:
+			if tld {
+				panic(todo("", linkName))
+			}
+
+			n.registerName(l, linkName)
+		case importQualifier:
 			if tld {
 				panic(todo("", linkName))
 			}
@@ -687,11 +692,11 @@ func argumentExpressionListLen(n *cc.ArgumentExpressionList) (r int) {
 }
 
 func unsafe(fn string, arg interface{}) string {
-	return fmt.Sprintf("%sunsafe.%[1]s%s(%s)", tag(preserve), fn, arg)
+	return fmt.Sprintf("%sunsafe.%s%s(%s)", tag(importQualifier), tag(preserve), fn, arg)
 }
 
 func unsafePointer(arg interface{}) string { return unsafe("Pointer", arg) }
 
 func unsafeAddr(arg interface{}) string {
-	return fmt.Sprintf("%sunsafe.%[1]sPointer(&(%s))", tag(preserve), arg)
+	return fmt.Sprintf("%sunsafe.%sPointer(&(%s))", tag(importQualifier), tag(preserve), arg)
 }

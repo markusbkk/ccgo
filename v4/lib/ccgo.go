@@ -93,7 +93,7 @@ func NewTask(goos, goarch string, args []string, stdout, stderr io.Writer, fs fs
 		goos:           goos,
 		stderr:         stderr,
 		stdout:         stdout,
-		tlsQualifier:   tag(preserve) + "libc.",
+		tlsQualifier:   tag(importQualifier) + "libc.",
 	}
 }
 
