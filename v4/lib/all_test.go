@@ -544,7 +544,6 @@ func TestCompile(t *testing.T) {
 		"fp-cmp-5.c":                   {}, //TODO
 		"fp-cmp-8.c":                   {}, //TODO
 		"fp-cmp-8f.c":                  {}, //TODO
-		"fp-cmp-8l.c":                  {}, //TODO
 		"ipa-sra-2.c":                  {}, //TODO
 		"loop-15.c":                    {}, //TODO
 		"loop-8.c":                     {}, //TODO
@@ -1061,7 +1060,7 @@ func TestExec(t *testing.T) {
 			return fmt.Errorf("%s\vFAIL: %v", out, err)
 		}
 
-		if out, err := shell(true, "go", "get", "modernc.org/libc"); err != nil {
+		if out, err := shell(true, "go", "get", defaultLibc); err != nil {
 			return fmt.Errorf("%s\vFAIL: %v", out, err)
 		}
 
@@ -1070,6 +1069,7 @@ func TestExec(t *testing.T) {
 			// Assertions are deprecated, not supported.
 			"950919-1.c": {},
 
+			// Other
 			"20000113-1.c":                 {}, //TODO
 			"20000217-1.c":                 {}, //TODO
 			"20000412-5.c":                 {}, //TODO
@@ -1313,6 +1313,7 @@ func TestExec(t *testing.T) {
 			"990524-1.c":                   {}, //TODO
 			"990525-1.c":                   {}, //TODO
 			"991014-1.c":                   {}, //TODO
+			"991112-1.c":                   {}, //TODO libc is missing __builtin_isprint
 			"991118-1.c":                   {}, //TODO
 			"991201-1.c":                   {}, //TODO
 			"991228-1.c":                   {}, //TODO

@@ -679,7 +679,6 @@ func (c *ctx) logicalAndExpression(w writer, n *cc.LogicalAndExpression, t cc.Ty
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LogicalAndExpressionLAnd: // LogicalAndExpression "&&" InclusiveOrExpression
 		rt, rmode = n.Type(), exprBool
-		rt, rmode = n.Type(), exprBool
 		var al, ar buf
 		bl := c.expr(&al, n.LogicalAndExpression, nil, exprBool)
 		br := c.expr(&ar, n.InclusiveOrExpression, nil, exprBool)
@@ -1053,7 +1052,7 @@ out:
 					}
 
 					rt, rmode = n.Type(), mode
-					t = p.Elem()
+					t := p.Elem()
 					if !cc.IsScalarType(t) {
 						c.err(errorf("unsupported va_arg type: %v", t.Kind()))
 						t = p
@@ -1746,11 +1745,6 @@ func (c *ctx) expressionList(w writer, n *cc.ExpressionList, t cc.Type, mode mod
 	return r, rt, rmode
 }
 
-const (
-	externMentioned = 1 << iota
-	externDefined
-)
-
 func (c *ctx) primaryExpression(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 out:
@@ -1759,9 +1753,8 @@ out:
 		rt, rmode = n.Type(), mode
 		switch x := n.ResolvedTo().(type) {
 		case *cc.Declarator:
-			if x.Linkage() == cc.External {
-				c.externsMentioned[x.Name()] = struct{}{}
-			}
+			nm := x.Name()
+			c.externsMentioned[nm] = struct{}{}
 			b.n = x
 			var info *declInfo
 			if c.f != nil {
@@ -1791,31 +1784,31 @@ out:
 					switch x.Type().Kind() {
 					case cc.Array:
 						p := &buf{n: x}
-						p.w("%s%s", c.declaratorTag(x), x.Name())
+						p.w("%s%s", c.declaratorTag(x), nm)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					case cc.Function:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s%s;", v, c.declaratorTag(x), x.Name())
+							w.w("var %s = %s%s;", v, c.declaratorTag(x), nm)
 						default:
-							w.w("%s := %s%s;", v, c.declaratorTag(x), x.Name())
+							w.w("%s := %s%s;", v, c.declaratorTag(x), nm)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
 					default:
-						b.w("%s%s", c.declaratorTag(x), x.Name())
+						b.w("%s%s", c.declaratorTag(x), nm)
 					}
 				case exprLvalue, exprSelect:
-					b.w("%s%s", c.declaratorTag(x), x.Name())
+					b.w("%s%s", c.declaratorTag(x), nm)
 				case exprCall:
 					switch y := x.Type().(type) {
 					case *cc.FunctionType:
-						b.w("%s%s", c.declaratorTag(x), x.Name())
+						b.w("%s%s", c.declaratorTag(x), nm)
 					case *cc.PointerType:
 						switch z := y.Elem().(type) {
 						case *cc.FunctionType:
 							rmode = exprUintpr
-							b.w("%s%s", c.declaratorTag(x), x.Name())
+							b.w("%s%s", c.declaratorTag(x), nm)
 						default:
 							c.err(errorf("TODO %T", z))
 						}
@@ -1825,7 +1818,7 @@ out:
 				case exprIndex:
 					switch x.Type().Kind() {
 					case cc.Array:
-						b.w("%s%s", c.declaratorTag(x), x.Name())
+						b.w("%s%s", c.declaratorTag(x), nm)
 					default:
 						panic(todo(""))
 						c.err(errorf("TODO %v", mode))
@@ -1837,14 +1830,14 @@ out:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s%s;", v, c.declaratorTag(x), x.Name())
+							w.w("var %s = %s%s;", v, c.declaratorTag(x), nm)
 						default:
-							w.w("%s := %s%s;", v, c.declaratorTag(x), x.Name())
+							w.w("%s := %s%s;", v, c.declaratorTag(x), nm)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
 					default:
 						p := &buf{n: x}
-						p.w("%s%s", c.declaratorTag(x), x.Name())
+						p.w("%s%s", c.declaratorTag(x), nm)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					}
 				default:

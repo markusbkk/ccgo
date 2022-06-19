@@ -23,6 +23,8 @@ import (
 type name int
 
 const (
+	defaultLibc = "modernc.org/libc"
+
 	generatedFilePrefix = "Code generated for "
 	generatedFileSuffix = ", DO NOT EDIT."
 	//  package __ccgo_object_file_v1
@@ -226,20 +228,26 @@ func (c ctx) w(s string, args ...interface{}) {
 	}
 }
 
-func (c *ctx) compile(ifn, ofn string) error {
+func (c *ctx) compile(ifn, ofn string) (err error) {
 	f, err := os.Create(ofn)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			c.err(errorf("%v", err))
+		if err2 := f.Close(); err2 != nil {
+			c.err(errorf("%v", err2))
+			if err == nil {
+				err = err2
+			}
 			return
 		}
 
-		if err := exec.Command("gofmt", "-s", "-w", "-r", "(x) -> x", ofn).Run(); err != nil {
-			c.err(errorf("%s: gofmt: %v", ifn, err))
+		if err2 := exec.Command("gofmt", "-s", "-w", "-r", "(x) -> x", ofn).Run(); err2 != nil {
+			c.err(errorf("%s: gofmt: %v", ifn, err2))
+			if err == nil {
+				err = err2
+			}
 		}
 		if *oTraceL {
 			b, _ := os.ReadFile(ofn)
@@ -286,10 +294,13 @@ func (c *ctx) compile(ifn, ofn string) error {
 	}
 	var a []string
 	for k := range c.externsDefined {
+		// trc("externsDefined %s", k)
 		delete(c.externsDeclared, k)
 	}
 	for k := range c.externsDeclared {
+		// trc("externsDeclared %s", k)
 		if _, ok := c.externsMentioned[k]; ok {
+			// trc("externsMentioned %s", k)
 			a = append(a, k)
 		}
 	}

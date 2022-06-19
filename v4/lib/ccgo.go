@@ -225,7 +225,7 @@ func (t *Task) Main() (err error) {
 	case t.nostdlib:
 		t.tlsQualifier = ""
 	default:
-		t.linkFiles = append(t.linkFiles, "-l=modernc.org/libc")
+		t.linkFiles = append(t.linkFiles, fmt.Sprintf("-l=%s", defaultLibc))
 	}
 	return t.link()
 }
