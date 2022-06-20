@@ -68,6 +68,7 @@ type Task struct {
 	c               bool // -c
 	fullPaths       bool // -full-paths
 	keepObjectFiles bool // -keep-object-files
+	debugLinkerSave bool // -debug-linker-save, causes pre type checking save of the linker result.
 	nostdinc        bool // -nostdinc
 	nostdlib        bool // -nostdlib
 	packageNameSet  bool
@@ -137,6 +138,7 @@ func (t *Task) Main() (err error) {
 	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; gc.ExtendedErrors = true; return nil })
 	set.Opt("full-paths", func(opt string) error { t.fullPaths = true; return nil })
 	set.Opt("keep-object-files", func(opt string) error { t.keepObjectFiles = true; return nil })
+	set.Opt("debug-linker-save", func(opt string) error { t.debugLinkerSave = true; return nil })
 	set.Opt("nostdinc", func(opt string) error { t.nostdinc = true; return nil })
 	set.Opt("nostdlib", func(opt string) error { t.nostdlib = true; return nil })
 	set.Opt("positions", func(opt string) error { t.positions = true; return nil })

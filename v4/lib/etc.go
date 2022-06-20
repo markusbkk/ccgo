@@ -482,12 +482,12 @@ func fldOff(n int64) string {
 	return ""
 }
 
-func (c *ctx) export(s string) string {
+func export(s string) string {
 	r, sz := utf8.DecodeRuneInString(s)
 	return strings.ToUpper(string(r)) + s[sz:]
 }
 
-func (c *ctx) unexport(s string) string {
+func unexport(s string) string {
 	r, sz := utf8.DecodeRuneInString(s)
 	return strings.ToLower(string(r)) + s[sz:]
 }

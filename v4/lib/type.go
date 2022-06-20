@@ -24,7 +24,7 @@ func (c *ctx) helper(t cc.Type) string {
 		t = t.(*cc.EnumType).UnderlyingType()
 	}
 	c.typ0(&b, t, false, false, false)
-	return c.export(b.String()[len(tag(preserve)):])
+	return export(b.String()[len(tag(preserve)):])
 }
 
 func (c *ctx) typ(t cc.Type) string {

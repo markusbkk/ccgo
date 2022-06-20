@@ -710,6 +710,12 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 		}
 	}
 	l.epilogue()
+	if l.task.debugLinkerSave {
+		if err := os.WriteFile(ofn, out.Bytes(), 0666); err != nil {
+			return errorf("%s", err)
+		}
+	}
+
 	b, err := l.postProcess(ofn, out.Bytes())
 	if err != nil {
 		l.err(err)
@@ -1026,17 +1032,11 @@ func (l *linker) PackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath s
 		var b buf
 		b.w("package %s", obj.pkgName)
 		if obj == l.libc {
-			b.w("\n\ntype TLS struct{}")
-			switch l.task.goarch {
-			case "386", "arm":
-				b.w("\n\ntype size_t = uint32")
-			default:
-				b.w("\n\ntype size_t = uint64")
-			}
+			l.synthLibc(&b, pkg)
+			b.w("\n")
 		}
 		fi := l.newFnInfo(nil)
 		for _, k := range a {
-			b.w("\n")
 			l.print0(&b, fi, obj.defs[k])
 		}
 		// trc("\n%s", b.bytes())
@@ -1047,6 +1047,69 @@ func (l *linker) PackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath s
 		return r, nil
 	default:
 		return nil, errorf("TODO %s", importPath)
+	}
+}
+
+func (l *linker) synthLibc(b *buf, pkg *gc.Package) {
+	b.w("\n\ntype TLS struct{}")
+	switch l.task.goarch {
+	case "386", "arm":
+		b.w("\n\ntype size_t = uint32")
+	default:
+		b.w("\n\ntype size_t = uint64")
+	}
+	uni := pkg.Scope.Parent.Nodes
+	predefinedTypes := map[string]gc.Type{}
+	for _, v := range []string{
+		"bool",
+		"complex128",
+		"complex64",
+		"float32",
+		"float64",
+		"int",
+		"int16",
+		"int32",
+		"int64",
+		"int8",
+		"string",
+		"uint",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uint8",
+		"uintptr",
+	} {
+		predefinedTypes[v] = uni[v].(gc.Type)
+	}
+	for _, v := range []string{
+		"float32",
+		"float64",
+		"int16",
+		"int32",
+		"int64",
+		"int8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uint8",
+		"uintptr",
+	} {
+		b.w("\n\nfunc %s(%s) %[2]s", export(v), v)
+		for _, w := range []string{
+			"float32",
+			"float64",
+			"int16",
+			"int32",
+			"int64",
+			"int8",
+			"uint16",
+			"uint32",
+			"uint64",
+			"uint8",
+			"uintptr",
+		} {
+			b.w("\n\nfunc %sFrom%s(%s) %s", export(v), export(w), w, v)
+		}
 	}
 }
 
@@ -1075,6 +1138,9 @@ func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Packa
 func (l *linker) CheckFunctions() bool {
 	panic(todo(""))
 }
+
+// GOARCG implements gc.Checker.
+func (l *linker) GOARCH() string { return l.task.goarch }
 
 var (
 	reflectSrc = []byte(`package reflect

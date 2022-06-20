@@ -365,7 +365,6 @@ func TestCompile(t *testing.T) {
 		"20040703-1.c":                 {}, //TODO
 		"20040704-1.c":                 {}, //TODO
 		"20040705-1.c":                 {}, //TODO
-		"20040705-2.c":                 {}, //TODO
 		"20040709-1.c":                 {}, //TODO
 		"20040709-2.c":                 {}, //TODO
 		"20040709-3.c":                 {}, //TODO
@@ -541,9 +540,11 @@ func TestCompile(t *testing.T) {
 		"extzvsi.c":                    {}, //TODO
 		"ffs-2.c":                      {}, //TODO
 		"fp-cmp-4.c":                   {}, //TODO
+		"fp-cmp-4f.c":                  {}, //TODO
 		"fp-cmp-5.c":                   {}, //TODO
 		"fp-cmp-8.c":                   {}, //TODO
 		"fp-cmp-8f.c":                  {}, //TODO
+		"fp-cmp-8l.c":                  {}, //TODO
 		"ipa-sra-2.c":                  {}, //TODO
 		"loop-15.c":                    {}, //TODO
 		"loop-8.c":                     {}, //TODO
@@ -1313,7 +1314,7 @@ func TestExec(t *testing.T) {
 			"990524-1.c":                   {}, //TODO
 			"990525-1.c":                   {}, //TODO
 			"991014-1.c":                   {}, //TODO
-			"991112-1.c":                   {}, //TODO libc is missing __builtin_isprint
+			"991112-1.c":                   {}, //TODO
 			"991118-1.c":                   {}, //TODO
 			"991201-1.c":                   {}, //TODO
 			"991228-1.c":                   {}, //TODO
