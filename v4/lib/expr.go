@@ -9,7 +9,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"modernc.org/cc/v4"
 )
@@ -461,21 +460,21 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 	return s //TODO
 }
 
-func (c *ctx) isIdent(s string) bool {
-	for i, v := range s {
-		switch {
-		case i == 0:
-			if !unicode.IsLetter(v) && v != '_' {
-				return false
-			}
-		default:
-			if !unicode.IsLetter(v) && v != '_' && !unicode.IsDigit(v) {
-				return false
-			}
-		}
-	}
-	return len(s) != 0
-}
+//TODO- func (c *ctx) isIdent(s string) bool {
+//TODO- 	for i, v := range s {
+//TODO- 		switch {
+//TODO- 		case i == 0:
+//TODO- 			if !unicode.IsLetter(v) && v != '_' {
+//TODO- 				return false
+//TODO- 			}
+//TODO- 		default:
+//TODO- 			if !unicode.IsLetter(v) && v != '_' && !unicode.IsDigit(v) {
+//TODO- 				return false
+//TODO- 			}
+//TODO- 		}
+//TODO- 	}
+//TODO- 	return len(s) != 0
+//TODO- }
 
 // mode unchanged
 func (c *ctx) convertType(n cc.ExpressionNode, s *buf, from, to cc.Type, fromMode, toMode mode) (r *buf) {

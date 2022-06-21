@@ -415,6 +415,7 @@ type linker struct {
 	out                   io.Writer
 	reflectName           string
 	stringLiterals        map[string]int64
+	synthDecls            map[string][]byte
 	task                  *Task
 	textSegment           strings.Builder
 	textSegmentName       string
@@ -474,9 +475,10 @@ func newLinker(task *Task, libc *object) (*linker, error) {
 		externs:        map[string]*object{},
 		fset:           token.NewFileSet(),
 		goTags:         goTags[:],
+		importsByPath:  map[string]*object{},
 		libc:           libc,
 		stringLiterals: map[string]int64{},
-		importsByPath:  map[string]*object{},
+		synthDecls:     map[string][]byte{},
 		task:           task,
 	}, nil
 }
@@ -697,7 +699,11 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 				}
 
 				l.goTypeNamesEmited.add(nm)
-				l.print(l.newFnInfo(nil), n)
+				fi := l.newFnInfo(nil)
+				l.print(fi, n)
+				var b buf
+				l.print0(&b, fi, n)
+				l.synthDecls[nm] = b.bytes()
 			case *gc.FunctionDecl:
 				if ln := x.FunctionName.Src(); l.meta(x, ln) {
 					break
@@ -994,7 +1000,7 @@ func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 }
 
 func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
-	return b, nil //TODO-
+	// return b, nil //TODO-
 	parserCfg := &gc.ParseSourceFileConfig{}
 	sf, err := gc.ParseSourceFile(parserCfg, fn, b)
 	if err != nil {
@@ -1024,17 +1030,28 @@ func (l *linker) PackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath s
 
 	switch obj := l.importsByPath[importPath]; {
 	case obj != nil:
+		var b buf
+		b.w("package %s", obj.pkgName)
+		var taken nameSet
 		var a []string
+		if obj == l.libc {
+			l.synthLibc(&b, &taken, pkg)
+			b.w("\n")
+		}
+		for k := range l.synthDecls {
+			a = append(a, k)
+		}
+		sort.Strings(a)
+		for _, k := range a {
+			if !taken.has(l.rawName(k)) {
+				b.Write(l.synthDecls[k])
+			}
+		}
+		a = a[:0]
 		for k := range obj.defs {
 			a = append(a, k)
 		}
 		sort.Strings(a)
-		var b buf
-		b.w("package %s", obj.pkgName)
-		if obj == l.libc {
-			l.synthLibc(&b, pkg)
-			b.w("\n")
-		}
 		fi := l.newFnInfo(nil)
 		for _, k := range a {
 			l.print0(&b, fi, obj.defs[k])
@@ -1050,37 +1067,9 @@ func (l *linker) PackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath s
 	}
 }
 
-func (l *linker) synthLibc(b *buf, pkg *gc.Package) {
+func (l *linker) synthLibc(b *buf, taken *nameSet, pkg *gc.Package) {
 	b.w("\n\ntype TLS struct{}")
-	switch l.task.goarch {
-	case "386", "arm":
-		b.w("\n\ntype size_t = uint32")
-	default:
-		b.w("\n\ntype size_t = uint64")
-	}
-	uni := pkg.Scope.Parent.Nodes
-	predefinedTypes := map[string]gc.Type{}
-	for _, v := range []string{
-		"bool",
-		"complex128",
-		"complex64",
-		"float32",
-		"float64",
-		"int",
-		"int16",
-		"int32",
-		"int64",
-		"int8",
-		"string",
-		"uint",
-		"uint16",
-		"uint32",
-		"uint64",
-		"uint8",
-		"uintptr",
-	} {
-		predefinedTypes[v] = uni[v].(gc.Type)
-	}
+	taken.add("TLS")
 	for _, v := range []string{
 		"float32",
 		"float64",
@@ -1094,7 +1083,9 @@ func (l *linker) synthLibc(b *buf, pkg *gc.Package) {
 		"uint8",
 		"uintptr",
 	} {
-		b.w("\n\nfunc %s(%s) %[2]s", export(v), v)
+		nm := export(v)
+		taken.add(nm)
+		b.w("\n\nfunc %s(%s) %[2]s", nm, v)
 		for _, w := range []string{
 			"float32",
 			"float64",
@@ -1108,7 +1099,9 @@ func (l *linker) synthLibc(b *buf, pkg *gc.Package) {
 			"uint8",
 			"uintptr",
 		} {
-			b.w("\n\nfunc %sFrom%s(%s) %s", export(v), export(w), w, v)
+			nm := fmt.Sprintf("%sFrom%s", export(v), export(w))
+			taken.add(nm)
+			b.w("\n\nfunc %s(%s) %s", nm, w, v)
 		}
 	}
 }
