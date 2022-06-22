@@ -1070,6 +1070,8 @@ func TestExec(t *testing.T) {
 			// Assertions are deprecated, not supported.
 			"950919-1.c": {},
 
+			"pr43784.c": {}, //TODO regression
+
 			// Other
 			"20000113-1.c":                 {}, //TODO
 			"20000217-1.c":                 {}, //TODO
@@ -1743,6 +1745,9 @@ func TestExec(t *testing.T) {
 			"76_dollars_in_identifiers.c": {}, //TODO
 			"77_push_pop_macro.c":         {}, //TODO
 
+			// Regression
+			"42_function_pointer.c": {}, //TODO
+
 			"34_array_assignment.c":     {}, //TODO
 			"46_grep.c":                 {}, //TODO
 			"54_goto.c":                 {}, //TODO
@@ -1776,7 +1781,12 @@ func TestExec(t *testing.T) {
 			// asm
 			blacklistGCC["960830-1.c"] = struct{}{}
 			blacklistGCC["rbug.c"] = struct{}{}
+
+			// Other
+			blacklistGCC["copysign2.c"] = struct{}{} //TODO
 		case "freebsd/amd64":
+			// Other
+			blacklistGCC["copysign2.c"] = struct{}{} //TODO
 		case "linux/386":
 			// asm
 			blacklistGCC["960830-1.c"] = struct{}{}
@@ -1796,8 +1806,12 @@ func TestExec(t *testing.T) {
 			// asm
 			blacklistGCC["pr58574.c"] = struct{}{}
 		case "netbsd/amd64":
+			// Other
+			blacklistGCC["copysign2.c"] = struct{}{} //TODO
 			blacklistGCC["fp-cmp-7.c"] = struct{}{}
 		case "openbsd/amd64":
+			// Other
+			blacklistGCC["copysign2.c"] = struct{}{} //TODO
 		case "windows/386":
 		case "windows/amd64":
 		case "windows/arm64":

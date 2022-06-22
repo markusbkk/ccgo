@@ -801,9 +801,8 @@ func (l *linker) epilogue() {
 		return
 	}
 
+	l.w("\n\nvar %s = (*%s.StringHeader)(%s.Pointer(&(%s))).Data\n", l.textSegmentNameP, l.reflectName, l.unsafeName, l.textSegmentName)
 	l.w("\n\nvar %s = %q\n", l.textSegmentName, l.textSegment.String())
-	//TODO rename unsafe
-	l.w("\nvar %s = (*%s.StringHeader)(%s.Pointer(&(%s))).Data\n", l.textSegmentNameP, l.reflectName, l.unsafeName, l.textSegmentName)
 }
 
 func (l *linker) prologue(nm string) {
