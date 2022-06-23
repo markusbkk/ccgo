@@ -118,7 +118,7 @@ func (o *object) collectConsts(file *gc.SourceFile) (consts map[string]string, e
 
 					var b strings.Builder
 					b.WriteByte('C') //TODO ?
-					b.Write(spec.ExpressionList[i].Expression.Source(true))
+					b.Write(spec.ExprList[i].Expr.Source(true))
 					in[nm] = b.String()
 					a = append(a, nm)
 				}
@@ -265,7 +265,7 @@ out:
 			for _, v := range x.VarSpecs {
 				for i, id := range v.IdentifierList {
 					if nm := id.Ident.Src(); nm == "CAPI" {
-						capi = v.ExpressionList[i].Expression
+						capi = v.ExprList[i].Expr
 						break out
 					}
 				}

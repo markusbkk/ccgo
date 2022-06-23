@@ -1070,8 +1070,6 @@ func TestExec(t *testing.T) {
 			// Assertions are deprecated, not supported.
 			"950919-1.c": {},
 
-			"pr43784.c": {}, //TODO regression
-
 			// Other
 			"20000113-1.c":                 {}, //TODO
 			"20000217-1.c":                 {}, //TODO
@@ -1744,9 +1742,6 @@ func TestExec(t *testing.T) {
 
 			"76_dollars_in_identifiers.c": {}, //TODO
 			"77_push_pop_macro.c":         {}, //TODO
-
-			// Regression
-			"42_function_pointer.c": {}, //TODO
 
 			"34_array_assignment.c":     {}, //TODO
 			"46_grep.c":                 {}, //TODO
