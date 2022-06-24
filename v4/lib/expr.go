@@ -878,14 +878,15 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 func (c *ctx) binopArgs(w writer, a, b cc.ExpressionNode, t cc.Type) (x, y *buf) {
 	x = c.expr(w, a, t, exprDefault)
 	y = c.expr(w, b, t, exprDefault)
-	if !cc.IsIntegerType(t) || a.Value() == cc.Unknown || b.Value() == cc.Unknown {
-		return x, y
-	}
+	return x, y
+	// if !cc.IsIntegerType(t) || a.Value() == cc.Unknown || b.Value() == cc.Unknown {
+	// 	return x, y
+	// }
 
-	var p, q buf
-	p.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), x)
-	q.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), y)
-	return &p, &q
+	// var p, q buf
+	// p.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), x)
+	// q.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), y)
+	// return &p, &q
 }
 
 func (c *ctx) equalityExpression(w writer, n *cc.EqualityExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
@@ -1897,7 +1898,7 @@ func (c *ctx) primaryExpressionIntConst(w writer, n *cc.PrimaryExpression, t cc.
 	rt, rmode = t, exprDefault
 	switch {
 	case n.Type().Kind() == t.Kind():
-		b.w("(%s(%v))", c.typ(t), n.Value())
+		b.w("(%s%s(%v))", c.task.tlsQualifier, c.helper(t), n.Value())
 	default:
 		b.w("(%s%sFrom%s(%v))", c.task.tlsQualifier, c.helper(t), c.helper(n.Type()), n.Value())
 	}

@@ -111,9 +111,13 @@ type buf struct {
 
 func newBufFromtring(s string) *buf { return &buf{b: []byte(s)} }
 
-func (b *buf) Write(p []byte) (int, error)     { b.b = append(b.b, p...); return len(p), nil }
-func (b *buf) len() int                        { return len(b.b) }
-func (b *buf) w(s string, args ...interface{}) { fmt.Fprintf(b, s, args...) }
+func (b *buf) Write(p []byte) (int, error) { b.b = append(b.b, p...); return len(p), nil }
+func (b *buf) len() int                    { return len(b.b) }
+
+func (b *buf) w(s string, args ...interface{}) {
+	//trc("%v: %q %s", origin(2), s, args)
+	fmt.Fprintf(b, s, args...)
+}
 
 func (b *buf) bytes() []byte {
 	if b == nil {

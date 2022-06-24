@@ -993,8 +993,6 @@ func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 		for i := 0; i < ne; i++ {
 			l.print0(w, fi, v.Index(i).Interface())
 		}
-	default:
-		panic(todo("", t.Kind()))
 	}
 }
 
@@ -1106,30 +1104,30 @@ func (l *linker) synthLibc(b *buf, taken *nameSet, pkg *gc.Package) {
 }
 
 // SymbolResolver implements gc.Checker.
-func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Package, ident string) (r gc.Node, err error) {
+func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Package, ident gc.Token) (r gc.Node, err error) {
 	// trc("%p %p %q %q %q", currentScope, fileScope, pkg.Name, pkg.ImportPath, ident)
+	nm := ident.Src()
+	off := ident.Offset()
 	for s := currentScope; s != nil; s = s.Parent {
 		if s.IsPackage() {
-			if r = fileScope.Nodes[ident]; r != nil {
-				return r, nil
+			if r := fileScope.Nodes[nm]; r.Node != nil {
+				return r.Node, nil
 			}
 
-			if pkg == l.libc.pkg && ident == "libc" { // rathole
+			if pkg == l.libc.pkg && nm == "libc" { // rathole
 				return pkg, nil
 			}
 		}
 
-		if r = s.Nodes[ident]; r != nil {
-			return r, nil
+		if r := s.Nodes[nm]; r.Node != nil && r.VisibleFrom <= off {
+			return r.Node, nil
 		}
 	}
-	return nil, errorf("undefined: %s", ident)
+	return nil, errorf("undefined: %s", nm)
 }
 
 // CheckFunctions implements gc.Checker.
-func (l *linker) CheckFunctions() bool {
-	panic(todo(""))
-}
+func (l *linker) CheckFunctions() bool { return true }
 
 // GOARCG implements gc.Checker.
 func (l *linker) GOARCH() string { return l.task.goarch }

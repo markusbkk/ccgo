@@ -679,8 +679,6 @@ func walk(n interface{}, fn func(gc.Node)) {
 		for i := 0; i < ne; i++ {
 			walk(v.Index(i).Interface(), fn)
 		}
-	default:
-		panic(todo("", t.Kind()))
 	}
 }
 
