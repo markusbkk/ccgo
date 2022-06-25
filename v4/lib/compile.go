@@ -221,7 +221,7 @@ func (c *ctx) id() int {
 
 func (c *ctx) err(err error) { c.eh("%s", err.Error()) }
 
-func (c ctx) w(s string, args ...interface{}) {
+func (c *ctx) w(s string, args ...interface{}) {
 	if c.closed {
 		return
 	}
