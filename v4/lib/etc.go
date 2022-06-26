@@ -186,8 +186,8 @@ func (e errors) err() error {
 	return e
 }
 
-// errorf constructs and error value. If ExtendedErrors is true, the error will
-// continue its origin.
+// errorf constructs an error value. If ExtendedErrors is true, the error will
+// contain its origin.
 func errorf(s string, args ...interface{}) error {
 	switch {
 	case s == "":

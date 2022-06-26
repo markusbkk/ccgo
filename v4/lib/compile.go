@@ -67,7 +67,8 @@ var (
 	// objectFileSemver must be incremented.
 	//
 	// The concatenation of a tag and a valid C identifier must not create a Go
-	// keyword neither it can be a prefix of a Go predefined identifier.
+	// keyword neither it can be a prefix of a Go predefined/protected identifier,
+	// see reservedNames.
 	tags = [...]string{
 		meta:            "_",
 		ccgo:            "aa",

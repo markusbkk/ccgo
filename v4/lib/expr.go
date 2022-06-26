@@ -876,17 +876,7 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 }
 
 func (c *ctx) binopArgs(w writer, a, b cc.ExpressionNode, t cc.Type) (x, y *buf) {
-	x = c.expr(w, a, t, exprDefault)
-	y = c.expr(w, b, t, exprDefault)
-	return x, y
-	// if !cc.IsIntegerType(t) || a.Value() == cc.Unknown || b.Value() == cc.Unknown {
-	// 	return x, y
-	// }
-
-	// var p, q buf
-	// p.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), x)
-	// q.w("(%s%s(%s))", c.task.tlsQualifier, c.helper(t), y)
-	// return &p, &q
+	return c.expr(w, a, t, exprDefault), c.expr(w, b, t, exprDefault)
 }
 
 func (c *ctx) equalityExpression(w writer, n *cc.EqualityExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {

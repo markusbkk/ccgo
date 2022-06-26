@@ -997,7 +997,6 @@ func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 }
 
 func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
-	// return b, nil //TODO-
 	parserCfg := &gc.ParseSourceFileConfig{}
 	sf, err := gc.ParseSourceFile(parserCfg, fn, b)
 	if err != nil {
@@ -1065,8 +1064,47 @@ func (l *linker) PackageLoader(pkg *gc.Package, src *gc.SourceFile, importPath s
 }
 
 func (l *linker) synthLibc(b *buf, taken *nameSet, pkg *gc.Package) {
-	b.w("\n\ntype TLS struct{}")
+	b.w(`
+
+type TLS struct{
+	Alloc func(int) uintptr
+	Free func(int)
+}
+
+func Start(func(*TLS, int32, uintptr) int32)
+
+func VaList(p uintptr, args ...interface{}) uintptr
+
+`)
 	taken.add("TLS")
+	taken.add("Start")
+	for _, v := range []string{
+		"float32",
+		"float64",
+		"int16",
+		"int32",
+		"int64",
+		"int8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uint8",
+		"uintptr",
+	} {
+		nm := fmt.Sprintf("Va%s", export(v))
+		taken.add(nm)
+		b.w("\n\nfunc %s(*uintptr) %s", nm, v)
+	}
+	for _, v := range []string{
+		"int16",
+		"int32",
+		"int64",
+		"int8",
+	} {
+		nm := fmt.Sprintf("Bool%s", export(v))
+		taken.add(nm)
+		b.w("\n\nfunc %s(bool) %s", nm, v)
+	}
 	for _, v := range []string{
 		"float32",
 		"float64",
@@ -1111,18 +1149,23 @@ func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Packa
 	for s := currentScope; s != nil; s = s.Parent {
 		if s.IsPackage() {
 			if r := fileScope.Nodes[nm]; r.Node != nil {
+				// trc("defined in file scope")
 				return r.Node, nil
 			}
 
 			if pkg == l.libc.pkg && nm == "libc" { // rathole
+				// trc("defined in libc")
 				return pkg, nil
 			}
 		}
 
 		if r := s.Nodes[nm]; r.Node != nil && r.VisibleFrom <= off {
+			// trc("defined in scope %p(%v), parent %p(%v)", s, s.IsPackage(), s.Parent, s.Parent != nil && s.Parent.IsPackage())
 			return r.Node, nil
 		}
 	}
+
+	// trc("undefined: %s", nm)
 	return nil, errorf("undefined: %s", nm)
 }
 
@@ -1151,6 +1194,8 @@ func Alignof(ArbitraryType) uintptr
 func Offsetof(ArbitraryType) uintptr
 
 func Sizeof(ArbitraryType) uintptr
+
+func Add(Pointer, int) Pointer
 `)
 )
 

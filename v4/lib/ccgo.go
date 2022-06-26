@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	oTraceL = flag.Bool("trcl", false, "Print produced link files.")
-	oTraceG = flag.Bool("trcg", false, "Print produced Gofiles.")
+	oTraceL = flag.Bool("trcl", false, "Print produced object files.")
+	oTraceG = flag.Bool("trcg", false, "Print produced Go files.")
 )
 
 // Task represents a compilation job.
