@@ -698,3 +698,13 @@ func unsafePointer(arg interface{}) string { return unsafe("Pointer", arg) }
 func unsafeAddr(arg interface{}) string {
 	return fmt.Sprintf("%sunsafe.%sPointer(&(%s))", tag(importQualifier), tag(preserve), arg)
 }
+
+func pos(n cc.Node) string {
+	if n != nil {
+		p := n.Position()
+		p.Filename = filepath.Base(p.Filename)
+		return p.String()
+	}
+
+	return "-"
+}

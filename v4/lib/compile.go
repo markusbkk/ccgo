@@ -211,6 +211,11 @@ func newCtx(task *Task, eh errHandler) *ctx {
 	}
 }
 
+func (c *ctx) baseName(n cc.Node) string {
+	p := c.pos(n)
+	return filepath.Base(p.Filename)
+}
+
 func (c *ctx) id() int {
 	if c.f != nil {
 		return c.f.id()
@@ -315,7 +320,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		case *cc.FunctionType:
 			c.w("\n\nfunc %s%s%s", tag(meta), k, c.signature(t, false, false))
 		default:
-			c.w("\n\nvar %s%s %s", tag(meta), k, c.typ(t))
+			c.w("\n\nvar %s%s %s", tag(meta), k, c.typ(d, t))
 		}
 	}
 	return nil

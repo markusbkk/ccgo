@@ -5,13 +5,14 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
+	"fmt"
 	"sort"
 
 	"modernc.org/cc/v4"
 )
 
 func (c *ctx) initializerOuter(w writer, n *cc.Initializer, t cc.Type) (r *buf) {
-	return c.initializer(w, c.initalizerFlatten(n, nil), t, 0)
+	return c.initializer(w, n, c.initalizerFlatten(n, nil), t, 0)
 }
 
 func (c *ctx) initalizerFlatten(n *cc.Initializer, a []*cc.Initializer) (r []*cc.Initializer) {
@@ -29,15 +30,19 @@ func (c *ctx) initalizerFlatten(n *cc.Initializer, a []*cc.Initializer) (r []*cc
 	return r
 }
 
-func (c *ctx) initializer(w writer, a []*cc.Initializer, t cc.Type, off0 int64) (r *buf) {
+func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, off0 int64) (r *buf) {
 	if len(a) == 0 {
 		c.err(errorf("TODO"))
 		return nil
 	}
 
+	// trc("==== (init A) typ %s off0 %#0x (%v:)", t, off0, a[0].Position())
+	// dumpInitializer(a, "")
+	// trc("---- (init Z)")
 	if cc.IsScalarType(t) {
 		if len(a) != 1 {
-			c.err(errorf("TODO"))
+			// trc("%v: FAIL", a[0].Position())
+			c.err(errorf("TODO scalar %s, len(initializers) %v", t, len(a)))
 			return nil
 		}
 
@@ -55,59 +60,138 @@ func (c *ctx) initializer(w writer, a []*cc.Initializer, t cc.Type, off0 int64) 
 			return c.expr(w, a[0].AssignmentExpression, t, exprDefault)
 		}
 
-		return c.initializerArray(w, a, x, off0)
+		return c.initializerArray(w, n, a, x, off0)
 	case *cc.StructType:
 		if len(a) == 1 && a[0].Type().Kind() == cc.Struct {
 			return c.expr(w, a[0].AssignmentExpression, t, exprDefault)
 		}
 
-		c.err(errorf("TODO %T", x))
-		return nil
+		return c.initializerStruct(w, n, a, x, off0)
 	default:
-		trc("%v: in type %v, in expr type %v, t %v", a[0].Position(), a[0].Type(), a[0].AssignmentExpression.Type(), t)
+		// trc("%v: in type %v, in expr type %v, t %v", a[0].Position(), a[0].Type(), a[0].AssignmentExpression.Type(), t)
 		c.err(errorf("TODO %T", x))
 		return nil
 	}
 }
 
-func (c *ctx) initializerArray(w writer, a []*cc.Initializer, t *cc.ArrayType, off0 int64) (r *buf) {
+func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.StructType, off0 int64) (r *buf) {
+	// trc("==== (struct A) %s off0 %#0x", t, off0)
+	// dumpInitializer(a, "")
+	// trc("---- (struct Z)")
 	var b buf
-	b.w("%s{", c.typ(t))
-	if len(a) != 0 {
-		et := t.Elem()
-		esz := et.Size()
-		m := map[int64][]*cc.Initializer{}
-		for _, v := range a {
-			off := v.Offset() - off0
-			off -= off % esz
-			m[off] = append(m[off], v)
-		}
-		var offs []int64
-		for k := range m {
-			offs = append(offs, k)
-		}
-		sort.Slice(offs, func(i, j int) bool { return offs[i] < offs[j] })
-		var off int64
-		keys := false
-		for _, v := range offs {
-			if v != off {
-				keys = true
-				break
+	b.w("%s{", c.typ(n, t))
+	var flds []*cc.Field
+	for i := 0; ; i++ {
+		if f := t.FieldByIndex(i); f != nil {
+			if f.IsBitfield() {
+				c.err(errorf("TODO bitfield"))
+				return nil
 			}
 
-			off += esz
-		}
-		for _, off := range offs {
-			if keys {
-				b.w("%d: ", off/esz)
+			if f.Type().Size() <= 0 {
+				switch x := f.Type().(type) {
+				case *cc.StructType:
+					if x.NumFields() != 0 {
+						c.err(errorf("TODO %T", x))
+						return nil
+					}
+				case *cc.UnionType:
+					if x.NumFields() != 0 {
+						c.err(errorf("TODO %T", x))
+						return nil
+					}
+				case *cc.ArrayType:
+					if x.Len() != 0 {
+						c.err(errorf("TODO %T", x))
+						return nil
+					}
+				default:
+					c.err(errorf("TODO %T", x))
+					return nil
+				}
+				continue
 			}
 
-			ins := m[off]
-			sort.Slice(ins, func(i, j int) bool { return ins[i].Offset() < ins[j].Offset() })
-			//trc("", cc.NodeSource(a[0].AssignmentExpression), a[0].Type(), t)
-			b.w("%s, ", c.initializer(w, ins, et, off))
+			flds = append(flds, f)
+			// trc("flds[%d] %q %s off %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset())
+			continue
 		}
+
+		break
+	}
+	s := sortInitializers(a, func(off int64) int64 {
+		off -= off0
+		i := sort.Search(len(flds), func(i int) bool {
+			return flds[i].Offset() >= off
+		})
+		if i < len(flds) && flds[i].Offset() == off {
+			return off
+		}
+
+		return flds[i-1].Offset()
+	})
+	for _, v := range s {
+		// trc("v[0].Offset %#0x", v[0].Offset())
+		off := v[0].Offset() - off0
+		// trc("off %#0x", off)
+		if len(flds) == 0 {
+			panic(todo("", a[0].Position()))
+		}
+		for len(flds) != 0 && flds[0].Offset() > off { // Skip
+			flds = flds[1:]
+		}
+		f := flds[0]
+		flds = flds[1:] // Consume
+		// trc("fld %q %s, off %#0x, len(v) %d", f.Name(), f.Type(), f.Offset(), len(v))
+		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+off))
 	}
 	b.w("}")
 	return &b
+}
+
+func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.ArrayType, off0 int64) (r *buf) {
+	// trc("==== (array A) %s off0 %#0x", t, off0)
+	// dumpInitializer(a, "")
+	// trc("---- (array Z)")
+	var b buf
+	b.w("%s{", c.typ(n, t))
+	et := t.Elem()
+	esz := et.Size()
+	s := sortInitializers(a, func(n int64) int64 { n -= off0; return n - n%esz })
+	for _, v := range s {
+		off := v[0].Offset() - off0
+		off -= off % esz
+		b.w("%d: %s, ", off/esz, c.initializer(w, n, v, et, off0+off))
+	}
+	b.w("}")
+	return &b
+}
+
+func sortInitializers(a []*cc.Initializer, group func(int64) int64) (r [][]*cc.Initializer) {
+	// [0]6.7.8/23: The order in which any side effects occur among the
+	// initialization list expressions is unspecified.
+	m := map[int64][]*cc.Initializer{}
+	for _, v := range a {
+		off := group(v.Offset())
+		m[off] = append(m[off], v)
+	}
+	for _, v := range m {
+		r = append(r, v)
+	}
+	sort.Slice(r, func(i, j int) bool { return r[i][0].Offset() < r[j][0].Offset() })
+	return r
+}
+
+func dumpInitializer(a []*cc.Initializer, pref string) {
+	for _, v := range a {
+		switch v.Case {
+		case cc.InitializerExpr:
+			fmt.Printf("%s %v: off %#05x '%s' %s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), v.AssignmentExpression.Type())
+		case cc.InitializerInitList:
+			s := pref + "· "
+			for l := v.InitializerList; l != nil; l = l.InitializerList {
+				dumpInitializer([]*cc.Initializer{l.Initializer}, s)
+			}
+		}
+	}
 }

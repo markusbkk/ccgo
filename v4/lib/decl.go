@@ -155,7 +155,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 					}
 				}
 			}
-			b.WriteString(c.typ(v.Type().Decay()))
+			b.WriteString(c.typ(v, v.Type().Decay()))
 		}
 	}
 	switch {
@@ -176,7 +176,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 		if names {
 			fmt.Fprintf(&b, "(%s%s ", tag(ccgo), retvalName)
 		}
-		b.WriteString(c.typ(f.Result()))
+		b.WriteString(c.typ(nil, f.Result()))
 		if names {
 			b.WriteByte(')')
 		}
@@ -258,7 +258,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		switch {
 		case d.IsTypename():
 			if external && c.typenames.add(nm) {
-				w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d.Type()))
+				w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
 				c.defineEnumStructUnion(w, sep, n, d.Type())
 			}
 			if !external {
@@ -272,13 +272,13 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			c.defineEnumStructUnion(w, sep, n, d.Type())
 			switch {
 			case info != nil && info.pinned():
-				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d.Type()))
+				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d, d.Type()))
 			default:
 				if d.Linkage() != cc.External && d.WriteCount()+d.ReadCount() == 0 {
 					return
 				}
 
-				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d.Type()))
+				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
@@ -291,7 +291,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		default:
 			switch {
 			case info != nil && info.pinned():
-				w.w("%s%s*(*%s)(%s) = %s;", sep, c.posComment(n), c.typ(d.Type()), unsafePointer(bpOff(info.bpOff)), c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%s*(*%s)(%s) = %s;", sep, c.posComment(n), c.typ(d, d.Type()), unsafePointer(bpOff(info.bpOff)), c.initializerOuter(w, n.Initializer, d.Type()))
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:

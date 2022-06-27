@@ -7,9 +7,9 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	golang.org/x/tools v0.1.10
-	modernc.org/cc/v4 v4.0.0-20220619120701-d80a6190393b
+	modernc.org/cc/v4 v4.0.0-20220627194228-5f7e7f067de7
 	modernc.org/ccorpus2 v0.0.15
-	modernc.org/gc/v2 v2.0.0-20220626193802-67ce63578f50
+	modernc.org/gc/v2 v2.0.0-20220627194441-2964326f8819
 	modernc.org/opt v0.1.3
 )
 

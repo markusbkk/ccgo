@@ -12,28 +12,28 @@ import (
 	"modernc.org/gc/v2"
 )
 
-func (c *ctx) typedef(t cc.Type) string {
+func (c *ctx) typedef(n cc.Node, t cc.Type) string {
 	var b strings.Builder
-	c.typ0(&b, t, false, false, false)
+	c.typ0(&b, n, t, false, false, false)
 	return b.String()
 }
 
-func (c *ctx) helper(t cc.Type) string {
+func (c *ctx) helper(n cc.Node, t cc.Type) string {
 	var b strings.Builder
 	if t.Kind() == cc.Enum {
 		t = t.(*cc.EnumType).UnderlyingType()
 	}
-	c.typ0(&b, t, false, false, false)
+	c.typ0(&b, n, t, false, false, false)
 	return export(b.String()[len(tag(preserve)):])
 }
 
-func (c *ctx) typ(t cc.Type) string {
+func (c *ctx) typ(n cc.Node, t cc.Type) string {
 	var b strings.Builder
-	c.typ0(&b, t, true, true, false)
+	c.typ0(&b, n, t, true, true, false)
 	return b.String()
 }
 
-func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag, isField bool) {
+func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStructUnionTag, isField bool) {
 	if tn := t.Typedef(); tn != nil && useTypename && tn.LexicalScope().Parent == nil {
 		fmt.Fprintf(b, "%s%s", tag(typename), tn.Name())
 		return
@@ -45,7 +45,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		b.WriteString("uintptr")
 	case *cc.PredefinedType:
 		if t.VectorSize() > 0 {
-			c.err(errorf("TODO"))
+			c.err(errorf("TODO vector"))
 		}
 		switch {
 		case cc.IsIntegerType(t):
@@ -95,6 +95,18 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 			default:
 				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			}
+		case t.Kind() == cc.ComplexFloat:
+			if t.Size() != 8 {
+				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
+			}
+			b.WriteString(tag(preserve))
+			b.WriteString("complex64")
+		case t.Kind() == cc.ComplexDouble:
+			if t.Size() != 16 {
+				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
+			}
+			b.WriteString(tag(preserve))
+			b.WriteString("complex128")
 		default:
 			b.WriteString(tag(preserve))
 			b.WriteString("int")
@@ -106,7 +118,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		case nm != "" && x.LexicalScope().Parent == nil:
 			fmt.Fprintf(b, "%s%s", tag(taggedEum), nm)
 		default:
-			c.typ0(b, x.UnderlyingType(), false, false, false)
+			c.typ0(b, n, x.UnderlyingType(), false, false, false)
 		}
 	case *cc.StructType:
 		nmTag := x.Tag()
@@ -122,8 +134,14 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					break
 				}
 
-				if f.IsBitfield() || f.Type().Size() == 0 {
-					c.err(errorf("TODO"))
+				if f.Type().Size() <= 0 {
+					continue
+				}
+
+				if f.IsBitfield() {
+					// trc("%q %s %v %#0x", f.Name(), f.Type(), f.IsBitfield(), f.Type().Size())
+					c.err(errorf("TODO bitfield"))
+					return
 				}
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
@@ -133,7 +151,7 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteByte(' ')
-				c.typ0(b, f.Type(), true, true, true)
+				c.typ0(b, n, f.Type(), true, true, true)
 			}
 			b.WriteString("\n}")
 		}
@@ -151,13 +169,20 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 					break
 				}
 
+				if f.Type().Size() <= 0 {
+					continue
+				}
+
 				if f.IsBitfield() {
-					c.err(errorf("TODO"))
+					// trc("%q %s %v %#0x", f.Name(), f.Type(), f.IsBitfield(), f.Type().Size())
+					c.err(errorf("TODO bitfield"))
+					return
 				}
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
 					c.err(errorf("TODO"))
+					return
 				default:
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
@@ -165,27 +190,29 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 				if i != 0 {
 					b.WriteString("[0]")
 				}
-				c.typ0(b, f.Type(), true, true, true)
+				c.typ0(b, n, f.Type(), true, true, true)
 			}
 			f := x.FieldByIndex(0)
 			if f == nil {
 				c.err(errorf("TODO"))
-				break
+				return
 			}
 
 			if f.IsBitfield() {
-				c.err(errorf("TODO"))
+				c.err(errorf("TODO bitfield"))
+				return
 			}
 			sz1 = f.Type().Size()
 			b.WriteByte('\n')
 			switch nm := f.Name(); {
 			case nm == "":
 				c.err(errorf("TODO"))
+				return
 			default:
 				fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 			}
 			b.WriteByte(' ')
-			c.typ0(b, f.Type(), true, true, true)
+			c.typ0(b, n, f.Type(), true, true, true)
 			if n := t.Size() - sz1; n != 0 {
 				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
 			}
@@ -193,22 +220,23 @@ func (c *ctx) typ0(b *strings.Builder, t cc.Type, useTypename, useStructUnionTag
 		}
 	case *cc.ArrayType:
 		fmt.Fprintf(b, "[%d]", x.Len())
-		c.typ0(b, x.Elem(), true, true, true)
+		c.typ0(b, n, x.Elem(), true, true, true)
 	default:
 		b.WriteString("int")
 		c.err(errorf("TODO %T", x))
+		return
 	}
 }
 
-func (c *ctx) unionLiteral(t *cc.UnionType) string {
+func (c *ctx) unionLiteral(n cc.Node, t *cc.UnionType) string {
 	var b strings.Builder
-	c.typ0(&b, t, true, false, false)
+	c.typ0(&b, n, t, true, false, false)
 	return b.String()
 }
 
-func (c *ctx) structLiteral(t *cc.StructType) string {
+func (c *ctx) structLiteral(n cc.Node, t *cc.StructType) string {
 	var b strings.Builder
-	c.typ0(&b, t, true, false, false)
+	c.typ0(&b, n, t, true, false, false)
 	return b.String()
 }
 
@@ -223,7 +251,7 @@ func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(t))
+		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
 	}
 }
 
@@ -285,7 +313,7 @@ func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(t))
+		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
 	}
 }
 
@@ -300,7 +328,7 @@ func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sepStr, c.posComment(n), tag(taggedEum), nm, c.typ(t.UnderlyingType()))
+		w.w("%s%stype %s%s = %s;", sepStr, c.posComment(n), tag(taggedEum), nm, c.typ(n, t.UnderlyingType()))
 	}
 	enums := t.Enumerators()
 	if len(enums) == 0 {

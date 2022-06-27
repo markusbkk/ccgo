@@ -5,6 +5,7 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
+	"fmt"
 	"strings"
 
 	"modernc.org/cc/v4"
@@ -29,7 +30,18 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 			if a.len() != 0 {
 				w.w("%s;", a.bytes())
 			}
-			w.w("%s;", b.bytes())
+			var pref string
+		out:
+			for e := n.ExpressionStatement.ExpressionList; ; {
+				switch e.(type) {
+				case *cc.CastExpression:
+					pref = fmt.Sprintf("%s_ = ", tag(preserve))
+					break out
+				default:
+					break out
+				}
+			}
+			w.w("%s%s;", pref, b.bytes())
 		}
 	case cc.StatementSelection: // SelectionStatement
 		w.w("%s%s", sep, c.posComment(n))
@@ -54,7 +66,8 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 	switch n.Case {
 	case cc.LabeledStatementLabel: // IDENTIFIER ':' Statement
-		c.err(errorf("TODO %v", n.Case))
+		w.w("%s%s:", tag(preserve), n.Token.Src()) //TODO use nameSpace
+		c.statement(w, n.Statement)
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
 			w.w("fallthrough;")
@@ -92,7 +105,7 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 			w.w("defer %stls.Free(%d);", tag(ccgo), v)
 			for _, v := range c.f.t.Parameters() {
 				if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
-					w.w("*(*%s)(%s) = %s_%s;", c.typ(d.Type()), unsafePointer(bpOff(c.f.declInfos.info(d).bpOff)), tag(ccgo), d.Name())
+					w.w("*(*%s)(%s) = %s_%s;", c.typ(n, d.Type()), unsafePointer(bpOff(c.f.declInfos.info(d).bpOff)), tag(ccgo), d.Name())
 				}
 			}
 			w.w("%s%s", sep(n.Token), c.posComment(n))
@@ -284,7 +297,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	switch n.Case {
 	case cc.JumpStatementGoto: // "goto" IDENTIFIER ';'
-		c.err(errorf("TODO %v", n.Case))
+		w.w("goto %s%s;", tag(preserve), n.Token2.Src()) //TODO use nameSpace
 	case cc.JumpStatementGotoExpr: // "goto" '*' ExpressionList ';'
 		c.err(errorf("TODO %v", n.Case))
 	case cc.JumpStatementContinue: // "continue" ';'
