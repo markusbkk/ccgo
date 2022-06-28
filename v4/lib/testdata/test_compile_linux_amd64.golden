@@ -83,6 +83,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010206-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010221-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010222-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010224-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010325-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010329-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010403-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20010409-1.c
@@ -1182,7 +1183,9 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/vrp-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/vrp-4.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/vrp-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/vrp-6.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/wchar_t-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/zerolen-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/zerolen-2.c
 assets/tcc-0.9.27/tests/tests2/00_assignment.c

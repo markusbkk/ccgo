@@ -832,6 +832,7 @@ type fnInfo struct {
 func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 	r = &fnInfo{linker: l}
 	if n != nil {
+		// trc("==== %v:", n.Position())
 		walk(n, func(n gc.Node) {
 			tok, ok := n.(gc.Token)
 			if !ok {
@@ -841,7 +842,7 @@ func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 			switch tok.Ch {
 			case gc.IDENTIFIER:
 				switch nm := tok.Src(); symKind(nm) {
-				case staticInternal, field:
+				case field, preserve, staticInternal:
 					// nop
 				default:
 					r.linkNames.add(nm)
@@ -1106,6 +1107,8 @@ func VaList(p uintptr, args ...interface{}) uintptr
 		b.w("\n\nfunc %s(bool) %s", nm, v)
 	}
 	for _, v := range []string{
+		"complex128",
+		"complex64",
 		"float32",
 		"float64",
 		"int16",
@@ -1122,6 +1125,8 @@ func VaList(p uintptr, args ...interface{}) uintptr
 		taken.add(nm)
 		b.w("\n\nfunc %s(%s) %[2]s", nm, v)
 		for _, w := range []string{
+			"complex128",
+			"complex64",
 			"float32",
 			"float64",
 			"int16",

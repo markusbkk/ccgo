@@ -101,8 +101,8 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 			if c.f.maxValist != 0 {
 				v += 8 * int64((c.f.maxValist + 1))
 			}
-			w.w("%sbp := %[1]stls.Alloc(%d); /* tlsAllocs %v maxValist %v */", tag(ccgo), v, c.f.tlsAllocs, c.f.maxValist)
-			w.w("defer %stls.Free(%d);", tag(ccgo), v)
+			w.w("%sbp := %[1]stls.%sAlloc(%d); /* tlsAllocs %v maxValist %v */", tag(ccgo), tag(preserve), v, c.f.tlsAllocs, c.f.maxValist)
+			w.w("defer %stls.%sFree(%d);", tag(ccgo), tag(preserve), v)
 			for _, v := range c.f.t.Parameters() {
 				if d := v.Declarator; d != nil && c.f.declInfos.info(d).pinned() {
 					w.w("*(*%s)(%s) = %s_%s;", c.typ(n, d.Type()), unsafePointer(bpOff(c.f.declInfos.info(d).bpOff)), tag(ccgo), d.Name())

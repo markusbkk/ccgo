@@ -300,7 +300,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 	}
 	c.w("%s", sep(c.ast.EOF))
 	if c.hasMain && c.task.tlsQualifier != "" {
-		c.w("\n\nfunc main() { %s%sStart(%smain) }\n", c.task.tlsQualifier, tag(preserve), tag(external))
+		c.w("\n\nfunc %smain() { %s%[1]sStart(%[3]smain) }\n", tag(preserve), c.task.tlsQualifier, tag(external))
 	}
 	var a []string
 	for k := range c.externsDefined {

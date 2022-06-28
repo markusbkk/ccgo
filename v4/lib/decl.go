@@ -160,7 +160,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 	}
 	switch {
 	case isMain && len(f.Parameters()) == 0 || isMain && len(f.Parameters()) == 1 && f.Parameters()[0].Type().Kind() == cc.Void:
-		fmt.Fprintf(&b, ", %sargc int32, %[1]sargv %suintptr", tag(ccgo), tag(preserve))
+		fmt.Fprintf(&b, ", %sargc %sint32, %[1]sargv %suintptr", tag(ccgo), tag(preserve))
 	case isMain && len(f.Parameters()) == 1:
 		fmt.Fprintf(&b, ", %sargv %suintptr", tag(ccgo), tag(preserve))
 	case f.IsVariadic():

@@ -314,7 +314,7 @@ func (d *dict) put(k, v string) {
 
 type nameSpace struct {
 	reg  nameRegister
-	dict dict
+	dict dict // link name -> Go name
 }
 
 func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
@@ -349,6 +349,7 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 			}
 
 			n.dict.put(linkName, l.tld.registerName(l, linkName))
+			n.registerName(l, linkName)
 		case automatic, ccgoAutomatic, ccgo:
 			if tld {
 				panic(todo("", linkName))
@@ -373,6 +374,7 @@ func (n *nameSpace) registerName(l *linker, linkName string) (goName string) {
 	goName = l.goName(linkName)
 	goName = n.reg.put(goName)
 	n.dict.put(linkName, goName)
+	// trc("%p: registered %q -> %q", n, linkName, goName)
 	return goName
 }
 
@@ -444,7 +446,7 @@ func symKind(s string) name {
 	return -1
 }
 
-func binary(s string) string {
+func enforceBinaryExt(s string) string {
 	switch runtime.GOOS {
 	case "windows":
 		if !strings.HasSuffix(s, ".exe") {
@@ -707,4 +709,17 @@ func pos(n cc.Node) string {
 	}
 
 	return "-"
+}
+
+func isOctalString(s string) bool {
+	if s == "" || len(s) > 3 {
+		return false
+	}
+	for _, v := range s {
+		if v < '0' || v > '7' {
+			return false
+		}
+	}
+
+	return true
 }

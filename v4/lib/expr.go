@@ -2,9 +2,39 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// libc bit field helpers
+//
+// func AssignBitFieldPtr32Int32(p uintptr, v int32, w, off int, mask uint32) int32 {
+// 	*(*uint32)(unsafe.Pointer(p)) = *(*uint32)(unsafe.Pointer(p))&^uint32(mask) | uint32(v)<<off&mask
+// 	s := 32 - w
+// 	return v << s >> s
+// }
+//
+// func SetBitFieldPtr32Int32(p uintptr, v int32, off int, mask uint32) {
+// 	*(*uint32)(unsafe.Pointer(p)) = *(*uint32)(unsafe.Pointer(p))&^uint32(mask) | uint32(v)<<off&mask
+// }
+//
+// func PostIncBitFieldPtr32Int32(p uintptr, d int32, w, off int, mask uint32) (r int32) {
+// 	x0 := *(*uint32)(unsafe.Pointer(p))
+// 	s := 32 - w
+// 	r = int32(x0) & int32(mask) << s >> (s + off)
+// 	*(*uint32)(unsafe.Pointer(p)) = x0&^uint32(mask) | uint32(r+d)<<off&mask
+// 	return r
+// }
+//
+// func PostDecBitFieldPtr32Int32(p uintptr, d int32, w, off int, mask uint32) (r int32) {
+// 	x0 := *(*uint32)(unsafe.Pointer(p))
+// 	s := 32 - w
+// 	r = int32(x0) & int32(mask) << s >> (s + off)
+// 	*(*uint32)(unsafe.Pointer(p)) = x0&^uint32(mask) | uint32(r-d)<<off&mask
+// 	return r
+// }
+
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -193,7 +223,7 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 			case *cc.PointerType:
 				switch y := from.Undecay().(type) {
 				case *cc.ArrayType:
-					b.w("((*%s)(%s))", c.typ(n, y), unsafeAddr(s))
+					b.w("((*%s)(%s))", c.typ(n, y), unsafePointer(s))
 					return &b
 				default:
 					c.err(errorf("TODO %T", y))
@@ -705,9 +735,12 @@ out:
 			case exprDefault:
 				switch d := c.declaratorOf(n.UnaryExpression); {
 				case d != nil:
+					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					ds := c.expr(w, n.UnaryExpression, nil, exprDefault)
-					w.w("%s += %d;", ds, sz)
-					b.w("%s", ds)
+					w.w("var %s %s;/**/", v, c.typ(n, n.UnaryExpression.Type()))
+					w.w("\n%s += %d;", ds, sz)
+					w.w("\n%s = %s;", v, ds)
+					b.w("%s", v)
 				default:
 					c.err(errorf("TODO")) // -
 				}
@@ -721,9 +754,12 @@ out:
 			case exprDefault:
 				switch d := c.declaratorOf(n.UnaryExpression); {
 				case d != nil:
+					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					ds := c.expr(w, n.UnaryExpression, nil, exprDefault)
-					w.w("%s++;", ds)
-					b.w("%s", ds)
+					w.w("var %s %s;/**/", v, c.typ(n, n.UnaryExpression.Type()))
+					w.w("\n%s++;", ds)
+					w.w("\n%s = %s;", v, ds)
+					b.w("%s", v)
 				default:
 					c.err(errorf("TODO")) // 1: bit field
 				}
@@ -742,9 +778,12 @@ out:
 			case exprDefault:
 				switch d := c.declaratorOf(n.UnaryExpression); {
 				case d != nil:
+					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					ds := c.expr(w, n.UnaryExpression, nil, exprDefault)
-					w.w("%s -= %d;", ds, sz)
-					b.w("%s", ds)
+					w.w("var %s %s;/**/", v, c.typ(n, n.UnaryExpression.Type()))
+					w.w("\n%s -= %d;", ds, sz)
+					w.w("\n%s = %s;", v, ds)
+					b.w("%s", v)
 				default:
 					c.err(errorf("TODO")) // -
 				}
@@ -758,9 +797,12 @@ out:
 			case exprDefault:
 				switch d := c.declaratorOf(n.UnaryExpression); {
 				case d != nil:
+					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					ds := c.expr(w, n.UnaryExpression, nil, exprDefault)
-					w.w("%s--;", ds)
-					b.w("%s", ds)
+					w.w("var %s %s;/**/", v, c.typ(n, n.UnaryExpression.Type()))
+					w.w("\n%s--;", ds)
+					w.w("\n%s = %s;", v, ds)
+					b.w("%s", v)
 				default:
 					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
@@ -1597,13 +1639,13 @@ out:
 	case cc.PrimaryExpressionFloat: // FLOATCONST
 		return c.primaryExpressionFloatConst(w, n, t, mode)
 	case cc.PrimaryExpressionChar: // CHARCONST
-		return c.primaryExpressionIntConst(w, n, t, mode)
+		return c.primaryExpressionCharConst(w, n, t, mode)
 	case cc.PrimaryExpressionLChar: // LONGCHARCONST
-		return c.primaryExpressionIntConst(w, n, t, mode)
+		return c.primaryExpressionLCharConst(w, n, t, mode)
 	case cc.PrimaryExpressionString: // STRINGLITERAL
 		return c.primaryExpressionStringConst(w, n, t, mode)
 	case cc.PrimaryExpressionLString: // LONGSTRINGLITERAL
-		c.err(errorf("TODO %v", n.Case))
+		return c.primaryExpressionLStringConst(w, n, t, mode)
 	case cc.PrimaryExpressionExpr: // '(' ExpressionList ')'
 		return c.expr0(w, n.ExpressionList, nil, mode)
 	case cc.PrimaryExpressionStmt: // '(' CompoundStatement ')'
@@ -1614,6 +1656,69 @@ out:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	return &b, rt, rmode
+}
+
+func (c *ctx) utf16(n cc.Node, s cc.UTF16StringValue) string {
+	b := bytes.NewBuffer(make([]byte, 0, 2*len(s)))
+	bo := c.ast.ABI.ByteOrder
+	for _, v := range s {
+		if err := binary.Write(b, bo, v); err != nil {
+			c.err(errorf("%v: %v", n.Position(), err))
+			return ""
+		}
+	}
+	return b.String()
+}
+
+func (c *ctx) utf32(n cc.Node, s cc.UTF32StringValue) string {
+	b := bytes.NewBuffer(make([]byte, 0, 4*len(s)))
+	bo := c.ast.ABI.ByteOrder
+	for _, v := range s {
+		if err := binary.Write(b, bo, v); err != nil {
+			c.err(errorf("%v: %v", n.Position(), err))
+			return ""
+		}
+	}
+	return b.String()
+}
+
+func (c *ctx) primaryExpressionLStringConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	switch x := n.Type().Undecay().(type) {
+	case *cc.ArrayType:
+		switch y := t.(type) {
+		case *cc.ArrayType:
+			switch z := n.Value().(type) {
+			case cc.UTF16StringValue:
+				c.err(errorf("TODO %T", z))
+			case cc.UTF32StringValue:
+				for len(z) != 0 && z[len(z)-1] == 0 {
+					z = z[:len(z)-1]
+				}
+				b.w("%s{", c.typ(n, y))
+				for _, c := range z {
+					b.w("%s, ", strconv.QuoteRune(c))
+				}
+				b.w("}")
+			default:
+				c.err(errorf("TODO %T", z))
+			}
+		case *cc.PointerType:
+			switch z := n.Value().(type) {
+			case cc.UTF16StringValue:
+				b.w("%q", c.utf16(n, z))
+			case cc.UTF32StringValue:
+				b.w("%q", c.utf32(n, z))
+			default:
+				c.err(errorf("TODO %T", z))
+			}
+		default:
+			c.err(errorf("TODO %T", y))
+		}
+	default:
+		c.err(errorf("TODO %T", x))
+	}
+	return &b, t, exprDefault
 }
 
 func (c *ctx) primaryExpressionStringConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
@@ -1641,7 +1746,10 @@ func (c *ctx) primaryExpressionStringConst(w writer, n *cc.PrimaryExpression, t 
 				t := t.(*cc.PointerType)
 				if c.isCharType(t.Elem()) || t.Elem().Kind() == cc.Void {
 					b.w("%q", s)
+					break
 				}
+
+				c.err(errorf("TODO"))
 			default:
 				c.err(errorf("TODO"))
 			}
@@ -1654,10 +1762,115 @@ func (c *ctx) primaryExpressionStringConst(w writer, n *cc.PrimaryExpression, t 
 	return &b, t, exprDefault
 }
 
-func (c *ctx) primaryExpressionIntConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
-	var b buf
+func (c *ctx) primaryExpressionLCharConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	rt, rmode = t, exprDefault
-	b.w("(%s%sFrom%s(%v))", c.task.tlsQualifier, c.helper(n, t), c.helper(n, n.Type()), n.Value())
+	var b buf
+	src := n.Token.SrcStr()
+	lit := src[1:] // L
+	val, err := strconv.Unquote(lit)
+	if err != nil {
+		switch {
+		case strings.HasPrefix(lit, `'\`) && isOctalString(lit[2:len(lit)-1]):
+			lit = fmt.Sprintf(`'\%03o'`, n.Value())
+			if val, err = strconv.Unquote(lit); err != nil {
+				lit = fmt.Sprintf(`'\u%04x'`, n.Value())
+			}
+		case src == `'\"'`:
+			lit = `'"'`
+		}
+		if val, err = strconv.Unquote(lit); err != nil {
+			c.err(errorf("TODO `%s` -> %s", lit, err))
+			return &b, rt, rmode
+		}
+	}
+
+	ch := []rune(val)[0]
+	switch x := n.Value().(type) {
+	case cc.Int64Value:
+		if rune(x) != ch {
+			c.err(errorf("TODO `%s` -> |% x|, exp %#0x", lit, val, x))
+			return &b, rt, rmode
+		}
+	case cc.UInt64Value:
+		if rune(x) != ch {
+			c.err(errorf("TODO `%s` -> |% x|, exp %#0x", lit, val, x))
+			return &b, rt, rmode
+		}
+	}
+
+	b.w("(%s%s%sFromInt32(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), lit)
+	return &b, rt, rmode
+}
+
+func (c *ctx) primaryExpressionCharConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	rt, rmode = t, exprDefault
+	var b buf
+	src := n.Token.SrcStr()
+	lit := src
+	val, err := strconv.Unquote(lit)
+	if err != nil {
+		switch {
+		case strings.HasPrefix(src, `'\`) && isOctalString(src[2:len(src)-1]):
+			lit = fmt.Sprintf(`'\%03o'`, n.Value())
+		case src == `'\"'`:
+			lit = `'"'`
+		}
+		if val, err = strconv.Unquote(lit); err != nil {
+			c.err(errorf("TODO `%s` -> %s", lit, err))
+			return &b, rt, rmode
+		}
+	}
+	if len(val) != 1 {
+		c.err(errorf("TODO `%s` -> |% x|", lit, val))
+		return &b, rt, rmode
+	}
+
+	ch := val[0]
+	switch x := n.Value().(type) {
+	case cc.Int64Value:
+		if byte(x) != ch {
+			c.err(errorf("TODO `%s` -> |% x|, exp %#0x", lit, val, x))
+			return &b, rt, rmode
+		}
+	case cc.UInt64Value:
+		if byte(x) != ch {
+			c.err(errorf("TODO `%s` -> |% x|, exp %#0x", lit, val, x))
+			return &b, rt, rmode
+		}
+	}
+
+	b.w("(%s%s%sFromUint8(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), lit)
+	return &b, rt, rmode
+}
+
+func (c *ctx) primaryExpressionIntConst(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	rt, rmode = t, exprDefault
+	var b buf
+	src := n.Token.SrcStr()
+	lit := strings.TrimRight(src, "uUlL")
+	var want uint64
+	switch x := n.Value().(type) {
+	case cc.Int64Value:
+		want = uint64(x)
+	case cc.UInt64Value:
+		want = uint64(x)
+	default:
+		c.err(errorf("TODO %T", x))
+		return &b, rt, rmode
+	}
+
+	val, err := strconv.ParseUint(lit, 0, 64)
+	if err != nil {
+		c.err(errorf("TODO `%s` -> %s", lit, err))
+		return &b, rt, rmode
+	}
+
+	if val != want {
+		c.err(errorf("TODO `%s` -> got %v, want %v", lit, val, want))
+		return &b, rt, rmode
+	}
+
+	b.w("(%s%s%sFrom%s(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), lit)
 	return &b, rt, rmode
 }
 
@@ -1666,9 +1879,9 @@ func (c *ctx) primaryExpressionFloatConst(w writer, n *cc.PrimaryExpression, t c
 	rt, rmode = t, exprDefault
 	switch x := n.Value().(type) {
 	case *cc.LongDoubleValue:
-		b.w("(%s%sFrom%s(%v))", c.task.tlsQualifier, c.helper(n, t), c.helper(n, n.Type()), (*big.Float)(x))
+		b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), (*big.Float)(x))
 	case cc.Float64Value:
-		b.w("(%s%sFrom%s(%v))", c.task.tlsQualifier, c.helper(n, t), c.helper(n, n.Type()), x)
+		b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), x)
 	default:
 		c.err(errorf("TODO %T", x))
 	}
