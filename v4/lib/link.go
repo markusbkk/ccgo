@@ -7,6 +7,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 import (
 	"bytes"
 	"fmt"
+	"go/constant"
 	"go/token"
 	"io"
 	"os"
@@ -833,7 +834,11 @@ func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 	r = &fnInfo{linker: l}
 	if n != nil {
 		// trc("==== %v:", n.Position())
-		walk(n, func(n gc.Node) {
+		walk(n, func(n gc.Node, pre bool, arg interface{}) {
+			if !pre {
+				return
+			}
+
 			tok, ok := n.(gc.Token)
 			if !ok {
 				return
@@ -850,7 +855,7 @@ func (l *linker) newFnInfo(n gc.Node) (r *fnInfo) {
 			case gc.STRING_LIT:
 				r.linker.stringLit(tok.Src(), true)
 			}
-		})
+		}, nil)
 	}
 	r.ns.registerNameSet(l, r.linkNames, false)
 	r.linkNames = nil
@@ -1013,6 +1018,7 @@ func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
 		return nil, errorf("%s", err)
 	}
 
+	l.unconvert(sf)
 	return sf.Source(true), nil
 }
 
@@ -1187,6 +1193,8 @@ type StringHeader struct {
     Data uintptr
     Len  int
 }
+
+type Type struct{}
 `)
 	unsafeSrc = []byte(`package unsafe
 
@@ -1233,4 +1241,54 @@ func (l *linker) syntheticPackage(importPath, fn string, src []byte) (r *gc.Pack
 	}
 
 	return r, nil
+}
+
+type uctx struct {
+	typ   gc.Type
+	types []gc.Type
+}
+
+func (c *uctx) push(t gc.Type) { c.types = append(c.types, t); c.typ = t }
+func (c *uctx) pop()           { c.typ = c.types[len(c.types)-1]; c.types = c.types[:len(c.types)-1] }
+
+func (l *linker) unconvert(sf *gc.SourceFile) {
+	walk(
+		sf.TopLevelDecls,
+		func(n gc.Node, pre bool, arg interface{}) {
+			if _, ok := n.(gc.Token); ok {
+				return
+			}
+
+			e, ok := n.(gc.Expression)
+			if !ok {
+				return
+			}
+
+			c := arg.(*uctx)
+			if pre {
+				// trc("%v: %T '%s'", e.Position(), e, e.Source(false))
+				// c.push(e.Type())
+				// trc("ok")
+				return
+			}
+
+			return //TODO-
+			defer c.pop()
+
+			val := e.Value()
+			if val.Kind() == constant.Unknown {
+				return
+			}
+
+			// trc("", e.Position(), e.Type(), e.Value())
+			// if x, ok := e.(*gc.BasicLit); ok {
+			// 	trc("\t%s", x.Source(false))
+			// }
+			// switch x := n.(type) {
+			// default:
+			// 	l.err(errorf("TODO %T", x))
+			// }
+		},
+		&uctx{},
+	)
 }

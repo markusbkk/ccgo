@@ -371,7 +371,6 @@ func TestCompile(t *testing.T) {
 		"20040705-2.c":                 {}, //TODO
 		"20040709-1.c":                 {}, //TODO
 		"20040709-2.c":                 {}, //TODO
-		"20040709-3.c":                 {}, //TODO
 		"20041124-1.c":                 {}, //TODO
 		"20041201-1.c":                 {}, //TODO
 		"20041214-1.c":                 {}, //TODO
@@ -493,7 +492,6 @@ func TestCompile(t *testing.T) {
 		"divconst-2.c":                 {}, //TODO
 		"extzvsi.c":                    {}, //TODO
 		"fp-cmp-4.c":                   {}, //TODO
-		"fp-cmp-4f.c":                  {}, //TODO
 		"fp-cmp-4l.c":                  {}, //TODO
 		"loop-15.c":                    {}, //TODO
 		"medce-1.c":                    {}, //TODO
@@ -972,9 +970,6 @@ func TestExec(t *testing.T) {
 			"simd-4.c":       {},
 			"simd-5.c":       {},
 			"simd-6.c":       {},
-
-			//TODO Nested goto
-			"20020716-1.c": {},
 
 			// Other
 			"20000113-1.c":                 {}, //TODO

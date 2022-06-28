@@ -614,7 +614,11 @@ func firstToken(n cc.Node, r *cc.Token) {
 func unresolvedSymbols(ast *gc.SourceFile) (r map[string]token.Position) {
 	r = map[string]token.Position{}
 	def := map[string]struct{}{}
-	walk(ast, func(n gc.Node) {
+	walk(ast, func(n gc.Node, pre bool, arg interface{}) {
+		if !pre {
+			return
+		}
+
 		switch x := n.(type) {
 		case *gc.FunctionDecl:
 			def[x.FunctionName.Src()] = struct{}{}
@@ -628,21 +632,21 @@ func unresolvedSymbols(ast *gc.SourceFile) (r map[string]token.Position) {
 				r[nm] = x.Position()
 			}
 		}
-	})
+	}, nil)
 	for k := range def {
 		delete(r, k)
 	}
 	return r
 }
 
-func walk(n interface{}, fn func(gc.Node)) {
+func walk(n interface{}, fn func(n gc.Node, pre bool, arg interface{}), arg interface{}) {
 	if n == nil {
 		return
 	}
 
 	if x, ok := n.(gc.Token); ok {
 		if x.IsValid() {
-			fn(x)
+			fn(x, true, arg)
 		}
 		return
 	}
@@ -661,7 +665,7 @@ func walk(n interface{}, fn func(gc.Node)) {
 	switch t.Kind() {
 	case reflect.Struct:
 		if x, ok := n.(gc.Node); ok {
-			fn(x)
+			fn(x, true, arg)
 		}
 		nf := t.NumField()
 		for i := 0; i < nf; i++ {
@@ -674,12 +678,15 @@ func walk(n interface{}, fn func(gc.Node)) {
 				continue
 			}
 
-			walk(v.Field(i).Interface(), fn)
+			walk(v.Field(i).Interface(), fn, arg)
+		}
+		if x, ok := n.(gc.Node); ok {
+			fn(x, false, arg)
 		}
 	case reflect.Slice:
 		ne := v.Len()
 		for i := 0; i < ne; i++ {
-			walk(v.Index(i).Interface(), fn)
+			walk(v.Index(i).Interface(), fn, arg)
 		}
 	}
 }
