@@ -1266,13 +1266,10 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 
 			c := arg.(*uctx)
 			if pre {
-				// trc("%v: %T '%s'", e.Position(), e, e.Source(false))
-				// c.push(e.Type())
-				// trc("ok")
+				c.push(e.Type())
 				return
 			}
 
-			return //TODO-
 			defer c.pop()
 
 			val := e.Value()
