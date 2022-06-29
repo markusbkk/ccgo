@@ -67,6 +67,12 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 		}
 
 		return c.initializerStruct(w, n, a, x, off0)
+	case *cc.UnionType:
+		if len(a) == 1 && a[0].Type().Kind() == cc.Union {
+			return c.expr(w, a[0].AssignmentExpression, t, exprDefault)
+		}
+
+		return c.initializerUnion(w, n, a, x, off0)
 	default:
 		// trc("%v: in type %v, in expr type %v, t %v", a[0].Position(), a[0].Type(), a[0].AssignmentExpression.Type(), t)
 		c.err(errorf("TODO %T", x))
@@ -74,8 +80,46 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 	}
 }
 
+func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
+	// trc("==== %v: (struct A) %s off0 %#0x", n.Position(), t, off0)
+	// dumpInitializer(a, "")
+	// trc("---- (struct Z)")
+	var b buf
+	b.w("%s{", c.typ(n, t))
+	f := t.FieldByIndex(0)
+	flds := []*cc.Field{f}
+	s := sortInitializers(a, func(off int64) int64 {
+		off -= off0
+		i := sort.Search(len(flds), func(i int) bool {
+			return flds[i].Offset() >= off
+		})
+		if i < len(flds) && flds[i].Offset() == off {
+			return off
+		}
+
+		return flds[i-1].Offset()
+	})
+	for _, v := range s {
+		first := v[0]
+		off := first.Offset() - off0
+		// trc("first.Offset() %#0x, off %#0x", first.Offset(), off)
+		for off > flds[0].Offset()+flds[0].Type().Size()-1 {
+			// trc("skip %q off %#0x", flds[0].Name(), flds[0].Offset())
+			flds = flds[1:]
+			if len(flds) == 0 {
+				panic(todo("", n.Position()))
+			}
+		}
+		f := flds[0]
+		// trc("f %q %s off %#0x", f.Name(), f.Type(), f.Offset())
+		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+f.Offset()))
+	}
+	b.w("}")
+	return &b
+}
+
 func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.StructType, off0 int64) (r *buf) {
-	// trc("==== (struct A) %s off0 %#0x", t, off0)
+	// trc("==== %v: (struct A) %s off0 %#0x", n.Position(), t, off0)
 	// dumpInitializer(a, "")
 	// trc("---- (struct Z)")
 	var b buf
@@ -101,7 +145,8 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 						return nil
 					}
 				case *cc.ArrayType:
-					if x.Len() != 0 {
+					if x.Len() > 0 {
+						trc("", x.Len())
 						c.err(errorf("TODO %T", x))
 						return nil
 					}
@@ -113,7 +158,7 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 			}
 
 			flds = append(flds, f)
-			// trc("flds[%d] %q %s off %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset())
+			// trc("appended: flds[%d] %q %s off %#0x sz %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset(), f.Type().Size())
 			continue
 		}
 
@@ -131,19 +176,19 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 		return flds[i-1].Offset()
 	})
 	for _, v := range s {
-		// trc("v[0].Offset %#0x", v[0].Offset())
-		off := v[0].Offset() - off0
-		// trc("off %#0x", off)
-		if len(flds) == 0 {
-			panic(todo("", a[0].Position()))
-		}
-		for len(flds) != 0 && flds[0].Offset() > off { // Skip
+		first := v[0]
+		off := first.Offset() - off0
+		// trc("first.Offset() %#0x, off %#0x", first.Offset(), off)
+		for off > flds[0].Offset()+flds[0].Type().Size()-1 {
+			// trc("skip %q off %#0x", flds[0].Name(), flds[0].Offset())
 			flds = flds[1:]
+			if len(flds) == 0 {
+				panic(todo("", n.Position()))
+			}
 		}
 		f := flds[0]
-		flds = flds[1:] // Consume
-		// trc("fld %q %s, off %#0x, len(v) %d", f.Name(), f.Type(), f.Offset(), len(v))
-		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+off))
+		// trc("f %q %s off %#0x", f.Name(), f.Type(), f.Offset())
+		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+f.Offset()))
 	}
 	b.w("}")
 	return &b

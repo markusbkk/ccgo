@@ -293,8 +293,20 @@ func (c *ctx) convertType(n cc.ExpressionNode, s *buf, from, to cc.Type, fromMod
 
 	var b buf
 	if cc.IsScalarType(from) && cc.IsScalarType(to) {
-		b.w("(%s(%s))", c.typ(n, to), s)
-		return &b
+		//b.w("(%s(%s))", c.typ(n, to), s)
+		switch {
+		case from.Kind() == cc.Int128:
+			//TODO
+		case from.Kind() == cc.UInt128:
+			//TODO
+		case to.Kind() == cc.Int128:
+			//TODO
+		case to.Kind() == cc.UInt128:
+			//TODO
+		default:
+			b.w("(%s%s%sFrom%s(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, to), c.helper(n, from), s)
+			return &b
+		}
 	}
 
 	c.err(errorf("TODO %q %s %s -> %s %s (%v:)", s, from, fromMode, to, toMode, c.pos(n)))
@@ -1106,10 +1118,16 @@ out:
 		}
 	case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
 		f := n.Field()
+		pe, ok := n.PostfixExpression.Type().(*cc.PointerType)
+		if !ok {
+			c.err(errorf("TODO %T", n.PostfixExpression.Type()))
+			break
+		}
+
 		switch mode {
 		case exprDefault, exprLvalue, exprIndex, exprSelect:
 			rt, rmode = n.Type(), mode
-			b.w("((*%s)(%s).", c.typ(n, n.PostfixExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
+			b.w("((*%s)(%s).", c.typ(n, pe.Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
 			switch {
 			case f.Parent() != nil:
 				c.err(errorf("TODO %v", n.Case))

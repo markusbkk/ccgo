@@ -10,6 +10,7 @@ import (
 	"go/constant"
 	"go/token"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1244,12 +1245,44 @@ func (l *linker) syntheticPackage(importPath, fn string, src []byte) (r *gc.Pack
 }
 
 type uctx struct {
-	typ   gc.Type
-	types []gc.Type
+	libc  *gc.Package
+	stack []uctxStack
+	uctxStack
 }
 
-func (c *uctx) push(t gc.Type) { c.types = append(c.types, t); c.typ = t }
-func (c *uctx) pop()           { c.typ = c.types[len(c.types)-1]; c.types = c.types[:len(c.types)-1] }
+type uctxStack struct {
+	opt gc.Node
+	set func(gc.Node)
+	typ gc.Type
+
+	strict bool // false: assignable to .typ, true: exactly .typ.
+}
+
+func (c *uctx) push() { c.stack = append(c.stack, c.uctxStack) }
+func (c *uctx) pop()  { c.uctxStack = c.stack[len(c.stack)-1]; c.stack = c.stack[:len(c.stack)-1] }
+
+func (c *uctx) libcFunc(n gc.Expression) *gc.QualifiedIdent {
+	switch x := n.(type) {
+	case *gc.QualifiedIdent:
+		if x.ResolvedIn() == c.libc {
+			return x
+		}
+	}
+	return nil
+}
+
+func (c *uctx) libcXFromY(n gc.Expression) (dest, src gc.Type, ok bool) {
+	if qi := c.libcFunc(n); qi != nil {
+		if !strings.Contains(qi.Ident.Src(), "From") {
+			return nil, nil, false
+		}
+
+		ft := qi.ResolvedTo().(*gc.FunctionDecl).Type().(*gc.FunctionType)
+		return ft.Result.Types[0], ft.Parameters.Types[0], true
+	}
+
+	return nil, nil, false
+}
 
 func (l *linker) unconvert(sf *gc.SourceFile) {
 	walk(
@@ -1259,33 +1292,79 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 				return
 			}
 
-			e, ok := n.(gc.Expression)
-			if !ok {
-				return
-			}
-
 			c := arg.(*uctx)
 			if pre {
-				c.push(e.Type())
+				c.push()
+			out:
+				switch x := n.(type) {
+				case *gc.KeyedElement:
+					c.opt = x.Element
+					c.set = func(n gc.Node) { x.Element = n }
+					c.typ = x.Type()
+					c.strict = false
+				case *gc.CompositeLit:
+					switch x.Type().(type) {
+					case *gc.ArrayType:
+						lv := x.LiteralValue
+						for i, ke := range lv.ElementList {
+							switch y, ok := ke.Key.(gc.Expression); {
+							case ok:
+								i64, ok := constant.Int64Val(y.Value())
+								if !ok || int64(i) != i64 {
+									break out
+								}
+							default:
+								break out
+							}
+						}
+						for _, ke := range lv.ElementList {
+							ke.Key = nil
+							ke.Colon = gc.Token{}
+						}
+					}
+				case *gc.Index:
+					c.opt = x.Expr
+					c.set = func(n gc.Node) { x.Expr = n.(gc.Expression) }
+					c.typ = x.Type()
+					c.strict = false
+				}
 				return
 			}
 
-			defer c.pop()
+			defer func() { c.pop() }()
 
-			val := e.Value()
-			if val.Kind() == constant.Unknown {
+			if n != c.opt {
 				return
 			}
 
-			// trc("", e.Position(), e.Type(), e.Value())
-			// if x, ok := e.(*gc.BasicLit); ok {
-			// 	trc("\t%s", x.Source(false))
-			// }
-			// switch x := n.(type) {
-			// default:
-			// 	l.err(errorf("TODO %T", x))
-			// }
+			switch x := n.(type) {
+			case *gc.Arguments:
+				if c.strict {
+					break
+				}
+
+				dest, _, ok := c.libcXFromY(x.PrimaryExpr)
+				if !ok {
+					break
+				}
+
+				expr := x.ExprList[0].Expr
+				val := expr.Value()
+				switch val.Kind() {
+				case constant.Int:
+					switch dest.Kind() {
+					case gc.Int8:
+						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt8 && n <= math.MaxInt8 {
+							c.set(expr)
+						}
+					case gc.Int32:
+						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt32 && n <= math.MaxInt32 {
+							c.set(expr)
+						}
+					}
+				}
+			}
 		},
-		&uctx{},
+		&uctx{libc: l.libc.pkg},
 	)
 }
