@@ -669,6 +669,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/index-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/inst-check.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/int-compare.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ipa-sra-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ipa-sra-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/longlong.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/loop-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/loop-10.c
@@ -714,6 +715,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/postmod-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr15262-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr15262-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr15262.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr15296.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr16790-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17133.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17252.c

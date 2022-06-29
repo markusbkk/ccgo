@@ -425,6 +425,7 @@ type linker struct {
 	textSegmentOff        int64
 	tld                   nameSpace
 	unsafeName            string
+	maxUintptr            uint64
 
 	closed bool
 }
@@ -473,12 +474,18 @@ func newLinker(task *Task, libc *object) (*linker, error) {
 			return nil, errorf("internal error: %v", name(i))
 		}
 	}
+	maxUintptr := uint64(math.MaxUint64)
+	switch task.goarch {
+	case "386", "arm":
+		maxUintptr = math.MaxUint32
+	}
 	return &linker{
 		externs:        map[string]*object{},
 		fset:           token.NewFileSet(),
 		goTags:         goTags[:],
 		importsByPath:  map[string]*object{},
 		libc:           libc,
+		maxUintptr:     maxUintptr,
 		stringLiterals: map[string]int64{},
 		synthDecls:     map[string][]byte{},
 		task:           task,
@@ -1357,8 +1364,36 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt8 && n <= math.MaxInt8 {
 							c.set(expr)
 						}
+					case gc.Int16:
+						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt16 && n <= math.MaxInt16 {
+							c.set(expr)
+						}
 					case gc.Int32:
 						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt32 && n <= math.MaxInt32 {
+							c.set(expr)
+						}
+					case gc.Int64:
+						if _, ok := constant.Int64Val(val); ok {
+							c.set(expr)
+						}
+					case gc.Uint8:
+						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint8 {
+							c.set(expr)
+						}
+					case gc.Uint16:
+						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint16 {
+							c.set(expr)
+						}
+					case gc.Uint32:
+						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint32 {
+							c.set(expr)
+						}
+					case gc.Uint64:
+						if _, ok := constant.Uint64Val(val); ok {
+							c.set(expr)
+						}
+					case gc.Uintptr:
+						if n, ok := constant.Uint64Val(val); ok && n <= l.maxUintptr {
 							c.set(expr)
 						}
 					}

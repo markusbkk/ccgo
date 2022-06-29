@@ -117,6 +117,13 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 	if to.Kind() == cc.Enum {
 		to = to.(*cc.EnumType).UnderlyingType()
 	}
+
+	if cc.IsScalarType(from) && fromMode == exprDefault && toMode == exprBool {
+		var b buf
+		b.w("(%s != 0)", s)
+		return &b
+	}
+
 	if from == to || from != nil && from.IsCompatible(to) {
 		if fromMode == toMode {
 			return s
@@ -1121,6 +1128,23 @@ out:
 		pe, ok := n.PostfixExpression.Type().(*cc.PointerType)
 		if !ok {
 			c.err(errorf("TODO %T", n.PostfixExpression.Type()))
+			break
+		}
+
+		if _, ok := pe.Elem().(*cc.UnionType); ok && f.Index() != 0 {
+			switch mode {
+			case exprSelect, exprLvalue:
+				rt, rmode = n.Type(), mode
+				switch {
+				case f.Offset() != 0:
+					c.err(errorf("TODO %v", mode))
+					b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer((%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), f.Offset())
+				default:
+					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
+				}
+			default:
+				c.err(errorf("TODO %v", mode))
+			}
 			break
 		}
 

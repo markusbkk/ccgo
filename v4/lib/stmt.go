@@ -260,12 +260,6 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
 			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
-		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
-			w.w("for %s; ; %s {", b, b3)
-			w.w("\n%s", a2.bytes())
-			w.w("\nif !(%s) { break };", b2)
-			c.unbracedStatement(w, n.Statement)
-			w.w("};")
 		case a.len() != 0 && a2.len() == 0 && a3.len() == 0:
 			w.w("%s%s", a.bytes(), b.bytes())
 			w.w("\nfor ;%s; %s{", b2, b3)
@@ -283,8 +277,9 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
 			w.w("};")
+		//TODO case a.len() != 0 && a2.len() != 0 && a3.len() != 0:
 		default:
-			trc("", c.pos(n))
+			trc("", c.pos(n), a.len() != 0, a2.len() != 0, a3.len() != 0)
 			c.err(errorf("TODO"))
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
