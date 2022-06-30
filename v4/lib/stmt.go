@@ -69,6 +69,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		w.w("%s%s:", tag(preserve), n.Token.Src()) //TODO use nameSpace
 		c.statement(w, n.Statement)
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
+		trc("", n.Position())
 		if n.CaseOrdinal() != 0 {
 			w.w("fallthrough;")
 		}

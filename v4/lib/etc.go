@@ -730,3 +730,15 @@ func isOctalString(s string) bool {
 
 	return true
 }
+
+func firstError(err error, short bool) error {
+	if !short || err == nil {
+		return nil
+	}
+
+	if a := strings.Split(err.Error(), "\n"); len(a) != 0 {
+		return fmt.Errorf("%s", a[0])
+	}
+
+	return err
+}

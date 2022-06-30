@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-.PHONY:	build_all_targets clean edit editor tmp tmp2 diff
+.PHONY:	build_all_targets clean edit editor tmp x
 
 build_all_targets:
 	GOOS=darwin GOARCH=amd64 go build -v ./...
@@ -36,18 +36,12 @@ editor:
 	go install -v -tags=ccgo.assert modernc.org/ccgo/v4 2>&1 | tee log-editor
 
 tmp:
-	go test -tags=ccgo.assert -v -run TestCompile -trc 2>&1 | tee log
-	grep -a '^ \+TODO' log | sort | uniq -c | sort -n | tee log-2
-	grep -a 'TOTAL\|PASS' log || true
-
-
-tmp2:
 	go test -tags=ccgo.assert -v -run TestExec -trc 2>&1 | tee log
 	grep -a '^ \+TODO' log | sort | uniq -c | sort -n | tee log-2
 	grep -a 'TOTAL\|PASS' log || true
 
-diff:
-	rm -f log-todo
-	diff -u0 testdata/test_compile_linux_amd64.golden testdata/test_exec_linux_amd64.golden > log-todo || true
-	sed -i -e /^@/d -e /^--/d -e /^\+\+/d -e 's|^-|~/src/modernc.org/ccorpus/|' log-todo
-	wc -l log-todo
+x:
+	rm -f /tmp/ccgo.log
+	go test -v -tags=ccgo.asser,ccgo.dmesg -timeout 24h -run Exec -err1 -trc -stime 5s 2>&1 | tee log
+	grep TOTAL log
+	git status

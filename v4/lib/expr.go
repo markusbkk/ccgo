@@ -60,7 +60,7 @@ const (
 func (c *ctx) expr(w writer, n cc.ExpressionNode, to cc.Type, toMode mode) *buf {
 	if toMode == 0 {
 		c.err(errorf("internal error"))
-		return nil
+		return &buf{}
 	}
 
 	if n == nil {
@@ -1379,12 +1379,12 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 	}
 	if len(args) < ft.MinArgs() {
 		c.err(errorf("%v: too few arguments to function '%s', type '%v' in '%v'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression), ft, cc.NodeSource(n)))
-		return nil, nil, 0
+		return &b, nil, 0
 	}
 
 	if len(args) > ft.MaxArgs() && ft.MaxArgs() >= 0 {
 		c.err(errorf("%v: too many arguments to function '%s', type '%v' in '%v'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression), ft, cc.NodeSource(n)))
-		return nil, nil, 0
+		return &b, nil, 0
 	}
 
 	params := ft.Parameters()
