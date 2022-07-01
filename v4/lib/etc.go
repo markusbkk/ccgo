@@ -204,8 +204,9 @@ func errorf(s string, args ...interface{}) error {
 }
 
 type parallel struct {
-	errors errors
-	limit  chan struct{}
+	errors    errors
+	limit     chan struct{}
+	resultTag string
 	sync.Mutex
 	wg sync.WaitGroup
 
@@ -216,9 +217,10 @@ type parallel struct {
 	skips int32
 }
 
-func newParallel() *parallel {
+func newParallel(resultTag string) *parallel {
 	return &parallel{
-		limit: make(chan struct{}, runtime.GOMAXPROCS(0)),
+		limit:     make(chan struct{}, runtime.GOMAXPROCS(0)),
+		resultTag: resultTag,
 	}
 }
 
@@ -577,6 +579,14 @@ func sep(n cc.Node) string {
 
 func firstToken(n cc.Node, r *cc.Token) {
 	if n == nil {
+		return
+	}
+
+	if x, ok := n.(*cc.LabeledStatement); ok && x != nil {
+		t := x.Token
+		if r.Seq() == 0 || t.Seq() < t.Seq() {
+			*r = t
+		}
 		return
 	}
 

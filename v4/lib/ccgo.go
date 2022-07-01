@@ -258,7 +258,7 @@ func (t *Task) compile(optO string) error {
 		}
 	}
 
-	p := newParallel()
+	p := newParallel("")
 	for _, ifn := range t.inputFiles {
 		ifn := ifn
 		ofn := optO

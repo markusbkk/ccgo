@@ -7,13 +7,10 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 //TODO CSmith
 
 import (
-	"bufio"
 	"bytes"
-	"context"
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"io"
 	"io/fs"
 	"io/ioutil"
 	"math"
@@ -34,6 +31,7 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 	"modernc.org/cc/v4"
 	"modernc.org/ccorpus2"
+	"modernc.org/fileutil"
 	"modernc.org/gc/v2"
 )
 
@@ -42,7 +40,7 @@ var (
 	oErr1       = flag.Bool("err1", false, "first error line only")
 	oKeep       = flag.Bool("keep", false, "keep temp directories")
 	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime  = flag.Duration("stime", 5*time.Minute, "shell() time limit")
+	oShellTime  = flag.Duration("shelltimeout", 5*time.Minute, "shell() time limit")
 	oStackTrace = flag.Bool("trcstack", false, "")
 	oTrace      = flag.Bool("trc", false, "Print tested paths.")
 	oTraceF     = flag.Bool("trcf", false, "Print test file content")
@@ -80,7 +78,7 @@ func (p *parallel) close(t *testing.T) {
 		t.Error(v)
 	}
 	p.Unlock()
-	t.Logf("TOTAL: files %v, skip %v, ok %v, fails %v", h(p.files), h(p.skips), h(p.oks), h(p.fails))
+	t.Logf("TOTAL: files %v, skip %v, ok %v, fails %v: %s", h(p.files), h(p.skips), h(p.oks), h(p.fails), p.resultTag)
 }
 
 func h(v interface{}) string {
@@ -223,166 +221,7 @@ func (w *echoWriter) Write(b []byte) (int, error) {
 	return w.w.Write(b)
 }
 
-func shell(echo bool, cmd string, args ...string) ([]byte, error) {
-	cmd, err := exec.LookPath(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	wd, err := absCwd()
-	if err != nil {
-		return nil, err
-	}
-
-	if echo {
-		fmt.Printf("execute %s %q in %s\n", cmd, args, wd)
-	}
-	var b echoWriter
-	b.silent = !echo
-	ctx, cancel := context.WithTimeout(context.Background(), *oShellTime)
-	defer cancel()
-	c := exec.CommandContext(ctx, cmd, args...)
-	c.Stdout = &b
-	c.Stderr = &b
-	err = c.Run()
-	return b.w.Bytes(), err
-}
-
-// copyFile copies src in fsys, to dest in the OS file system, preserving
-// permissions and times where/when possible. If canOverwrite is not nil, it is
-// consulted whether a destination file can be overwritten. If canOverwrite is
-// nil then destination is overwritten if permissions allow that, otherwise the
-// function fails.
-func copyFile(fsys fs.FS, dst, src string, canOverwrite func(fn string, fi os.FileInfo) bool) (n int64, rerr error) {
-	dstDir := filepath.Dir(dst)
-	di, err := os.Stat(dstDir)
-	switch {
-	case err != nil:
-		if !os.IsNotExist(err) {
-			return 0, err
-		}
-
-		if err := os.MkdirAll(dstDir, 0770); err != nil {
-			return 0, err
-		}
-	case err == nil:
-		if !di.IsDir() {
-			return 0, fmt.Errorf("cannot create directory, file exists: %s", dst)
-		}
-	}
-
-	s, err := fsys.Open(src)
-	if err != nil {
-		return 0, err
-	}
-
-	defer s.Close()
-
-	si, err := s.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	if si.IsDir() {
-		return 0, fmt.Errorf("cannot copy a directory: %s", src)
-	}
-
-	di, err = os.Stat(dst)
-	switch {
-	case err != nil && !os.IsNotExist(err):
-		return 0, err
-	case err == nil:
-		if di.IsDir() {
-			return 0, fmt.Errorf("cannot overwite a directory: %s", dst)
-		}
-
-		if canOverwrite != nil && !canOverwrite(dst, di) {
-			return 0, fmt.Errorf("cannot overwite: %s", dst)
-		}
-	}
-
-	r := bufio.NewReader(s)
-	d, err := os.Create(dst)
-
-	defer func() {
-		if err := d.Close(); err != nil && rerr == nil {
-			rerr = err
-			return
-		}
-
-		if err := os.Chmod(dst, si.Mode()); err != nil && rerr == nil {
-			rerr = err
-			return
-		}
-
-		if err := os.Chtimes(dst, si.ModTime(), si.ModTime()); err != nil && rerr == nil {
-			rerr = err
-			return
-		}
-	}()
-
-	w := bufio.NewWriter(d)
-
-	defer func() {
-		if err := w.Flush(); err != nil && rerr == nil {
-			rerr = err
-		}
-	}()
-
-	return io.Copy(w, r)
-}
-
-// copyDir recursively copies src in fsys to dest in the OS file system,
-// preserving permissions and times where/when possible. If canOverwrite is not
-// nil, it is consulted whether a destination file can be overwritten. If
-// canOverwrite is nil then destination is overwritten if permissions allow
-// that, otherwise the function fails.
-func copyDir(fsys fs.FS, dst, src string, canOverwrite func(fn string, fi os.FileInfo) bool) (files int, bytes int64, rerr error) {
-	s, err := fsys.Open(src)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	si, err := s.Stat()
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if err := s.Close(); err != nil {
-		return 0, 0, err
-	}
-
-	if !si.IsDir() {
-		return 0, 0, fmt.Errorf("cannot copy a file: %s", src)
-	}
-
-	return files, bytes, fs.WalkDir(fsys, src, func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return os.MkdirAll(filepath.Join(dst, rel), 0770)
-		}
-
-		n, err := copyFile(fsys, filepath.Join(dst, rel), path, canOverwrite)
-		if err != nil {
-			return err
-		}
-
-		files++
-		bytes += n
-		return nil
-	})
-}
-
 func TestExec(t *testing.T) {
-	return //TODO-
 	g := newGolden(t, fmt.Sprintf("testdata/test_exec_%s_%s.golden", runtime.GOOS, runtime.GOARCH))
 
 	defer g.close()
@@ -397,19 +236,23 @@ func TestExec(t *testing.T) {
 			return fmt.Errorf("%s\vFAIL: %v", out, err)
 		}
 
-		for _, v := range []string{
-			"CompCert-3.6/test/c",
-			"benchmarksgame-team.pages.debian.net",
-			"ccgo",
-			"gcc-9.1.0/gcc/testsuite/gcc.c-torture",
-			"github.com/AbsInt/CompCert/test/c",
-			"github.com/cxgo",
-			"github.com/gcc-mirror/gcc/gcc/testsuite",
-			"github.com/vnmakarov",
-			"tcc-0.9.27/tests/tests2",
+		for _, v := range []struct {
+			path string
+			exec bool
+		}{
+			{"CompCert-3.6/test/c", true},
+			{"benchmarksgame-team.pages.debian.net", true},
+			{"ccgo", true},
+			{"gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile", false},
+			{"gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute", true},
+			{"github.com/AbsInt/CompCert/test/c", true},
+			{"github.com/cxgo", true},
+			{"github.com/gcc-mirror/gcc/gcc/testsuite", true},
+			//TODO crash {"github.com/vnmakarov", true},
+			{"tcc-0.9.27/tests/tests2", true},
 		} {
-			t.Run(v, func(t *testing.T) {
-				testExec(t, "assets/"+v, g)
+			t.Run(v.path, func(t *testing.T) {
+				testExec(t, "assets/"+v.path, v.exec, g)
 			})
 		}
 
@@ -419,7 +262,7 @@ func TestExec(t *testing.T) {
 	}
 }
 
-func testExec(t *testing.T, cfsDir string, g *golden) {
+func testExec(t *testing.T, cfsDir string, exec bool, g *golden) {
 	const isolated = "x"
 	os.RemoveAll(isolated)
 	if err := os.Mkdir(isolated, 0770); err != nil {
@@ -430,14 +273,20 @@ func testExec(t *testing.T, cfsDir string, g *golden) {
 		t.Fatal(err)
 	}
 
-	files, bytes, err := copyDir(cfs, "", cfsDir, nil)
+	defer func() {
+		if err := os.Chdir(".."); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	files, bytes, err := fileutil.CopyDir(cfs, "", cfsDir, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Logf("%s: copied %v files, %v bytes", cfsDir, h(files), h(bytes))
 
-	p := newParallel()
+	p := newParallel(cfsDir)
 
 	defer func() { p.close(t) }()
 
@@ -455,7 +304,8 @@ func testExec(t *testing.T, cfsDir string, g *golden) {
 		}
 
 		p.file()
-		if re != nil && !re.MatchString(path) {
+		switch {
+		case re != nil && !re.MatchString(filepath.Base(path)):
 			p.skip()
 			return nil
 		}
@@ -464,25 +314,49 @@ func testExec(t *testing.T, cfsDir string, g *golden) {
 		if *oTrace {
 			fmt.Fprintln(os.Stderr, filepath.Join(cfsDir, path), id)
 		}
-		p.exec(func() error { return testExec1(t, p, cfsDir, path, g, id) })
+		p.exec(func() error { return testExec1(t, p, cfsDir, path, exec, g, id) })
 		return nil
 	}))
 }
 
-func testExec1(t *testing.T, p *parallel, root, path string, g *golden, id int) error {
+func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golden, id int) error {
 	fullPath := filepath.Join(root, path)
+	if dmesgs {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
+		defer func() {
+			runtime.ReadMemStats(&m)
+			h1 := m.HeapInuse
+			if h1 < h0 {
+				h1 = h0
+			}
+			dmesg("%80v: (%v) heap in use out %15s, used %15s", fullPath, origin(1), h(h1), h(h1-h0))
+		}()
+	}
 	var cCompilerFailed, cExecFailed bool
 	ofn := fmt.Sprint(id)
-	_, err := shell(false, hostCC, "-o", enforceBinaryExt(ofn), "-w", path)
-	if err != nil {
-		cCompilerFailed = true
+	bin := "cbin_" + enforceBinaryExt(ofn)
+	if exec {
+		_, err := shell(false, hostCC, "-o", bin, "-w", path)
+		if err != nil {
+			cCompilerFailed = true
+		}
 	}
 
 	defer os.Remove(ofn)
 
+	if dmesgs {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
+	}
 	var cOut []byte
+	var err error
 	if !cCompilerFailed {
-		if cOut, err = shell(false, "./"+enforceBinaryExt(ofn)); err != nil {
+		if cOut, err = shell(false, "./"+bin); err != nil {
 			cExecFailed = true
 		}
 	}
@@ -494,62 +368,50 @@ func testExec1(t *testing.T, p *parallel, root, path string, g *golden, id int) 
 	if dmesgs {
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
-		dmesg("compile start %v, heap in use: %v ", id, h(m.HeapInuse))
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
 	}
 	var out bytes.Buffer
 	if err := NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "--prefix-field=F", path}, &out, &out, nil).Main(); err != nil {
-		if dmesgs {
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-			dmesg("compile finished %v, heap in use: %v ", id, h(m.HeapInuse))
-		}
 		if cCompilerFailed {
 			p.skip()
 			return nil
 		}
 
 		p.fail()
-		if dmesgs {
-			dmesg("compile failed %v: %v ", id, firstError(err, true))
-		}
 		return errorf("%s: %s: FAIL: %v", fullPath, out.Bytes(), firstError(err, *oErr1))
 	}
 
+	bin = "gobin_" + ofn[:len(ofn)-len(".go")]
+	bin = enforceBinaryExt(ofn)
 	if dmesgs {
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
-		dmesg("compile result start %v, heap in use: %v ", id, h(m.HeapInuse))
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
 	}
-	bin := ofn[:len(ofn)-len(".go")]
-	bin = enforceBinaryExt(ofn)
-	if _, err = exec.Command("go", "build", "-o", bin, ofn).CombinedOutput(); err != nil {
-		if dmesgs {
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-			dmesg("compile result finished %v, heap in use: %v ", id, h(m.HeapInuse))
-		}
+	if _, err = shell(false, "go", "build", "-o", bin, ofn); err != nil {
 		p.fail()
-		if dmesgs {
-			dmesg("compile result failed %v: %v ", id, firstError(err, true))
-		}
 		return firstError(err, *oErr1)
 	}
 
-	if dmesgs {
-		var m runtime.MemStats
-		runtime.ReadMemStats(&m)
-		dmesg("executing result start %v, heap in use: %v ", id, h(m.HeapInuse))
+	if !exec {
+		p.ok()
+		g.w("%s\n", fullPath)
+		return nil
 	}
+
 	if runtime.GOOS != "windows" {
 		bin = "./" + bin
 	}
+	if dmesgs {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
+	}
 	goOut, err := shell(false, bin)
 	if err != nil {
-		if dmesgs {
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-			dmesg("executing result finished %v, heap in use: %v ", id, h(m.HeapInuse))
-		}
 		if cExecFailed {
 			p.skip()
 			return nil
@@ -561,16 +423,14 @@ func testExec1(t *testing.T, p *parallel, root, path string, g *golden, id int) 
 		}
 
 		p.fail()
-		if dmesgs {
-			dmesg("executing result failed %v: %v ", id, firstError(err, true))
-		}
 		return firstError(err, *oErr1)
 	}
 
 	if dmesgs {
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
-		dmesg("executing result done %v, heap in use: %v ", id, h(m.HeapInuse))
+		h0 := m.HeapInuse
+		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
 	}
 	cOut = bytes.TrimSpace(cOut)
 	goOut = bytes.TrimSpace(goOut)

@@ -2,6 +2,25 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//	jnml@e5-1650:~/tmp$ wc 1.go
+//	 100021  300054 3804357 1.go
+//	jnml@e5-1650:~/tmp$ go clean -cache ; time go build 1.go
+//
+//	real	0m1,832s
+//	user	0m4,902s
+//	sys	0m1,061s
+//	jnml@e5-1650:~/tmp$
+//
+//	cases x 1000	real time	secs
+//		   0	0m1,832s	  1
+//		   1	0m2,053s	  2
+//		   2	0m2,838s	  3
+//		   4	0m5,188s	  5
+//		   8	0m14,448s	 14
+//		  16	0m50,383s	 50
+//		  32	3m17,064s	197
+//		  64	13m28,119s	808
+
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
