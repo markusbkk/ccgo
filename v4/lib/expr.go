@@ -187,7 +187,8 @@ func (c *ctx) pin(n cc.Node, b *buf) *buf {
 			switch symKind(string(b.bytes())) {
 			case automatic, ccgoAutomatic:
 				c.f.declInfos.takeAddress(x)
-				//trc("%v: PIN %v at %v (%v: %v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(4), origin(3), origin(2))
+				// trc("%v: PIN %v at %v (%v: %v: %v:)", c.pos(n), x.Name(), c.pos(x), origin(4), origin(3), origin(2))
+				// trc("%s", debug.Stack())
 			}
 		case 2:
 			// ok
@@ -201,7 +202,8 @@ func (c *ctx) pin(n cc.Node, b *buf) *buf {
 			switch symKind(s) {
 			case automatic, ccgoAutomatic:
 				c.f.declInfos.takeAddress(y)
-				//trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), y.Name(), c.pos(y), origin(3), origin(2))
+				// trc("%v: PIN %v at %v (%v: %v:)", c.pos(n), y.Name(), c.pos(y), origin(3), origin(2))
+				// trc("%s", debug.Stack())
 			}
 			return b
 		}
@@ -992,7 +994,7 @@ out:
 					}
 				}
 
-				b.w("%suintptr(%sunsafe.%[1]sAdd(%sunsafe.%[1]sPointer(%[3]s), (%s%s)))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprUintpr), c.expr(w, n.ExpressionList, nil, exprDefault), s)
+				b.w("%suintptr(%sunsafe.%[1]sAdd(%sunsafe.%[1]sPointer(%[3]s), (%s%s)))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
 			default:
 				//trc("", c.pos(n), mode, cc.NodeSource(n))
 				c.err(errorf("TODO %v", mode))

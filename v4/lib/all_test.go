@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -248,7 +249,7 @@ func TestExec(t *testing.T) {
 			{"github.com/AbsInt/CompCert/test/c", true},
 			{"github.com/cxgo", true},
 			{"github.com/gcc-mirror/gcc/gcc/testsuite", true},
-			//TODO crash {"github.com/vnmakarov", true},
+			{"github.com/vnmakarov", true},
 			{"tcc-0.9.27/tests/tests2", true},
 		} {
 			t.Run(v.path, func(t *testing.T) {
@@ -320,6 +321,7 @@ func testExec(t *testing.T, cfsDir string, exec bool, g *golden) {
 }
 
 func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golden, id int) error {
+	args, err := getArgs(path)
 	fullPath := filepath.Join(root, path)
 	if dmesgs {
 		var m runtime.MemStats
@@ -338,11 +340,10 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 	var cCompilerFailed, cExecFailed bool
 	ofn := fmt.Sprint(id)
 	bin := "cbin_" + enforceBinaryExt(ofn)
-	if exec {
-		_, err := shell(false, hostCC, "-o", bin, "-w", path)
-		if err != nil {
-			cCompilerFailed = true
-		}
+	if _, err = shell(false, hostCC, "-o", bin, "-w", path, "-lm"); err != nil {
+		p.skip()
+		return nil
+		cCompilerFailed = true
 	}
 
 	defer os.Remove(ofn)
@@ -354,9 +355,10 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
 	}
 	var cOut []byte
-	var err error
-	if !cCompilerFailed {
-		if cOut, err = shell(false, "./"+bin); err != nil {
+	if exec && !cCompilerFailed {
+		if cOut, err = shell(false, "./"+bin, args...); err != nil {
+			p.skip()
+			return nil
 			cExecFailed = true
 		}
 	}
@@ -410,7 +412,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 		h0 := m.HeapInuse
 		dmesg("%80v: (%v) heap in use in  %15v", fullPath, origin(1), h(h0))
 	}
-	goOut, err := shell(false, bin)
+	goOut, err := shell(false, bin, args...)
 	if err != nil {
 		if cExecFailed {
 			p.skip()
@@ -422,6 +424,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 			panic(err)
 		}
 
+		trc("%s: EXEC FAIL %s: %s", fullPath, goOut, err)
 		p.fail()
 		return firstError(err, *oErr1)
 	}
@@ -460,8 +463,33 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 		panic(err)
 	}
 
+	trc("%s: EXEC FAIL %s: %s", fullPath, goOut, err)
 	p.fail()
 	return firstError(err, *oErr1)
+}
+
+func getArgs(src string) (args []string, err error) {
+	src = src[:len(src)-len(filepath.Ext(src))] + ".arg"
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return nil, nil
+	}
+
+	a := strings.Split(strings.TrimSpace(string(b)), "\n")
+	for _, v := range a {
+		switch {
+		case strings.HasPrefix(v, "\"") || strings.HasPrefix(v, "`"):
+			w, err := strconv.Unquote(v)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %v: %v", src, v, err)
+			}
+
+			args = append(args, w)
+		default:
+			args = append(args, v)
+		}
+	}
+	return args, nil
 }
 
 type golden struct {

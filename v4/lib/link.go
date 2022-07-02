@@ -1181,7 +1181,7 @@ func VaList(p uintptr, args ...interface{}) uintptr
 
 // SymbolResolver implements gc.Checker.
 func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Package, ident gc.Token) (r gc.Node, err error) {
-	// trc("%p %p %q %q %q", currentScope, fileScope, pkg.Name, pkg.ImportPath, ident)
+	// trc("symbol resolver: %p %p %q %q %q off %v", currentScope, fileScope, pkg.Name, pkg.ImportPath, ident, ident.Offset())
 	nm := ident.Src()
 	off := ident.Offset()
 	for s := currentScope; s != nil; s = s.Parent {
@@ -1198,7 +1198,7 @@ func (l *linker) SymbolResolver(currentScope, fileScope *gc.Scope, pkg *gc.Packa
 		}
 
 		if r := s.Nodes[nm]; r.Node != nil && r.VisibleFrom <= off {
-			// trc("defined in scope %p(%v), parent %p(%v)", s, s.IsPackage(), s.Parent, s.Parent != nil && s.Parent.IsPackage())
+			// trc("defined in scope %p(%v), parent %p(%v), %T visible from %v", s, s.IsPackage(), s.Parent, s.Parent != nil && s.Parent.IsPackage(), r.Node, r.VisibleFrom)
 			return r.Node, nil
 		}
 	}
@@ -1353,6 +1353,20 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 					c.set = func(n gc.Node) { x.Expr = n.(gc.Expression) }
 					c.typ = x.Type()
 					c.strict = false
+				case *gc.Assignment:
+					if len(x.LExprList) == 1 && len(x.RExprList) == 1 {
+						c.opt = x.RExprList[0].Expr
+						c.set = func(n gc.Node) { x.RExprList[0].Expr = n.(gc.Expression) }
+						c.typ = x.LExprList[0].Expr.Type()
+						c.strict = false
+					}
+				case *gc.ReturnStmt:
+					if len(x.ExprList) == 1 {
+						c.opt = x.ExprList[0].Expr
+						c.set = func(n gc.Node) { x.ExprList[0].Expr = n.(gc.Expression) }
+						c.typ = x.ExprList[0].Expr.Type()
+						c.strict = false
+					}
 				}
 				return
 			}
@@ -1374,47 +1388,68 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 					break
 				}
 
+				do := false
 				expr := x.ExprList[0].Expr
 				val := expr.Value()
+
+				defer func() {
+					if do {
+						if y, ok := expr.(*gc.BasicLit); ok {
+							if sep1, sep2 := x.PrimaryExpr.(*gc.QualifiedIdent).PackageName.Sep(), y.Token.Sep(); sep1 != "" && sep2 == "" {
+								y.Token.SetSep(sep1)
+								expr = y
+							}
+						}
+						c.set(expr)
+					}
+				}()
+
 				switch val.Kind() {
 				case constant.Int:
 					switch dest.Kind() {
 					case gc.Int8:
 						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt8 && n <= math.MaxInt8 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Int16:
 						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt16 && n <= math.MaxInt16 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Int32:
 						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt32 && n <= math.MaxInt32 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Int64:
 						if _, ok := constant.Int64Val(val); ok {
-							c.set(expr)
+							do = true
 						}
 					case gc.Uint8:
 						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint8 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Uint16:
 						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint16 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Uint32:
 						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint32 {
-							c.set(expr)
+							do = true
 						}
 					case gc.Uint64:
 						if _, ok := constant.Uint64Val(val); ok {
-							c.set(expr)
+							do = true
 						}
 					case gc.Uintptr:
 						if n, ok := constant.Uint64Val(val); ok && n <= l.maxUintptr {
-							c.set(expr)
+							do = true
 						}
+					}
+				case constant.Float:
+					switch dest.Kind() {
+					case gc.Float32:
+						do = true
+					case gc.Float64:
+						do = true
 					}
 				}
 			}
