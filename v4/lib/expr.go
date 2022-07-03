@@ -1582,8 +1582,8 @@ out:
 					rt = x.Type().Pointer()
 					b.w("%s", bpOff(info.bpOff))
 				case exprDefault:
-					switch n.Type().Undecay().(type) {
-					case *cc.ArrayType:
+					switch _, ok := n.Type().Undecay().(*cc.ArrayType); {
+					case ok && !x.IsParam():
 						b.w("%s", bpOff(info.bpOff))
 					default:
 						b.w("(*(*%s)(%s))", c.typ(n, x.Type()), unsafePointer(bpOff(info.bpOff)))

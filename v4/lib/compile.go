@@ -193,8 +193,9 @@ type ctx struct {
 	nextID int
 	pass   int // 0: out of function, 1: func 1st pass, 2: func 2nd pass.
 
-	closed  bool
-	hasMain bool
+	closed    bool
+	hasMain   bool
+	hasErrors bool
 }
 
 func newCtx(task *Task, eh errHandler) *ctx {
@@ -225,7 +226,10 @@ func (c *ctx) id() int {
 	return c.nextID
 }
 
-func (c *ctx) err(err error) { c.eh("%s", err.Error()) }
+func (c *ctx) err(err error) {
+	c.hasErrors = true
+	c.eh("%s", err.Error())
+}
 
 func (c *ctx) w(s string, args ...interface{}) {
 	if c.closed {
@@ -250,6 +254,10 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 			if err == nil {
 				err = err2
 			}
+			return
+		}
+
+		if c.hasErrors {
 			return
 		}
 

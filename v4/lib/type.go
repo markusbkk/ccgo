@@ -34,6 +34,12 @@ func (c *ctx) typ(n cc.Node, t cc.Type) string {
 }
 
 func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStructUnionTag, isField bool) {
+	if !c.checkValidType(n, t) {
+		b.WriteString(tag(preserve))
+		b.WriteString("int32")
+		return
+	}
+
 	if tn := t.Typedef(); tn != nil && useTypename && tn.LexicalScope().Parent == nil {
 		fmt.Fprintf(b, "%s%s", tag(typename), tn.Name())
 		return
@@ -134,15 +140,12 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					break
 				}
 
-				if f.Type().Size() <= 0 {
-					continue
-				}
-
 				if f.IsBitfield() {
 					// trc("%q %s %v %#0x", f.Name(), f.Type(), f.IsBitfield(), f.Type().Size())
 					c.err(errorf("TODO bitfield"))
 					return
 				}
+
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -169,15 +172,12 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					break
 				}
 
-				if f.Type().Size() <= 0 {
-					continue
-				}
-
 				if f.IsBitfield() {
 					// trc("%q %s %v %#0x", f.Name(), f.Type(), f.IsBitfield(), f.Type().Size())
 					c.err(errorf("TODO bitfield"))
 					return
 				}
+
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -226,6 +226,50 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 		c.err(errorf("TODO %T", x))
 		return
 	}
+}
+
+func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {
+	t = t.Undecay()
+	if x, ok := t.(*cc.ArrayType); ok && x.IsIncomplete() && !x.IsVLA() {
+		return true
+	}
+
+	return c.checkValidType(n, t)
+}
+
+func (c *ctx) checkValidType(n cc.Node, t cc.Type) (ok bool) {
+	ok = true
+	switch attr := t.Attributes(); {
+	case t.Align() > 8:
+		c.err(errorf("%v: unsupported alignment: %d", pos(n), t.Align()))
+		ok = false
+	case attr != nil && t.Attributes().Aligned() > 8:
+		c.err(errorf("%v: unsupported alignment: %d", pos(n), attr.Aligned()))
+		ok = false
+	case attr != nil && attr.Aligned() >= 0 && int64(t.Align()) != attr.Aligned():
+		c.err(errorf("%v: unsupported alignment: %d", pos(n), attr.Aligned()))
+		ok = false
+	}
+
+	switch x := t.(type) {
+	case *cc.ArrayType:
+		if x.IsVLA() {
+			c.err(errorf("%v: variable length arrays are not supported", pos(n)))
+			return false
+		}
+	}
+
+	if t.IsIncomplete() {
+		c.err(errorf("%v: incomplete type: %s", pos(n), t))
+		return false
+	}
+
+	if t.Size() <= 0 {
+		c.err(errorf("%v: invalid type size: %d", pos(n), t.Size()))
+		return false
+	}
+
+	return ok
 }
 
 func (c *ctx) unionLiteral(n cc.Node, t *cc.UnionType) string {

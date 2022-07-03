@@ -141,6 +141,10 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 	}
 	if f.MaxArgs() != 0 {
 		for i, v := range f.Parameters() {
+			if !c.checkValidParamType(v, v.Type()) {
+				return ""
+			}
+
 			b.WriteString(", ")
 			if names {
 				switch nm := v.Name(); {
