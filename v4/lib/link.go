@@ -529,14 +529,25 @@ func (l *linker) w(s string, args ...interface{}) {
 	}
 }
 
+var hide = map[string]struct{}{
+	tag(external) + "_longjmp":       {}, // only panics
+	tag(external) + "_setjmp":        {}, // only panics
+	tag(external) + "longjmp":        {}, // only panics
+	tag(external) + "pthread_create": {}, // implementation is still broken
+	tag(external) + "setjmp":         {}, // only panics
+}
+
 func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object) (err error) {
+	// Force a link error for things not really supported or that only panic at runtime.
 	var tld nameSet
 	// Build the symbol table.
 	for _, linkFile := range linkFiles {
 		object := objects[linkFile]
 		for nm := range object.externs {
 			if _, ok := l.externs[nm]; !ok {
-				l.externs[nm] = object
+				if _, ok := hide[nm]; !ok {
+					l.externs[nm] = object
+				}
 			}
 			tld.add(nm)
 		}

@@ -449,15 +449,11 @@ func symKind(s string) name {
 }
 
 func enforceBinaryExt(s string) string {
+	ext := filepath.Ext(s)
+	s = s[:len(s)-len(ext)]
 	switch runtime.GOOS {
 	case "windows":
-		if !strings.HasSuffix(s, ".exe") {
-			return s + ".exe"
-		}
-	default:
-		if strings.HasSuffix(s, ".exe") {
-			return s[:len(s)-len(".exe")]
-		}
+		return s + ".exe"
 	}
 	return s
 }

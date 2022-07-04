@@ -10,6 +10,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 import (
 	"context"
 	"fmt"
+	"os/exec"
 )
 
 func shell(echo bool, cmd string, args ...string) ([]byte, error) {
