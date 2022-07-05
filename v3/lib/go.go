@@ -12640,6 +12640,23 @@ func (p *project) iterationStatement(f *function, n *cc.IterationStatement) {
 		}
 		p.statement(f, n.Statement, true, false, false, 0)
 	case cc.IterationStatementForDecl: // "for" '(' Declaration Expression ';' Expression ')' Statement
+		if !(f.hasJumps || n.Expression2 != nil && n.Expression2.Case == cc.ExpressionComma) {
+			p.w("{")
+			p.declaration(f, n.Declaration, false)
+			p.w("for ;")
+			if n.Expression != nil {
+				p.expression(f, n.Expression, n.Expression.Operand.Type(), exprBool, 0)
+			}
+			p.w(";")
+			if n.Expression2 != nil {
+				p.expression(f, n.Expression2, n.Expression2.Operand.Type(), exprVoid, fNoCondAssignment)
+			}
+			p.w("{")
+			p.statement(f, n.Statement, false, true, false, 0)
+			p.w("}};")
+			break
+		}
+
 		var ids []*cc.InitDeclarator
 		for list := n.Declaration.InitDeclaratorList; list != nil; list = list.InitDeclaratorList {
 			ids = append(ids, list.InitDeclarator)
