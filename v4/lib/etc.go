@@ -218,8 +218,13 @@ type parallel struct {
 }
 
 func newParallel(resultTag string) *parallel {
+	limit := runtime.GOMAXPROCS(0)
+	switch runtime.GOARCH {
+	case "386", "arm": // 32 bit targets
+		limit = 1
+	}
 	return &parallel{
-		limit:     make(chan struct{}, runtime.GOMAXPROCS(0)),
+		limit:     make(chan struct{}, limit),
 		resultTag: resultTag,
 	}
 }

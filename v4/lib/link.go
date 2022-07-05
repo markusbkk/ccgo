@@ -1282,8 +1282,8 @@ func (l *linker) syntheticPackage(importPath, fn string, src []byte) (r *gc.Pack
 }
 
 type uctx struct {
-	libc  *gc.Package
-	stack []uctxStack
+	linker *linker
+	stack  []uctxStack
 	uctxStack
 }
 
@@ -1298,18 +1298,18 @@ type uctxStack struct {
 func (c *uctx) push() { c.stack = append(c.stack, c.uctxStack) }
 func (c *uctx) pop()  { c.uctxStack = c.stack[len(c.stack)-1]; c.stack = c.stack[:len(c.stack)-1] }
 
-func (c *uctx) libcFunc(n gc.Expression) *gc.QualifiedIdent {
+func (c *uctx) libcQI(n gc.Expression) *gc.QualifiedIdent {
 	switch x := n.(type) {
 	case *gc.QualifiedIdent:
-		if x.ResolvedIn() == c.libc {
+		if x.ResolvedIn() == c.linker.libc.pkg {
 			return x
 		}
 	}
 	return nil
 }
 
-func (c *uctx) libcXFromY(n gc.Expression) (dest, src gc.Type, ok bool) {
-	if qi := c.libcFunc(n); qi != nil {
+func (c *uctx) isLibcXFromY(n gc.Expression) (dest, src gc.Type, ok bool) {
+	if qi := c.libcQI(n); qi != nil {
 		if !strings.Contains(qi.Ident.Src(), "From") {
 			return nil, nil, false
 		}
@@ -1319,6 +1319,96 @@ func (c *uctx) libcXFromY(n gc.Expression) (dest, src gc.Type, ok bool) {
 	}
 
 	return nil, nil, false
+}
+
+func (c *uctx) unsafeQI(n gc.Expression) *gc.QualifiedIdent {
+	switch x := n.(type) {
+	case *gc.QualifiedIdent:
+		if x.ResolvedIn().Name == "unsafe" {
+			return x
+		}
+	}
+	return nil
+}
+
+func (c *uctx) isUnsafe(n gc.Expression) (fn string, ok bool) {
+	if qi := c.unsafeQI(n); qi != nil {
+		return qi.Ident.Src(), true
+	}
+
+	return "", false
+}
+
+func (c *uctx) unconvertExpr(n gc.Expression, strict bool) (r gc.Expression, changed bool) {
+	switch x := n.(type) {
+	case *gc.Arguments:
+		if c.strict {
+			return n, false
+		}
+
+		dest, _, ok := c.isLibcXFromY(x.PrimaryExpr)
+		if !ok {
+			return n, false
+		}
+
+		lit, ok := x.ExprList[0].Expr.(*gc.BasicLit)
+		if !ok {
+			return n, false
+		}
+
+		if sep1, sep2 := x.PrimaryExpr.(*gc.QualifiedIdent).PackageName.Sep(), lit.Token.Sep(); sep1 != "" && sep2 == "" {
+			lit.Token.SetSep(sep1)
+		}
+		switch val := lit.Value(); val.Kind() {
+		case constant.Int:
+			switch dest.Kind() {
+			case gc.Int8:
+				if n, ok := constant.Int64Val(val); ok && n >= math.MinInt8 && n <= math.MaxInt8 {
+					return lit, true
+				}
+			case gc.Int16:
+				if n, ok := constant.Int64Val(val); ok && n >= math.MinInt16 && n <= math.MaxInt16 {
+					return lit, true
+				}
+			case gc.Int32:
+				if n, ok := constant.Int64Val(val); ok && n >= math.MinInt32 && n <= math.MaxInt32 {
+					return lit, true
+				}
+			case gc.Int64:
+				if _, ok := constant.Int64Val(val); ok {
+					return lit, true
+				}
+			case gc.Uint8:
+				if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint8 {
+					return lit, true
+				}
+			case gc.Uint16:
+				if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint16 {
+					return lit, true
+				}
+			case gc.Uint32:
+				if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint32 {
+					return lit, true
+				}
+			case gc.Uint64:
+				if _, ok := constant.Uint64Val(val); ok {
+					return lit, true
+				}
+			case gc.Uintptr:
+				if n, ok := constant.Uint64Val(val); ok && n <= c.linker.maxUintptr {
+					return lit, true
+				}
+			}
+		case constant.Float:
+			switch dest.Kind() {
+			case gc.Float32:
+				return lit, true
+			case gc.Float64:
+				return lit, true
+			}
+		}
+	}
+	return n, false
 }
 
 func (l *linker) unconvert(sf *gc.SourceFile) {
@@ -1378,6 +1468,20 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 						c.typ = x.ExprList[0].Expr.Type()
 						c.strict = false
 					}
+				case *gc.Arguments:
+					if _, _, ok := c.isLibcXFromY(x.PrimaryExpr); ok {
+						break
+					}
+
+					if c.unsafeQI(x.PrimaryExpr) != nil {
+						break
+					}
+
+					for i, v := range x.ExprList {
+						if e, changed := c.unconvertExpr(v.Expr, false); changed {
+							x.ExprList[i].Expr = e
+						}
+					}
 				}
 				return
 			}
@@ -1390,81 +1494,11 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 
 			switch x := n.(type) {
 			case *gc.Arguments:
-				if c.strict {
-					break
-				}
-
-				dest, _, ok := c.libcXFromY(x.PrimaryExpr)
-				if !ok {
-					break
-				}
-
-				do := false
-				expr := x.ExprList[0].Expr
-				val := expr.Value()
-
-				defer func() {
-					if do {
-						if y, ok := expr.(*gc.BasicLit); ok {
-							if sep1, sep2 := x.PrimaryExpr.(*gc.QualifiedIdent).PackageName.Sep(), y.Token.Sep(); sep1 != "" && sep2 == "" {
-								y.Token.SetSep(sep1)
-								expr = y
-							}
-						}
-						c.set(expr)
-					}
-				}()
-
-				switch val.Kind() {
-				case constant.Int:
-					switch dest.Kind() {
-					case gc.Int8:
-						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt8 && n <= math.MaxInt8 {
-							do = true
-						}
-					case gc.Int16:
-						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt16 && n <= math.MaxInt16 {
-							do = true
-						}
-					case gc.Int32:
-						if n, ok := constant.Int64Val(val); ok && n >= math.MinInt32 && n <= math.MaxInt32 {
-							do = true
-						}
-					case gc.Int64:
-						if _, ok := constant.Int64Val(val); ok {
-							do = true
-						}
-					case gc.Uint8:
-						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint8 {
-							do = true
-						}
-					case gc.Uint16:
-						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint16 {
-							do = true
-						}
-					case gc.Uint32:
-						if n, ok := constant.Uint64Val(val); ok && n <= math.MaxUint32 {
-							do = true
-						}
-					case gc.Uint64:
-						if _, ok := constant.Uint64Val(val); ok {
-							do = true
-						}
-					case gc.Uintptr:
-						if n, ok := constant.Uint64Val(val); ok && n <= l.maxUintptr {
-							do = true
-						}
-					}
-				case constant.Float:
-					switch dest.Kind() {
-					case gc.Float32:
-						do = true
-					case gc.Float64:
-						do = true
-					}
+				if expr, changed := c.unconvertExpr(x, c.strict); changed {
+					c.set(expr)
 				}
 			}
 		},
-		&uctx{libc: l.libc.pkg},
+		&uctx{linker: l},
 	)
 }

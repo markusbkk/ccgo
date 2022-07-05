@@ -238,16 +238,14 @@ func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {
 }
 
 func (c *ctx) checkValidType(n cc.Node, t cc.Type) (ok bool) {
+	//trc("", pos(n), t, t.Attributes() != nil)
 	ok = true
 	switch attr := t.Attributes(); {
-	case t.Align() > 8:
-		c.err(errorf("%v: unsupported alignment: %d", pos(n), t.Align()))
+	case t.Align() > 8 || int64(t.Align()) > t.Size():
+		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
 		ok = false
-	case attr != nil && t.Attributes().Aligned() > 8:
-		c.err(errorf("%v: unsupported alignment: %d", pos(n), attr.Aligned()))
-		ok = false
-	case attr != nil && attr.Aligned() >= 0 && int64(t.Align()) != attr.Aligned():
-		c.err(errorf("%v: unsupported alignment: %d", pos(n), attr.Aligned()))
+	case attr != nil && (attr.Aligned() > 8 || attr.Aligned() > t.Size()):
+		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
 		ok = false
 	}
 
