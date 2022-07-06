@@ -9523,7 +9523,7 @@ func (p *project) postfixExpressionSelectPSelectStruct(f *function, n *cc.Postfi
 
 func (p *project) postfixExpressionSelectSelect(f *function, n *cc.PostfixExpression, t cc.Type, mode exprMode, flags flags) {
 	// PostfixExpression '.' IDENTIFIER
-	switch k := p.opKind(f, n.PostfixExpression, n.PostfixExpression.Operand.Type()); k {
+	switch k := p.structOrUnion(n); k {
 	case opUnion:
 		p.postfixExpressionSelectSelectUnion(f, n, t, mode, flags)
 	case opStruct:
@@ -9531,6 +9531,40 @@ func (p *project) postfixExpressionSelectSelect(f *function, n *cc.PostfixExpres
 	default:
 		panic(todo("", n.Position(), k))
 	}
+}
+
+func (p *project) structOrUnion(n *cc.PostfixExpression) opKind {
+	t := n.PostfixExpression.Operand.Type()
+	switch n.Case {
+	case cc.PostfixExpressionSelect: // PostfixExpression '.' IDENTIFIER
+		// ok
+	case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
+		if t.Kind() == cc.Ptr {
+			t = t.Elem()
+			break
+		}
+
+		p.err(n, "expected pointer type: %s", t)
+		return opStruct
+	}
+	f, path, ok := t.FieldByName2(n.Token2.Src)
+	if !ok {
+		p.err(&n.Token, "unknown field: %s", n.Token2)
+		return opStruct
+	}
+
+	for len(path) > 1 {
+		f = t.FieldByIndex(path[:1])
+		path = path[1:]
+		t = f.Type()
+	}
+	if t.Kind() == cc.Union {
+		// trc("%v: %q %v", n.Token2.Position(), n.Token2.Src, opUnion)
+		return opUnion
+	}
+
+	// trc("%v: %q %v", n.Token2.Position(), n.Token2.Src, opStruct)
+	return opStruct
 }
 
 func (p *project) postfixExpressionSelectSelectStruct(f *function, n *cc.PostfixExpression, t cc.Type, mode exprMode, flags flags) {
