@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/dustin/go-humanize v1.0.0
+	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pmezard/go-difflib v1.0.0
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654

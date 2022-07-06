@@ -18,12 +18,14 @@ import (
 	"sync/atomic"
 	"unicode/utf8"
 
+	"github.com/pbnjay/memory"
 	"modernc.org/cc/v4"
 	"modernc.org/gc/v2"
 )
 
 var (
 	extendedErrors bool // true: Errors will include origin info.
+	totalRam       = memory.TotalMemory()
 
 	reservedNames = nameSet{
 		// Keywords
@@ -222,6 +224,10 @@ func newParallel(resultTag string) *parallel {
 	switch runtime.GOARCH {
 	case "386", "arm": // 32 bit targets
 		limit = 1
+	default:
+		if totalRam <= 1<<32 {
+			limit = 1
+		}
 	}
 	return &parallel{
 		limit:     make(chan struct{}, limit),

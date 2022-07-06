@@ -968,7 +968,7 @@ out:
 				case *cc.PointerType:
 					switch mode {
 					case exprLvalue, exprDefault, exprSelect:
-						b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(%s), (%s)%s)))", c.typ(n, y.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
+						b.w("(*(*%s)(%sunsafe.%sPointer(%s + uintptr(%s)%s)))", c.typ(n, y.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
 						return &b, n.Type(), mode
 					case exprUintptr:
 						b.w("%suintptr(%sunsafe.%[1]sAdd(%sunsafe.%[1]sPointer(%[3]s), (%s%s)))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
