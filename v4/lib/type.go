@@ -241,10 +241,10 @@ func (c *ctx) checkValidType(n cc.Node, t cc.Type) (ok bool) {
 	//trc("", pos(n), t, t.Attributes() != nil)
 	ok = true
 	switch attr := t.Attributes(); {
-	case t.Align() > 8 || int64(t.Align()) > t.Size():
+	case t.Align() > 8 || (t.Size() > 0 && int64(t.Align()) > t.Size()):
 		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
 		ok = false
-	case attr != nil && (attr.Aligned() > 8 || attr.Aligned() > t.Size()):
+	case attr != nil && (attr.Aligned() > 8 || (t.Size() > 0 && attr.Aligned() > t.Size())):
 		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
 		ok = false
 	}

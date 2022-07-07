@@ -318,7 +318,7 @@ func testExec(t *testing.T, cfsDir string, exec bool, g *golden) {
 		}
 
 		if *oTrace {
-			fmt.Fprintln(os.Stderr, filepath.Join(cfsDir, path), id, args)
+			fmt.Fprintf(os.Stderr, "%5d %s %v\n", id, filepath.Join(cfsDir, path), args)
 		}
 		p.exec(func() error { return testExec1(t, p, cfsDir, path, exec, g, id, args) })
 		return nil
@@ -455,10 +455,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`: {}, // EXEC FAIL
 
-	//TODO missed VLA check
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41935.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr41935.c`: {}, // EXEC FAIL
-
 	// Other
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c`:                 {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c`: {}, // EXEC FAIL
@@ -467,7 +463,6 @@ var testExecKnownFails = map[string]struct{}{
 	// Miscompiled
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c`:                 {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/do-continue.c`:                       {}, // EXEC FAIL + hangs
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer.c`:                  {}, // EXEC FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/new/issue23.c`:                            {}, // EXEC FAIL
 	`assets/tcc-0.9.27/tests/tests2/75_array_in_struct_init.c`:                         {}, // EXEC FAIL initializer
@@ -534,6 +529,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/align-3.c`: {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23467.c`: {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr77718.c`: {}, // COMPILE FAIL
+
+	// VLA
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41935.c`:                 {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr41935.c`: {}, // COMPILE FAIL
 
 	//TODO linux/386
 	`assets/CompCert-3.6/test/c/lists.c`:                                                {}, // COMPILE FAIL

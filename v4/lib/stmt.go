@@ -223,11 +223,19 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		var a buf
 		switch b := c.expr(&a, n.ExpressionList, nil, exprBool); {
 		case a.len() != 0:
-			w.w("for {")
-			c.unbracedStatement(w, n.Statement)
+			// w.w("for {")
+			// c.unbracedStatement(w, n.Statement)
+			// w.w("%s", a.bytes())
+			// w.w("\nif !(%s) { break };", b)
+			// w.w("\n};")
+
+			w.w("for %sfirst := true; ; %[1]sfirst = false {", tag(ccgo))
+			w.w("\nif !first {")
 			w.w("%s", a.bytes())
 			w.w("\nif !(%s) { break };", b)
 			w.w("\n};")
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
 		default:
 			w.w("for %scond := true; %[1]scond; %[1]scond = %s", tag(ccgo), b)
 			c.bracedStatement(w, n.Statement)

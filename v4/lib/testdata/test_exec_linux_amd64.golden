@@ -2335,6 +2335,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-complement.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-expression.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/deref-store.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/directive-number.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/do-continue.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/for-side-effects.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-null.c

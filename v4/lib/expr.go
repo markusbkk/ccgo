@@ -947,6 +947,73 @@ out:
 	return &b, rt, rmode
 }
 
+func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *cc.PointerType, nt, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	// trc("%v: %s[%s] %v", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode)
+	// defer func() { trc("%v: %s[%s] %v -> %q", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode, r.bytes()) }()
+	var b buf
+	elem := pt.Elem()
+	var mul string
+	if v := elem.Size(); v != 1 {
+		if v < 0 {
+			c.err(errorf("TODO"))
+		}
+		mul = fmt.Sprintf("*%v", v)
+	}
+
+	rt, rmode = nt, mode
+	if f := c.isLastStructOrUnionField(p); f != nil {
+		switch f.Type().(type) {
+		case *cc.ArrayType:
+			// Flexible array member.
+			//
+			//  https://en.wikipedia.org/wiki/Flexible_array_member
+			switch mode {
+			case exprLvalue, exprDefault, exprSelect:
+				b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+				return &b, nt, mode
+			case exprUintptr:
+				b.w("(%s+%suintptr(%s)%s)", c.expr(w, p, nil, exprDefault), tag(preserve), c.expr(w, index, nil, exprDefault), mul)
+				return &b, nt.Pointer(), mode
+			default:
+				c.err(errorf("TODO %v", mode))
+				return &b, t, mode
+			}
+		}
+	}
+
+	switch mode {
+	case exprSelect, exprLvalue, exprDefault, exprIndex:
+		switch x := pt.Undecay().(type) {
+		case *cc.ArrayType:
+			if d := c.declaratorOf(p); d != nil && d.IsParam() {
+				b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+				break
+			}
+
+			b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
+		case *cc.PointerType:
+			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+		default:
+			trc("%v: %s[%s] %v %T", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode, x)
+			c.err(errorf("TODO %T", x))
+		}
+	case exprUintptr:
+		rt, rmode = nt.Pointer(), mode
+		if elem.Kind() == cc.Array {
+			if d := c.declaratorOf(p); d != nil && d.Type().Kind() == cc.Ptr {
+				b.w("((%s)+(%s)%s)", c.expr(w, p, nil, exprDefault), c.expr(w, index, c.pvoid, exprDefault), mul)
+				break
+			}
+		}
+
+		b.w("(%s + %suintptr(%s%s))", c.expr(w, p, nil, exprDefault), tag(preserve), c.expr(w, index, nil, exprDefault), mul)
+	default:
+		trc("%v: %s[%s] %v", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode)
+		c.err(errorf("TODO %v", mode))
+	}
+	return &b, rt, rmode
+}
+
 func (c *ctx) postfixExpression(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 out:
@@ -954,106 +1021,15 @@ out:
 	case cc.PostfixExpressionPrimary: // PrimaryExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.PostfixExpressionIndex: // PostfixExpression '[' ExpressionList ']'
-		if f := c.isLastStructOrUnionField(n.PostfixExpression); f != nil {
-			switch x := f.Type().(type) {
-			case *cc.ArrayType:
-				// Flexible array member.
-				//
-				//  https://en.wikipedia.org/wiki/Flexible_array_member
-				var s string
-				if v := x.Elem().Size(); v != 1 {
-					s = fmt.Sprintf("*%v", v)
-				}
-				switch y := n.PostfixExpression.Type().(type) {
-				case *cc.PointerType:
-					switch mode {
-					case exprLvalue, exprDefault, exprSelect:
-						b.w("(*(*%s)(%sunsafe.%sPointer(%s + uintptr(%s)%s)))", c.typ(n, y.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
-						return &b, n.Type(), mode
-					case exprUintptr:
-						b.w("%suintptr(%sunsafe.%[1]sAdd(%sunsafe.%[1]sPointer(%[3]s), (%s%s)))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
-						return &b, n.Type().Pointer(), mode
-					default:
-						trc("", n.Token.Position(), mode)
-						c.err(errorf("TODO %v", mode))
-					}
-				default:
-					c.err(errorf("TODO %v", n.Case))
-					return &b, t, mode
-				}
-			}
+		if x, ok := n.PostfixExpression.Type().(*cc.PointerType); ok {
+			return c.postfixExpressionIndex(w, n.PostfixExpression, n.ExpressionList, x, n.Type(), t, mode)
 		}
 
-		switch x := n.PostfixExpression.Type().(type) {
-		case *cc.PointerType:
-			switch mode {
-			case exprSelect, exprLvalue, exprDefault, exprIndex:
-				switch y := x.Undecay().(type) {
-				case *cc.ArrayType:
-					rt, rmode = n.Type(), mode
-					if d := c.declaratorOf(n.PostfixExpression); d != nil && d.IsParam() {
-						var s string
-						if v := x.Elem().Size(); v != 1 {
-							s = fmt.Sprintf("*%v", v)
-						}
-						b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(%s), (%s)%s)))", c.typ(n, x.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
-						break
-					}
-
-					b.w("%s[%s]", c.expr(w, n.PostfixExpression, nil, exprIndex), c.expr(w, n.ExpressionList, nil, exprDefault))
-				case *cc.PointerType:
-					rt, rmode = n.Type(), mode
-					var s string
-					if v := y.Elem().Size(); v != 1 {
-						s = fmt.Sprintf("*%v", v)
-					}
-					b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(%s), (%s)%s)))", c.typ(n, y.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
-				default:
-					c.err(errorf("TODO %T", x))
-				}
-			case exprUintptr:
-				rt, rmode = n.Type().Pointer(), mode
-				s := ""
-				if sz := x.Elem().Size(); sz != 1 {
-					s = fmt.Sprintf("*%v", sz)
-				}
-				if x.Elem().Kind() == cc.Array {
-					if d := c.declaratorOf(n.PostfixExpression); d != nil && d.Type().Kind() == cc.Ptr {
-						b.w("((%s)+(%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, c.pvoid, exprDefault), s)
-						break
-					}
-				}
-
-				b.w("%suintptr(%sunsafe.%[1]sAdd(%sunsafe.%[1]sPointer(%[3]s), (%s%s)))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprDefault), c.expr(w, n.ExpressionList, nil, exprDefault), s)
-			default:
-				//trc("", c.pos(n), mode, cc.NodeSource(n))
-				c.err(errorf("TODO %v", mode))
-			}
-		case *cc.PredefinedType:
-			switch {
-			case x.VectorSize() < 0:
-				switch mode {
-				case exprDefault:
-					switch y := n.ExpressionList.Type().Undecay().(type) {
-					case *cc.PointerType:
-						rt, rmode = n.Type(), mode
-						var s string
-						if v := y.Elem().Size(); v != 1 {
-							s = fmt.Sprintf("*%v", v)
-						}
-						b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(%s), (%s)%s)))", c.typ(n, y.Elem()), tag(importQualifier), tag(preserve), c.expr(w, n.ExpressionList, nil, exprDefault), c.expr(w, n.PostfixExpression, nil, exprDefault), s)
-					default:
-						c.err(errorf("TODO %T", y))
-					}
-				default:
-					c.err(errorf("TODO %v %v", x, mode))
-				}
-			default:
-				c.err(errorf("TODO %v", x))
-			}
-		default:
-			c.err(errorf("TODO %T", x))
+		if x, ok := n.ExpressionList.Type().(*cc.PointerType); ok {
+			return c.postfixExpressionIndex(w, n.ExpressionList, n.PostfixExpression, x, n.Type(), t, mode)
 		}
+
+		c.err(errorf("TODO %v", n.Case))
 	case cc.PostfixExpressionCall: // PostfixExpression '(' ArgumentExpressionList ')'
 		//TODO __builtin_object_size 28_strings.c on darwin/amd64
 		switch c.declaratorOf(n.PostfixExpression).Name() {
@@ -1102,7 +1078,8 @@ out:
 				rt, rmode = n.Type(), mode
 				switch {
 				case f.Offset() != 0:
-					b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
+					//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
+					c.err(errorf("TODO"))
 				default:
 					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 				}
@@ -1110,7 +1087,8 @@ out:
 				rt, rmode = n.Type().Pointer(), mode
 				switch {
 				case f.Offset() != 0:
-					b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+					// b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+					c.err(errorf("TODO"))
 				default:
 					b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
 				}
@@ -1120,7 +1098,8 @@ out:
 					rt, rmode = n.Type(), mode
 					switch {
 					case f.Offset() != 0:
-						b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+						// b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+						c.err(errorf("TODO"))
 					default:
 						b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
 					}
@@ -1170,7 +1149,7 @@ out:
 				switch {
 				case f.Offset() != 0:
 					c.err(errorf("TODO %v", mode))
-					b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer((%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), f.Offset())
+					//b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer((%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), f.Offset())
 				default:
 					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
 				}
