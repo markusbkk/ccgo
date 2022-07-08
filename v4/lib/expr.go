@@ -1653,6 +1653,11 @@ out:
 				case exprCall:
 					switch y := x.Type().(type) {
 					case *cc.FunctionType:
+						if !c.task.strictISOMode {
+							if _, ok := forcedBuiltins[nm]; ok {
+								nm = "__builtin_" + nm
+							}
+						}
 						b.w("%s%s", c.declaratorTag(x), nm)
 					case *cc.PointerType:
 						switch z := y.Elem().(type) {

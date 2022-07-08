@@ -12,7 +12,7 @@ require (
 	modernc.org/cc/v4 v4.0.0-20220705164147-7203a10c3a3e
 	modernc.org/ccorpus2 v0.0.15
 	modernc.org/fileutil v1.1.0
-	modernc.org/gc/v2 v2.0.0-20220702205838-2e37d5166a19
+	modernc.org/gc/v2 v2.0.0-20220708192943-89f1f8fe63d7
 	modernc.org/opt v0.1.3
 )
 

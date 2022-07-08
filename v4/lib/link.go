@@ -535,6 +535,7 @@ var hide = map[string]struct{}{
 	tag(external) + "longjmp":        {}, // only panics
 	tag(external) + "pthread_create": {}, // implementation is still broken
 	tag(external) + "setjmp":         {}, // only panics
+	tag(external) + "signal":         {}, // not really supported
 }
 
 func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object) (err error) {

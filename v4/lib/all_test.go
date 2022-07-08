@@ -444,16 +444,15 @@ func isTestExecKnownFail(s string) (r bool) {
 }
 
 var testExecKnownFails = map[string]struct{}{
-	// --------------------------------------------------------------------
+	// ====================================================================
 	// Compiles and builds but fails at execution.
 
+	// --------------------------------------------------------------------
 	// Won't fix
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20021127-1.c`:                 {}, // EXEC FAIL
+	//
+	// Compiler specific conversion results.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`:                 {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20021127-1.c`: {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`: {}, // EXEC FAIL
 
 	// Other
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c`:                 {}, // EXEC FAIL
@@ -471,14 +470,13 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-load.c`: {}, // EXEC FAIL
 
 	// linux/386
-	`assets/github.com/vnmakarov/mir/c-benchmarks/binary-trees.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`:         {}, // EXEC FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`: {}, // EXEC FAIL
 
 	//TODO timeout
 	`assets/benchmarksgame-team.pages.debian.net/fasta.c`:   {}, // EXEC FAIL
 	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`: {}, // EXEC FAIL
 
-	// --------------------------------------------------------------------
+	// ====================================================================
 	// Compiles but does not build.
 
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:                  {}, // BUILD FAIL
@@ -519,7 +517,13 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/tcc-0.9.27/tests/tests2/54_goto.c`:                                          {}, // BUILD FAIL
 	`assets/tcc-0.9.27/tests/tests2/78_vla_label.c`:                                     {}, // BUILD FAIL
 
-	// --------------------------------------------------------------------
+	// linux/386
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/991216-2.c`:                 {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-6.c`:                 {}, // BUILD FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/991216-2.c`: {}, // BUILD FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-6.c`: {}, // BUILD FAIL
+
+	// ====================================================================
 	// Does not compile (transpile).
 
 	// void func(void) __attribute__((aligned(256))) etc.
@@ -529,6 +533,16 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/align-3.c`: {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23467.c`: {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr77718.c`: {}, // COMPILE FAIL
+
+	// uses signal(2)
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`:                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-1.c`:                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-2.c`:                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-3.c`:                 {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`:    {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-1.c`: {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-2.c`: {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-3.c`: {}, // COMPILE FAIL
 
 	// VLA
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41935.c`:                 {}, // COMPILE FAIL
@@ -550,11 +564,23 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-1.c`:   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c`:  {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-2.c`: {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/binary-trees.c`:                       {}, // COMPILE FAIL
 
 	//TODO longjmp/setjmp
 	`assets/github.com/vnmakarov/mir/c-benchmarks/except.c`: {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/new/setjmp.c`:  {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/new/setjmp2.c`: {}, // COMPILE FAIL
+
+	//TODO libc missing __builtin_*
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20021127-1.c`:                      {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cbrt.c`:                            {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20010114-2.c`:                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20030331-1.c`:                 {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20021127-1.c`:      {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cbrt.c`:            {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20010114-2.c`: {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20030331-1.c`: {}, // COMPILE FAIL
+	`assets/tcc-0.9.27/tests/tests2/24_math_library.c`:                                       {}, // COMPILE FAIL
 
 	//TODO Other
 	`assets/CompCert-3.6/test/c/aes.c`:                                                                  {}, // COMPILE FAIL

@@ -67,15 +67,18 @@ type Task struct {
 	tlsQualifier          string
 
 	E               bool // -E
+	ansi            bool // -ansi
 	c               bool // -c
+	debugLinkerSave bool // -debug-linker-save, causes pre type checking save of the linker result.
 	fullPaths       bool // -full-paths
 	keepObjectFiles bool // -keep-object-files
-	debugLinkerSave bool // -debug-linker-save, causes pre type checking save of the linker result.
 	nostdinc        bool // -nostdinc
 	nostdlib        bool // -nostdlib
 	packageNameSet  bool
 	positions       bool // -positions
 	pthread         bool // -pthread
+
+	strictISOMode bool // -ansi or stc=c90
 }
 
 // NewTask returns a newly created Task. args[0] is the command name.
@@ -134,13 +137,20 @@ func (t *Task) Main() (err error) {
 		return nil
 	})
 	set.Arg("o", true, func(opt, val string) error { t.o = val; return nil })
-	set.Arg("std", true, func(opt, val string) error { t.std = fmt.Sprintf("%s=%s", opt, val); return nil })
+	set.Arg("std", true, func(opt, val string) error {
+		t.std = fmt.Sprintf("%s=%s", opt, val)
+		if val == "c90" {
+			t.strictISOMode = true
+		}
+		return nil
+	})
 	set.Opt("E", func(opt string) error { t.E = true; return nil })
+	set.Opt("ansi", func(opt string) error { t.ansi = true; t.strictISOMode = true; return nil })
 	set.Opt("c", func(opt string) error { t.c = true; return nil })
+	set.Opt("debug-linker-save", func(opt string) error { t.debugLinkerSave = true; return nil })
 	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; gc.ExtendedErrors = true; return nil })
 	set.Opt("full-paths", func(opt string) error { t.fullPaths = true; return nil })
 	set.Opt("keep-object-files", func(opt string) error { t.keepObjectFiles = true; return nil })
-	set.Opt("debug-linker-save", func(opt string) error { t.debugLinkerSave = true; return nil })
 	set.Opt("nostdinc", func(opt string) error { t.nostdinc = true; return nil })
 	set.Opt("nostdlib", func(opt string) error { t.nostdlib = true; return nil })
 	set.Opt("positions", func(opt string) error { t.positions = true; return nil })

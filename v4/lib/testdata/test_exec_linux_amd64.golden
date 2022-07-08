@@ -17,6 +17,9 @@ assets/CompCert-3.6/test/c/qsort.c
 assets/CompCert-3.6/test/c/sha1.c
 assets/CompCert-3.6/test/c/siphash24.c
 assets/CompCert-3.6/test/c/spectral.c
+assets/benchmarksgame-team.pages.debian.net/binary-trees.c
+assets/benchmarksgame-team.pages.debian.net/fasta.c
+assets/benchmarksgame-team.pages.debian.net/nbody-2.c
 assets/benchmarksgame-team.pages.debian.net/nbody-3.c
 assets/benchmarksgame-team.pages.debian.net/nbody-6.c
 assets/benchmarksgame-team.pages.debian.net/nbody.c
@@ -703,7 +706,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-5.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cbrt.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpdi-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpsi-1.c
@@ -738,10 +740,8 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/func-ptr-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/gofast.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20000320-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20001122-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20010114-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20010226-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20011123-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20030331-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20041213-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/920518-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/920810-1.c
@@ -755,9 +755,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/compare-fp-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/compare-fp-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-2.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-4e.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-6.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-8e.c
@@ -1775,7 +1772,6 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-pre
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cbrt.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpdi-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpsi-1.c
@@ -1810,10 +1806,8 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/func-ptr-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/gofast.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20000320-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20001122-1.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20010114-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20010226-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20011123-1.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20030331-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20041213-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/920518-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/920810-1.c
@@ -1827,9 +1821,6 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/compar
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/compare-fp-4.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-1.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-2.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-4e.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-6.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/fp-cmp-8e.c
@@ -2272,10 +2263,12 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/wchar_t-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-3.c
+assets/github.com/vnmakarov/mir/c-benchmarks/array.c
 assets/github.com/vnmakarov/mir/c-benchmarks/binary-trees.c
 assets/github.com/vnmakarov/mir/c-benchmarks/hash.c
 assets/github.com/vnmakarov/mir/c-benchmarks/hash2.c
 assets/github.com/vnmakarov/mir/c-benchmarks/heapsort.c
+assets/github.com/vnmakarov/mir/c-benchmarks/lists.c
 assets/github.com/vnmakarov/mir/c-benchmarks/mandelbrot.c
 assets/github.com/vnmakarov/mir/c-benchmarks/sieve.c
 assets/github.com/vnmakarov/mir/c-benchmarks/spectral-norm.c
@@ -2395,7 +2388,6 @@ assets/tcc-0.9.27/tests/tests2/20_pointer_comparison.c
 assets/tcc-0.9.27/tests/tests2/21_char_array.c
 assets/tcc-0.9.27/tests/tests2/22_floating_point.c
 assets/tcc-0.9.27/tests/tests2/23_type_coercion.c
-assets/tcc-0.9.27/tests/tests2/24_math_library.c
 assets/tcc-0.9.27/tests/tests2/25_quicksort.c
 assets/tcc-0.9.27/tests/tests2/26_character_constants.c
 assets/tcc-0.9.27/tests/tests2/27_sizeof.c
