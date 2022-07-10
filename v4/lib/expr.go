@@ -103,7 +103,7 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 		return s
 	}
 
-	if assert && fromMode == exprUintptr && from.Kind() != cc.Ptr {
+	if assert && fromMode == exprUintptr && from.Kind() != cc.Ptr && from.Kind() != cc.Function {
 		trc("%v: %v %v -> %v %v", c.pos(n), from, fromMode, to, toMode)
 		c.err(errorf("TODO assertion failed"))
 	}
@@ -316,6 +316,10 @@ func (c *ctx) convertType(n cc.ExpressionNode, s *buf, from, to cc.Type, fromMod
 			b.w("(%s%s%sFrom%s(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, to), c.helper(n, from), s)
 			return &b
 		}
+	}
+
+	if from.Kind() == cc.Function && to.Kind() == cc.Ptr && to.(*cc.PointerType).Elem().Kind() == cc.Function {
+		return s
 	}
 
 	c.err(errorf("TODO %q %s %s -> %s %s (%v:)", s, from, fromMode, to, toMode, c.pos(n)))
@@ -839,9 +843,19 @@ out:
 			}
 		}
 	case cc.UnaryExpressionAddrof: // '&' CastExpression
+		// trc("%v: nt %v, ct %v, '%s' %v", n.Token.Position(), n.Type(), n.CastExpression.Type(), cc.NodeSource(n), mode)
+		switch n.Type().Undecay().(type) {
+		case *cc.FunctionType:
+			trc("")
+			rt, rmode = n.Type(), mode
+			b.w("%s", c.expr(w, n.CastExpression, nil, mode))
+			break out
+		}
+
 		rt, rmode = n.Type(), exprUintptr
 		b.w("%s", c.expr(w, n.CastExpression, rt, exprUintptr))
 	case cc.UnaryExpressionDeref: // '*' CastExpression
+		// trc("%v: nt %v, ct %v, '%s' %v", n.Token.Position(), n.Type(), n.CastExpression.Type(), cc.NodeSource(n), mode)
 		if ce, ok := n.CastExpression.(*cc.CastExpression); ok && ce.Case == cc.CastExpressionCast {
 			if pfe, ok := ce.CastExpression.(*cc.PostfixExpression); ok && pfe.Case == cc.PostfixExpressionCall {
 				if pe, ok := pfe.PostfixExpression.(*cc.PrimaryExpression); ok && pe.Case == cc.PrimaryExpressionIdent && pe.Token.SrcStr() == "__builtin_va_arg_impl" {
@@ -869,11 +883,9 @@ out:
 		}
 		switch n.Type().Undecay().(type) {
 		case *cc.FunctionType:
-			if mode == exprCall {
-				rt, rmode = n.Type(), mode
-				b.w("%s", c.expr(w, n.CastExpression, nil, mode))
-				break out
-			}
+			rt, rmode = n.Type(), mode
+			b.w("%s", c.expr(w, n.CastExpression, nil, mode))
+			break out
 		}
 
 		switch mode {
@@ -1065,6 +1077,7 @@ out:
 			}
 
 			rt, rmode = n.Type(), mode
+			w.w("%s_ = %s;", tag(preserve), c.expr(w, n.ArgumentExpressionList.AssignmentExpression, nil, exprDefault))
 			break out
 		}
 

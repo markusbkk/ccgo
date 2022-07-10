@@ -1116,6 +1116,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pta-field-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pta-field-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ptr-arith-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pure-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/regstack-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/scope-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/shiftdi.c
@@ -1148,6 +1149,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-17.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-18.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-19.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-20.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-23.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-24.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-26.c
@@ -2208,6 +2210,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pta-field-1
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pta-field-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ptr-arith-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pure-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/regstack-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/scope-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/shiftdi-2.c
@@ -2241,6 +2244,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-17.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-18.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-19.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-20.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-23.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-24.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-26.c
@@ -2330,6 +2334,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/deref-store.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/directive-number.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/do-continue.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/for-side-effects.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-null.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/macro-paste.c
@@ -2355,6 +2360,7 @@ assets/github.com/vnmakarov/mir/c-tests/new/enum_test.c
 assets/github.com/vnmakarov/mir/c-tests/new/incomplete_type.c
 assets/github.com/vnmakarov/mir/c-tests/new/issue18.c
 assets/github.com/vnmakarov/mir/c-tests/new/issue19.c
+assets/github.com/vnmakarov/mir/c-tests/new/issue23.c
 assets/github.com/vnmakarov/mir/c-tests/new/issue36-2.c
 assets/github.com/vnmakarov/mir/c-tests/new/issue36.c
 assets/github.com/vnmakarov/mir/c-tests/new/issue68.c
@@ -2420,6 +2426,7 @@ assets/tcc-0.9.27/tests/tests2/67_macro_concat.c
 assets/tcc-0.9.27/tests/tests2/70_floating_point_literals.c
 assets/tcc-0.9.27/tests/tests2/71_macro_empty_arg.c
 assets/tcc-0.9.27/tests/tests2/72_long_long_constant.c
+assets/tcc-0.9.27/tests/tests2/77_push_pop_macro.c
 assets/tcc-0.9.27/tests/tests2/82_attribs_position.c
 assets/tcc-0.9.27/tests/tests2/83_utf8_in_identifiers.c
 assets/tcc-0.9.27/tests/tests2/84_hex-float.c

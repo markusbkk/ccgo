@@ -220,15 +220,14 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			c.bracedStatement(w, n.Statement)
 		}
 	case cc.IterationStatementDo: // "do" Statement "while" '(' ExpressionList ')' ';'
+		if isZero(n.ExpressionList.Value()) {
+			c.statement(w, n.Statement)
+			break
+		}
+
 		var a buf
 		switch b := c.expr(&a, n.ExpressionList, nil, exprBool); {
 		case a.len() != 0:
-			// w.w("for {")
-			// c.unbracedStatement(w, n.Statement)
-			// w.w("%s", a.bytes())
-			// w.w("\nif !(%s) { break };", b)
-			// w.w("\n};")
-
 			w.w("for %sfirst := true; ; %[1]sfirst = false {", tag(ccgo))
 			w.w("\nif !first {")
 			w.w("%s", a.bytes())

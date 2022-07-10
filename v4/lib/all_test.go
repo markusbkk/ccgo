@@ -453,49 +453,50 @@ var testExecKnownFails = map[string]struct{}{
 	// Compiler specific conversion results.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`:                 {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
-
-	// Other
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pushpop_macro.c`: {}, // EXEC FAIL
-	`assets/tcc-0.9.27/tests/tests2/77_push_pop_macro.c`:                                   {}, // EXEC FAIL
+	//
+	// Needs real long double support.
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-load.c`: {}, // EXEC FAIL
 
 	// Miscompiled
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-21.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer.c`:                  {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/new/issue23.c`:                            {}, // EXEC FAIL
-	`assets/tcc-0.9.27/tests/tests2/75_array_in_struct_init.c`:                         {}, // EXEC FAIL initializer
-
-	//TODO libc: printf.go:586:parseLengthModifier: TODOTODO
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-load.c`: {}, // EXEC FAIL
+	`assets/tcc-0.9.27/tests/tests2/75_array_in_struct_init.c`: {}, // EXEC FAIL initializer
 
 	// linux/386
 	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`: {}, // EXEC FAIL
 
 	//TODO timeout
-	`assets/benchmarksgame-team.pages.debian.net/fasta.c`:   {}, // EXEC FAIL
 	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`: {}, // EXEC FAIL
 
 	// ====================================================================
 	// Compiles but does not build.
 
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78574.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20080222-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920721-2.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34176.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr38051.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr77766.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-5.c`:                   {}, // BUILD FAIL
+	// goto/label
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78574.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr38051.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr77766.c`:    {}, // BUILD FAIL
+
+	// VLA
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920721-2.c`: {}, // BUILD FAIL
+
+	// Long double constant overflows floa64.
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`: {}, // BUILD FAIL
+
+	// LHS conversion
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34176.c`: {}, // BUILD FAIL
+
+	// Typed constant expression overflow.
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c`: {}, // BUILD FAIL
+
+	// Unused var
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-5.c`: {}, // BUILD FAIL
+
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20080222-1.c`: {}, // BUILD FAIL

@@ -963,3 +963,40 @@ func firstError(err error, short bool) error {
 
 	return err
 }
+
+func isZero(v cc.Value) bool {
+	if v == nil || v == cc.Unknown {
+		return false
+	}
+
+	switch x := v.(type) {
+	case *cc.ComplexLongDoubleValue:
+		return false //TODO
+	case *cc.LongDoubleValue:
+		return false //TODO
+	case *cc.UnknownValue:
+		return false
+	case *cc.ZeroValue:
+		return true
+	case cc.Complex128Value:
+		return x == 0
+	case cc.Complex64Value:
+		return x == 0
+	case cc.Float64Value:
+		return x == 0
+	case cc.Int64Value:
+		return x == 0
+	case cc.StringValue:
+		return false
+	case cc.UInt64Value:
+		return x == 0
+	case cc.UTF16StringValue:
+		return false
+	case cc.UTF32StringValue:
+		return false
+	case cc.VoidValue:
+		return false
+	default:
+		return false
+	}
+}
