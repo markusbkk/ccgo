@@ -507,6 +507,12 @@ var testExecKnownFails = map[string]struct{}{
 	//TODO linux/arm
 	`assets/benchmarksgame-team.pages.debian.net/fasta.c`: {}, // EXEC FAIL
 
+	//TODO freebsd/386
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c`:                 {}, // EXEC FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`:                 {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c`: {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`: {}, // EXEC FAIL
+
 	// ====================================================================
 	// Compiles but does not build.
 
@@ -515,6 +521,22 @@ var testExecKnownFails = map[string]struct{}{
 
 	//TODO linux/arm
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
+
+	//TODO freebsd/386
+	`assets/CompCert-3.6/test/c/chomp.c`:                                              {}, // BUILD FAIL
+	`assets/CompCert-3.6/test/c/mandelbrot.c`:                                         {}, // BUILD FAIL
+	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`:                           {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fprintf-lib.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fputs-lib.c`:       {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/fprintf.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/printf.c`:      {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/sprintf.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/printf-lib.c`:      {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/sprintf-lib.c`:     {}, // BUILD FAIL
+	`assets/github.com/AbsInt/CompCert/test/c/chomp.c`:                                {}, // BUILD FAIL
+	`assets/github.com/AbsInt/CompCert/test/c/mandelbrot.c`:                           {}, // BUILD FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/mandelbrot.c`:                       {}, // BUILD FAIL
 
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:  {}, // BUILD FAIL
@@ -736,6 +758,22 @@ var testExecKnownFails = map[string]struct{}{
 	// VLA
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41935.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr41935.c`: {}, // COMPILE FAIL
+
+	//TODO freebsd/386
+	`assets/CompCert-3.6/test/c/knucleotide.c`:                                         {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/rbug.c`:                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/loop-2f.c`:                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/loop-2g.c`:                   {}, // COMPILE FAIL
+	`assets/github.com/AbsInt/CompCert/test/c/knucleotide.c`:                           {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/rbug.c`: {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/loop-2f.c`:   {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/loop-2g.c`:   {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/hash2.c`:                             {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/lists.c`:                             {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/matrix.c`:                            {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/printstr.c`:                          {}, // COMPILE FAIL
+	`assets/tcc-0.9.27/tests/tests2/46_grep.c`:                                         {}, // COMPILE FAIL
+	`assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c`:                          {}, // COMPILE FAIL
 
 	//TODO linux/ppc64le
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000223-1.c`:                           {}, // COMPILE FAIL
