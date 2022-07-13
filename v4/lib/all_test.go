@@ -41,21 +41,51 @@ var (
 	oErr1       = flag.Bool("err1", false, "first error line only")
 	oKeep       = flag.Bool("keep", false, "keep temp directories")
 	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime  = flag.Duration("shelltimeout", 5*time.Minute, "shell() time limit")
+	oShellTime  = flag.Duration("shelltimeout", 100*time.Second, "shell() time limit")
 	oStackTrace = flag.Bool("trcstack", false, "")
 	oTrace      = flag.Bool("trc", false, "Print tested paths.")
 	oTraceF     = flag.Bool("trcf", false, "Print test file content")
 	oTraceO     = flag.Bool("trco", false, "Print test output")
 	oXTags      = flag.String("xtags", "", "passed to go build of TestSQLite")
 
-	cfs    = ccorpus2.FS
+	cfs    fs.FS
 	goarch = runtime.GOARCH
 	goos   = runtime.GOOS
 	re     *regexp.Regexp
 	hostCC string
 )
 
+type diskFS string
+
+func newDiskFS(root string) diskFS { return diskFS(root) }
+
+func (f diskFS) Open(name string) (fs.File, error) { return os.Open(filepath.Join(string(f), name)) }
+
+type overlayFS struct {
+	fs   fs.FS
+	over fs.FS
+}
+
+func newOverlayFS(fs, over fs.FS) *overlayFS { return &overlayFS{fs, over} }
+
+func (f *overlayFS) Open(name string) (fs.File, error) {
+	fi, err := fs.Stat(f.over, name)
+	if err == nil && !fi.IsDir() {
+		if f, err := f.over.Open(name); err == nil {
+			return f, nil
+		}
+	}
+
+	return f.fs.Open(name)
+}
+
 func TestMain(m *testing.M) {
+	overlay, err := filepath.Abs("testdata/overlay")
+	if err != nil {
+		panic(todo("", err))
+	}
+
+	cfs = newOverlayFS(ccorpus2.FS, newDiskFS(overlay))
 	extendedErrors = true
 	gc.ExtendedErrors = true
 	oRE := flag.String("re", "", "")
@@ -97,7 +127,7 @@ func h(v interface{}) string {
 }
 
 func cfsWalk(dir string, f func(pth string, fi os.FileInfo) error) error {
-	fis, err := cfs.ReadDir(dir)
+	fis, err := fs.ReadDir(cfs, dir)
 	if err != nil {
 		return err
 	}
@@ -330,9 +360,12 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 	var cCompilerFailed, cExecFailed bool
 	ofn := fmt.Sprint(id)
 	bin := "cbin_" + enforceBinaryExt(ofn)
-	if _, err = shell(false, hostCC, "-o", bin, "-w", path, "-lm"); err != nil {
-		p.skip()
-		return nil
+	flag := "-o"
+	if !exec {
+		flag = "-c"
+	}
+	if _, err = shell(false, hostCC, flag, bin, "-w", path, "-lm"); err != nil {
+		// trc("cc %v %v", path, err)
 		cCompilerFailed = true
 	}
 
@@ -341,8 +374,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 	var cOut []byte
 	if exec && !cCompilerFailed {
 		if cOut, err = shell(false, "./"+bin, args...); err != nil {
-			p.skip()
-			return nil
+			// trc("cbin %v %v", path, err)
 			cExecFailed = true
 		}
 	}
@@ -352,7 +384,8 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 	defer os.Remove(ofn)
 
 	var out bytes.Buffer
-	if err := NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "--prefix-field=F", path}, &out, &out, nil).Main(); err != nil {
+	if err := NewTask(goos, goarch, []string{"ccgo", flag, ofn, "--prefix-field=F", path}, &out, &out, nil).Main(); err != nil {
+		// trc("ccgo %v %v", path, err)
 		if cCompilerFailed || isTestExecKnownFail(fullPath) {
 			p.skip()
 			return nil
@@ -363,8 +396,15 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 		return errorf("%s: %s: FAIL: %v", fullPath, out.Bytes(), firstError(err, *oErr1))
 	}
 
+	if !exec {
+		p.ok()
+		g.w("%s\n", fullPath)
+		return nil
+	}
+
 	bin = "gobin_" + enforceBinaryExt(ofn)
 	if _, err = shell(false, "go", "build", "-o", bin, ofn); err != nil {
+		// trc("gc %v %v", path, err)
 		if isTestExecKnownFail(fullPath) {
 			p.skip()
 			return nil
@@ -375,17 +415,12 @@ func testExec1(t *testing.T, p *parallel, root, path string, exec bool, g *golde
 		return firstError(err, *oErr1)
 	}
 
-	if !exec {
-		p.ok()
-		g.w("%s\n", fullPath)
-		return nil
-	}
-
 	if runtime.GOOS != "windows" {
 		bin = "./" + bin
 	}
 	goOut, err := shell(false, bin, args...)
 	if err != nil {
+		// trc("gobin %v %v", path, err)
 		if cExecFailed || isTestExecKnownFail(fullPath) {
 			p.skip()
 			return nil
@@ -457,14 +492,14 @@ var testExecKnownFails = map[string]struct{}{
 	// Needs real long double support.
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-load.c`: {}, // EXEC FAIL
 
-	// Miscompiled
-	`assets/tcc-0.9.27/tests/tests2/75_array_in_struct_init.c`: {}, // EXEC FAIL initializer
+	// --------------------------------------------------------------------
+	// Other
 
-	// linux/386
+	// initilizer
+	`assets/ccgo/bug/init3.c`: {}, // EXEC FAIL
+
+	//TODO linux/386
 	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`: {}, // EXEC FAIL
-
-	//TODO timeout
-	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`: {}, // EXEC FAIL
 
 	// ====================================================================
 	// Compiles but does not build.
@@ -497,12 +532,151 @@ var testExecKnownFails = map[string]struct{}{
 	// Unused var
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-5.c`: {}, // BUILD FAIL
 
+	// Other
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:               {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/abs-2-lib.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/abs-3-lib.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/abs.c`:       {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/bfill.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/bzero.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/memcmp.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/memmove.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/mempcpy.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/memset.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/stpcpy.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strcat.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strchr.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strcmp.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strcpy.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strcspn.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strlen.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strncat.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strncmp.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strncpy.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strnlen.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strpbrk.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strrchr.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strspn.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/strstr.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/memcmp-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/memmove-2-lib.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/memmove-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/mempcpy-2-lib.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/mempcpy-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/memset-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/memset.c`:        {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/pr22237-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/pr22237.c`:       {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/sprintf.c`:       {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcat-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strchr-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcmp-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcmp.c`:        {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcpy-2-lib.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcpy-2.c`:      {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcpy-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcpy.c`:        {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strcspn-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strlen-2-lib.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strlen-3-lib.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strlen-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strlen.c`:        {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strncat-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strncmp-2-lib.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strncmp-2.c`:     {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strncmp-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strncpy-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strnlen-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strpbrk-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strpcpy-2-lib.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strpcpy-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strrchr-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strspn-lib.c`:    {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/strstr-lib.c`:    {}, // BUILD FAIL
+	`assets/github.com/cxgo/abs.c`:                                                      {}, // BUILD FAIL
+	`assets/github.com/cxgo/add int to bool.c`:                                          {}, // BUILD FAIL
+	`assets/github.com/cxgo/array lit indexes.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/array lit.c`:                                                {}, // BUILD FAIL
+	`assets/github.com/cxgo/bool arithm.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/bool include.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/bool to int.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/char var init.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/comp lit zero compare and assign.c`:                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/comp lit zero init.c`:                                       {}, // BUILD FAIL
+	`assets/github.com/cxgo/complex var.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/double negate.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/empty array decl.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum fixed.c`:                                               {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum in func.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum no zero 2.c`:                                           {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum no zero.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum start.c`:                                               {}, // BUILD FAIL
+	`assets/github.com/cxgo/enum zero.c`:                                                {}, // BUILD FAIL
+	`assets/github.com/cxgo/extern var.c`:                                               {}, // BUILD FAIL
+	`assets/github.com/cxgo/float div literal.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/forward enum.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/func arg.c`:                                                 {}, // BUILD FAIL
+	`assets/github.com/cxgo/func ptr.c`:                                                 {}, // BUILD FAIL
+	`assets/github.com/cxgo/function decl.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/function forward decl 2.c`:                                  {}, // BUILD FAIL
+	`assets/github.com/cxgo/function forward decl.c`:                                    {}, // BUILD FAIL
+	`assets/github.com/cxgo/function var.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/go ints.c`:                                                  {}, // BUILD FAIL
+	`assets/github.com/cxgo/if bool eq int 0.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/if bool neq int 0.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/if int eq.c`:                                                {}, // BUILD FAIL
+	`assets/github.com/cxgo/if int.c`:                                                   {}, // BUILD FAIL
+	`assets/github.com/cxgo/if not int.c`:                                               {}, // BUILD FAIL
+	`assets/github.com/cxgo/init byte string.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/int overflow.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/literal statement.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/local func var.c`:                                           {}, // BUILD FAIL
+	`assets/github.com/cxgo/macro empty.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/macro order.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/macro string.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/macro typed int.c`:                                          {}, // BUILD FAIL
+	`assets/github.com/cxgo/macro untyped int.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/multiple vars 2.c`:                                          {}, // BUILD FAIL
+	`assets/github.com/cxgo/multiple vars.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/named enum.c`:                                               {}, // BUILD FAIL
+	`assets/github.com/cxgo/negative char.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/negative uchar.c`:                                           {}, // BUILD FAIL
+	`assets/github.com/cxgo/negative uint.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/negative ushort.c`:                                          {}, // BUILD FAIL
+	`assets/github.com/cxgo/nested struct fields init.c`:                                {}, // BUILD FAIL
+	`assets/github.com/cxgo/recursive struct.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/rename decl func.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/return enum.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/stdbool override.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/stdint const override.c`:                                    {}, // BUILD FAIL
+	`assets/github.com/cxgo/stdlib forward decl.c`:                                      {}, // BUILD FAIL
+	`assets/github.com/cxgo/string literal ternary.c`:                                   {}, // BUILD FAIL
+	`assets/github.com/cxgo/string to byte ptr.c`:                                       {}, // BUILD FAIL
+	`assets/github.com/cxgo/struct and func.c`:                                          {}, // BUILD FAIL
+	`assets/github.com/cxgo/struct forward decl.c`:                                      {}, // BUILD FAIL
+	`assets/github.com/cxgo/tcc 10.c`:                                                   {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef alias.c`:                                            {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef bool.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef enum.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef primitive.c`:                                        {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef struct 3.c`:                                         {}, // BUILD FAIL
+	`assets/github.com/cxgo/typedef struct.c`:                                           {}, // BUILD FAIL
+	`assets/github.com/cxgo/undef malloc.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/unnamed enum.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/unnamed struct var.c`:                                       {}, // BUILD FAIL
+	`assets/github.com/cxgo/unused vars.c`:                                              {}, // BUILD FAIL
+	`assets/github.com/cxgo/var init sum.c`:                                             {}, // BUILD FAIL
+	`assets/github.com/cxgo/var init.c`:                                                 {}, // BUILD FAIL
+	`assets/github.com/cxgo/var.c`:                                                      {}, // BUILD FAIL
+	`assets/github.com/cxgo/varargs.c`:                                                  {}, // BUILD FAIL
+	`assets/github.com/cxgo/wstring to wchar ptr.c`:                                     {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20080222-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920721-2.c`:   {}, // BUILD FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:  {}, // BUILD FAIL
@@ -515,8 +689,12 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-5.c`:   {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0010-goto1.c`:             {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0022-namespaces1.c`:       {}, // BUILD FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/constant-integer-type.c`:              {}, // BUILD FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/goto.c`:                               {}, // BUILD FAIL
 	`assets/tcc-0.9.27/tests/tests2/54_goto.c`:                                          {}, // BUILD FAIL
+	`assets/tcc-0.9.27/tests/tests2/60_errors_and_warnings.c`:                           {}, // BUILD FAIL
 	`assets/tcc-0.9.27/tests/tests2/78_vla_label.c`:                                     {}, // BUILD FAIL
+	`assets/tcc-0.9.27/tests/tests2/96_nodata_wanted.c`:                                 {}, // BUILD FAIL
 
 	// linux/386
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/991216-2.c`:                 {}, // BUILD FAIL
@@ -530,10 +708,8 @@ var testExecKnownFails = map[string]struct{}{
 	// void func(void) __attribute__((aligned(256))) etc.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/align-3.c`:                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr23467.c`:                 {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr77718.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/align-3.c`: {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23467.c`: {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr77718.c`: {}, // COMPILE FAIL
 
 	// uses signal(2)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20101011-1.c`:                    {}, // COMPILE FAIL
@@ -604,6 +780,8 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/benchmarksgame-team.pages.debian.net/nbody-4.c`:                                             {}, // COMPILE FAIL
 	`assets/benchmarksgame-team.pages.debian.net/nbody-7.c`:                                             {}, // COMPILE FAIL
 	`assets/benchmarksgame-team.pages.debian.net/nbody-8.c`:                                             {}, // COMPILE FAIL
+	`assets/benchmarksgame-team.pages.debian.net/reverse-complement-4.c`:                                {}, // COMPILE FAIL
+	`assets/benchmarksgame-team.pages.debian.net/reverse-complement-5.c`:                                {}, // COMPILE FAIL
 	`assets/benchmarksgame-team.pages.debian.net/reverse-complement-6.c`:                                {}, // COMPILE FAIL
 	`assets/benchmarksgame-team.pages.debian.net/spectral-norm.c`:                                       {}, // COMPILE FAIL
 	`assets/ccgo/bug/arr.c`:                                                                             {}, // COMPILE FAIL
@@ -619,9 +797,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/ccgo/bug/fp.c`:                                                                              {}, // COMPILE FAIL
 	`assets/ccgo/bug/incfp.c`:                                                                           {}, // COMPILE FAIL
 	`assets/ccgo/bug/incfp2.c`:                                                                          {}, // COMPILE FAIL
-	`assets/ccgo/bug/init.c`:                                                                            {}, // COMPILE FAIL
 	`assets/ccgo/bug/init2.c`:                                                                           {}, // COMPILE FAIL
-	`assets/ccgo/bug/init3.c`:                                                                           {}, // COMPILE FAIL
 	`assets/ccgo/bug/init4.c`:                                                                           {}, // COMPILE FAIL
 	`assets/ccgo/bug/objv.c`:                                                                            {}, // COMPILE FAIL
 	`assets/ccgo/bug/select.c`:                                                                          {}, // COMPILE FAIL
@@ -705,7 +881,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020418-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020611-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20021113-1.c`:                                 {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20021118-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030109-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030222-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030224-2.c`:                                 {}, // COMPILE FAIL
@@ -789,7 +964,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920612-2.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920625-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920721-4.c`:                                   {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920731-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920908-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920908-2.c`:                                   {}, // COMPILE FAIL
@@ -1105,7 +1279,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr88739.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr88904.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr89195.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr89369.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr89434.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/printf-2.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/scal-to-vec1.c`:                               {}, // COMPILE FAIL
@@ -1130,7 +1303,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-4.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-6.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-7.c`:                                   {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-ini-1.c`:                               {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-ini-2.c`:                               {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-ini-3.c`:                               {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/usad-run.c`:                                   {}, // COMPILE FAIL
@@ -1187,7 +1359,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020418-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020611-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20021113-1.c`:                 {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20021118-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030109-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030222-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030224-2.c`:                 {}, // COMPILE FAIL
@@ -1273,7 +1444,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920612-2.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920625-1.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920721-4.c`:                   {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920731-1.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920908-1.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920908-2.c`:                   {}, // COMPILE FAIL
@@ -1595,7 +1765,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr88739.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr88904.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr89195.c`:                    {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr89369.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr89434.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr90311.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr90949.c`:                    {}, // COMPILE FAIL
@@ -1650,7 +1819,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-4.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-6.c`:                   {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-7.c`:                   {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-ini-1.c`:               {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-ini-2.c`:               {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-ini-3.c`:               {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/usad-run.c`:                   {}, // COMPILE FAIL
@@ -1676,9 +1844,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0021-tentativedefs1.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0025-duff.c`:                              {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits06.c`:                           {}, // COMPILE FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits07.c`:                           {}, // COMPILE FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits08.c`:                           {}, // COMPILE FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits09.c`:                           {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits10.c`:                           {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits11.c`:                           {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c`:                           {}, // COMPILE FAIL
@@ -1686,23 +1851,54 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits14.c`:                           {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits15.c`:                           {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/anonymous-members.c`:                                  {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/anonymous-struct.c`:                                   {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-basic.c`:                                     {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-extend.c`:                                    {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-immediate-assign.c`:                          {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-immediate-bitwise.c`:                         {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-initialize-zero.c`:                           {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-load.c`:                                      {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-mask.c`:                                      {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-pack-next.c`:                                 {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-packing.c`:                                   {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-reset-align.c`:                               {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-trailing-zero.c`:                             {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c`:                                {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types.c`:                                     {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-unsigned-promote.c`:                          {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield.c`:                                           {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/comma-side-effects.c`:                                 {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-void.c`:                                   {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/constant-expression.c`:                                {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/declarator-abstract.c`:                                {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/deref-compare-float.c`:                                {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/duffs-device.c`:                                       {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/enum.c`:                                               {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/field-chain-assign.c`:                                 {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/float-compare-equal.c`:                                {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/float-compare.c`:                                      {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-incomplete.c`:                                {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer-call.c`:                              {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/identifier.c`:                                         {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-call.c`:                                    {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-string.c`:                                  {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/logical-operators-basic.c`:                            {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/old-param-decay.c`:                                    {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/pointer-immediate.c`:                                  {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/return-bitfield.c`:                                    {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/return-point.c`:                                       {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/short-circuit-comma.c`:                                {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/sizeof.c`:                                             {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/string-addr.c`:                                        {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/string-conversion.c`:                                  {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/stringify.c`:                                          {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/struct-padding.c`:                                     {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/tag.c`:                                                {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/tail-compare-jump.c`:                                  {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/union-bitfield.c`:                                     {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/union-zero-init.c`:                                    {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/vararg-complex-1.c`:                                   {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/vararg-complex-2.c`:                                   {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/vararg.c`:                                             {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/new/array-size-def.c`:                                      {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/new/data-than-bss.c`:                                       {}, // COMPILE FAIL

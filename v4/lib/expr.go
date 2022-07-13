@@ -1020,7 +1020,7 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 
 		b.w("(%s + %suintptr(%s%s))", c.expr(w, p, nil, exprDefault), tag(preserve), c.expr(w, index, nil, exprDefault), mul)
 	default:
-		trc("%v: %s[%s] %v", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode)
+		// trc("%v: %s[%s] %v", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode)
 		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode
@@ -1850,7 +1850,8 @@ func (c *ctx) primaryExpressionStringConst(w writer, n *cc.PrimaryExpression, t 
 
 				c.err(errorf("TODO"))
 			default:
-				c.err(errorf("TODO"))
+				trc("%v: %s <- %q, convert to %s", n.Position(), x, s, t)
+				c.err(errorf("TODO %s", t))
 			}
 		default:
 			c.err(errorf("TODO"))

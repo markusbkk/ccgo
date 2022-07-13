@@ -42,6 +42,7 @@ func shell(echo bool, cmd string, args ...string) ([]byte, error) {
 	c.Stdout = &b
 	c.Stderr = &b
 	c.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	// t0 := time.Now()
 	err = c.Start()
 	if err == nil {
 		waitDone := make(chan struct{})
@@ -55,5 +56,13 @@ func shell(echo bool, cmd string, args ...string) ([]byte, error) {
 		err = c.Wait()
 		close(waitDone)
 	}
+	// if len(b.w.Bytes()) > 1e6 {
+	// 	return nil, fmt.Errorf("output too big: %v", len(b.w.Bytes()))
+	// }
+
+	// if time.Since(t0) > time.Second {
+	// 	return nil, fmt.Errorf("run too long: %v", time.Since(t0))
+	// }
+
 	return b.w.Bytes(), err
 }

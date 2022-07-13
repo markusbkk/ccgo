@@ -18,14 +18,14 @@ import (
 	"sync/atomic"
 	"unicode/utf8"
 
-	"github.com/pbnjay/memory"
+	// "github.com/pbnjay/memory"
 	"modernc.org/cc/v4"
 	"modernc.org/gc/v2"
 )
 
 var (
 	extendedErrors bool // true: Errors will include origin info.
-	totalRam       = memory.TotalMemory()
+	// totalRam       = memory.TotalMemory()
 
 	reservedNames = nameSet{
 		// Keywords
@@ -425,14 +425,14 @@ type parallel struct {
 
 func newParallel(resultTag string) *parallel {
 	limit := runtime.GOMAXPROCS(0)
-	switch runtime.GOARCH {
-	case "386", "arm": // 32 bit targets
-		limit = 1
-	default:
-		if totalRam <= 1<<32 {
-			limit = 1
-		}
-	}
+	//TODO- switch runtime.GOARCH {
+	//TODO- case "386", "arm": // 32 bit targets
+	//TODO- 	limit = 1
+	//TODO- default:
+	//TODO- 	if totalRam <= 1<<32 {
+	//TODO- 		limit = 1
+	//TODO- 	}
+	//TODO- }
 	return &parallel{
 		limit:     make(chan struct{}, limit),
 		resultTag: resultTag,

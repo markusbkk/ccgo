@@ -12,7 +12,9 @@ import (
 )
 
 func (c *ctx) initializerOuter(w writer, n *cc.Initializer, t cc.Type) (r *buf) {
-	return c.initializer(w, n, c.initalizerFlatten(n, nil), t, 0)
+	a := c.initalizerFlatten(n, nil)
+	// dumpInitializer(a, "")
+	return c.initializer(w, n, a, t, 0)
 }
 
 func (c *ctx) initalizerFlatten(n *cc.Initializer, a []*cc.Initializer) (r []*cc.Initializer) {
@@ -40,12 +42,6 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 	// dumpInitializer(a, "")
 	// trc("---- (init Z)")
 	if cc.IsScalarType(t) {
-		if len(a) != 1 {
-			// trc("%v: FAIL", a[0].Position())
-			c.err(errorf("TODO scalar %s, len(initializers) %v", t, len(a)))
-			return nil
-		}
-
 		if a[0].Offset()-off0 != 0 {
 			c.err(errorf("TODO"))
 			return nil
@@ -81,9 +77,9 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 }
 
 func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
-	// trc("==== %v: (struct A) %s off0 %#0x", n.Position(), t, off0)
+	// trc("==== %v: (union A) %s off0 %#0x", n.Position(), t, off0)
 	// dumpInitializer(a, "")
-	// trc("---- (struct Z)")
+	// trc("---- (union Z)")
 	var b buf
 	b.w("%s{", c.typ(n, t))
 	f := t.FieldByIndex(0)
@@ -231,7 +227,7 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 	for _, v := range a {
 		switch v.Case {
 		case cc.InitializerExpr:
-			fmt.Printf("%s %v: off %#05x '%s' %s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), v.AssignmentExpression.Type())
+			fmt.Printf("%s %v: off %#05x '%s' %s <- %s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), v.Type(), v.AssignmentExpression.Type())
 		case cc.InitializerInitList:
 			s := pref + "· "
 			for l := v.InitializerList; l != nil; l = l.InitializerList {

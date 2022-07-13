@@ -43,6 +43,6 @@ tmp:
 
 x:
 	rm -f /tmp/ccgo.log
-	go test -v -timeout 24h -tags=ccgo.asser,ccgo.dmesg -short -timeout 24h -run Exec -err1 -trc -shelltimeout 20s 2>&1 | tee log
+	go test -v -timeout 24h -tags=ccgo.assert,ccgo.dmesg -short -timeout 24h -run Exec -err1 -trc -shelltimeout 10s 2>&1 | tee log
 	grep TOTAL log
 	git status
