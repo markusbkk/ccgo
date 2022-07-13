@@ -535,7 +535,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/sprintf-lib.c`:     {}, // BUILD FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/chomp.c`:                                {}, // BUILD FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/mandelbrot.c`:                           {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-benchmarks/mandelbrot.c`:                       {}, // BUILD FAIL
 
 	// goto/label
@@ -788,8 +787,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20010226-1.c`:                      {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/20011123-1.c`:                      {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/acc2.c`:                            {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c`:                       {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`:                       {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/inf-1.c`:                           {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/inf-2.c`:                           {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/inf-3.c`:                           {}, // COMPILE FAIL
@@ -812,8 +809,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20010226-1.c`:      {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/20011123-1.c`:      {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/acc2.c`:            {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c`:       {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`:       {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/inf-1.c`:           {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/inf-2.c`:           {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/inf-3.c`:           {}, // COMPILE FAIL
@@ -856,7 +851,6 @@ var testExecKnownFails = map[string]struct{}{
 	//TODO linux/s390x
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr58574.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr58574.c`: {}, // COMPILE FAIL
-	`assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c`:                        {}, // COMPILE FAIL
 
 	//TODO longjmp/setjmp
 	`assets/github.com/vnmakarov/mir/c-benchmarks/except.c`: {}, // COMPILE FAIL
