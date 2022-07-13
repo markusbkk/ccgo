@@ -504,11 +504,17 @@ var testExecKnownFails = map[string]struct{}{
 	//TODO linux/s390x
 	`assets/github.com/vnmakarov/mir/c-tests/new/issue36.c`: {}, // EXEC FAIL
 
+	//TODO linux/arm
+	`assets/benchmarksgame-team.pages.debian.net/fasta.c`: {}, // EXEC FAIL
+
 	// ====================================================================
 	// Compiles but does not build.
 
-	// linux/386
+	//TODO linux/386
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
+
+	//TODO linux/arm
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
 
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:  {}, // BUILD FAIL
