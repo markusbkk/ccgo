@@ -501,6 +501,9 @@ var testExecKnownFails = map[string]struct{}{
 	//TODO linux/386
 	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`: {}, // EXEC FAIL
 
+	//TODO linux/s390x
+	`assets/github.com/vnmakarov/mir/c-tests/new/issue36.c`: {}, // EXEC FAIL
+
 	// ====================================================================
 	// Compiles but does not build.
 
@@ -748,6 +751,11 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/vnmakarov/mir/c-benchmarks/binary-trees.c`:                       {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/offsetof.c`:                           {}, // COMPILE FAIL
 	`assets/tcc-0.9.27/tests/tests2/99_fastcall.c`:                                      {}, // COMPILE FAIL
+
+	//TODO linux/s390x
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr58574.c`: {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr58574.c`: {}, // COMPILE FAIL
+	`assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c`: {}, // COMPILE FAIL
 
 	//TODO longjmp/setjmp
 	`assets/github.com/vnmakarov/mir/c-benchmarks/except.c`: {}, // COMPILE FAIL
