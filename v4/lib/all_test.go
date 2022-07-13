@@ -504,6 +504,9 @@ var testExecKnownFails = map[string]struct{}{
 	// ====================================================================
 	// Compiles but does not build.
 
+	// linux/386
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
+
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:  {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78574.c`:    {}, // BUILD FAIL
@@ -727,6 +730,7 @@ var testExecKnownFails = map[string]struct{}{
 
 	//TODO linux/386
 	`assets/CompCert-3.6/test/c/lists.c`:                                                {}, // COMPILE FAIL
+	`assets/benchmarksgame-team.pages.debian.net/binary-trees.c`:                        {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/udivmod4.c`:                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960830-1.c`:                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr44468.c`:                    {}, // COMPILE FAIL
@@ -742,6 +746,8 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c`:  {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/widechar-2.c`: {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-benchmarks/binary-trees.c`:                       {}, // COMPILE FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/offsetof.c`:                           {}, // COMPILE FAIL
+	`assets/tcc-0.9.27/tests/tests2/99_fastcall.c`:                                      {}, // COMPILE FAIL
 
 	//TODO longjmp/setjmp
 	`assets/github.com/vnmakarov/mir/c-benchmarks/except.c`: {}, // COMPILE FAIL
