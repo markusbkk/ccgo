@@ -495,9 +495,6 @@ var testExecKnownFails = map[string]struct{}{
 	// --------------------------------------------------------------------
 	// Other
 
-	// initilizer
-	`assets/ccgo/bug/init3.c`: {}, // EXEC FAIL
-
 	//TODO linux/386
 	`assets/github.com/vnmakarov/mir/c-benchmarks/hash.c`: {}, // EXEC FAIL
 
@@ -523,19 +520,19 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/va-arg-8.c`: {}, // BUILD FAIL
 
 	//TODO freebsd/386
-	`assets/CompCert-3.6/test/c/chomp.c`:                                              {}, // BUILD FAIL
-	`assets/CompCert-3.6/test/c/mandelbrot.c`:                                         {}, // BUILD FAIL
-	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`:                           {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fprintf-lib.c`:     {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fputs-lib.c`:       {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/fprintf.c`:     {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/printf.c`:      {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/sprintf.c`:     {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/printf-lib.c`:      {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/sprintf-lib.c`:     {}, // BUILD FAIL
-	`assets/github.com/AbsInt/CompCert/test/c/chomp.c`:                                {}, // BUILD FAIL
-	`assets/github.com/AbsInt/CompCert/test/c/mandelbrot.c`:                           {}, // BUILD FAIL
-	`assets/github.com/vnmakarov/mir/c-benchmarks/mandelbrot.c`:                       {}, // BUILD FAIL
+	`assets/CompCert-3.6/test/c/chomp.c`:                                          {}, // BUILD FAIL
+	`assets/CompCert-3.6/test/c/mandelbrot.c`:                                     {}, // BUILD FAIL
+	`assets/benchmarksgame-team.pages.debian.net/fasta-3.c`:                       {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fprintf-lib.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/fputs-lib.c`:   {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/fprintf.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/printf.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/lib/sprintf.c`: {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/printf-lib.c`:  {}, // BUILD FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtins/sprintf-lib.c`: {}, // BUILD FAIL
+	`assets/github.com/AbsInt/CompCert/test/c/chomp.c`:                            {}, // BUILD FAIL
+	`assets/github.com/AbsInt/CompCert/test/c/mandelbrot.c`:                       {}, // BUILD FAIL
+	`assets/github.com/vnmakarov/mir/c-benchmarks/mandelbrot.c`:                   {}, // BUILD FAIL
 
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:  {}, // BUILD FAIL
@@ -1241,6 +1238,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41239.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42570.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42614.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42691.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43220.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43385.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43560.c`:                                    {}, // COMPILE FAIL
@@ -1725,6 +1723,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr41239.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42570.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42614.c`:                    {}, // COMPILE FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42691.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43220.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43385.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43560.c`:                    {}, // COMPILE FAIL

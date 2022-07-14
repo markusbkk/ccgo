@@ -31,6 +31,8 @@ assets/ccgo/bug/do.c
 assets/ccgo/bug/esc_e.c
 assets/ccgo/bug/func.c
 assets/ccgo/bug/init.c
+assets/ccgo/bug/init3.c
+assets/ccgo/bug/init4.c
 assets/ccgo/bug/int.c
 assets/ccgo/bug/null.c
 assets/ccgo/bug/ovf.c
@@ -1066,7 +1068,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45059.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45109.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45182.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45412.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45728.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45771.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45876.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45919.c
@@ -2193,7 +2194,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42248.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42269-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42512.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42544.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42691.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42721.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42833.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43008.c
@@ -3273,7 +3273,6 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42248.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42269-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42512.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42544.c
-assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42691.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42721.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42833.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43008.c
