@@ -758,6 +758,9 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr41935.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr41935.c`: {}, // COMPILE FAIL
 
+	//TODO freebsd/amd64
+	`assets/benchmarksgame-team.pages.debian.net/mandelbrot-7.c`: {}, // COMPILE FAIL
+
 	//TODO freebsd/386
 	`assets/CompCert-3.6/test/c/knucleotide.c`:                                         {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/ieee/rbug.c`:                 {}, // COMPILE FAIL
