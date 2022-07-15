@@ -5,7 +5,6 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
-	"fmt"
 	"strings"
 
 	"modernc.org/cc/v4"
@@ -25,24 +24,51 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 	case cc.StatementExpr: // ExpressionStatement
 		var a buf
 		b := c.expr(&a, n.ExpressionStatement.ExpressionList, nil, exprVoid)
-		if a.len() != 0 || b.len() != 0 {
-			w.w("%s%s", sep, c.posComment(n))
-			if a.len() != 0 {
-				w.w("%s;", a.bytes())
-			}
-			var pref string
-		out:
-			for e := n.ExpressionStatement.ExpressionList; ; {
-				switch e.(type) {
-				case *cc.CastExpression:
-					pref = fmt.Sprintf("%s_ = ", tag(preserve))
-					break out
-				default:
-					break out
+		if a.len() == 0 && b.len() == 0 {
+			return
+		}
+
+		w.w("%s%s", sep, c.posComment(n))
+		if a.len() != 0 {
+			w.w("%s;", a.bytes())
+		}
+		e := c.expressionListLast(n.ExpressionStatement.ExpressionList)
+		switch {
+		case e.Type().Kind() == cc.Void:
+			switch x := e.(type) {
+			case *cc.CastExpression:
+				if x.Case == cc.CastExpressionCast && x.CastExpression.Type().Kind() != cc.Void {
+					w.w("%s_ = ", tag(preserve))
 				}
 			}
-			w.w("%s%s;", pref, b.bytes())
+		default:
+			blank := true
+			switch x := e.(type) {
+			case *cc.AssignmentExpression:
+				blank = false
+			case *cc.PostfixExpression:
+				switch x.Case {
+				case
+					cc.PostfixExpressionCall,
+					cc.PostfixExpressionDec,
+					cc.PostfixExpressionInc:
+
+					blank = false
+				}
+			case *cc.UnaryExpression:
+				switch x.Case {
+				case
+					cc.UnaryExpressionDec,
+					cc.UnaryExpressionInc:
+
+					blank = false
+				}
+			}
+			if blank {
+				w.w("%s_ = ", tag(preserve))
+			}
 		}
+		w.w("%s;", b.bytes())
 	case cc.StatementSelection: // SelectionStatement
 		w.w("%s%s", sep, c.posComment(n))
 		c.selectionStatement(w, n.SelectionStatement)

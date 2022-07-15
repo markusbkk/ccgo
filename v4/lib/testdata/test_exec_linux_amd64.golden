@@ -164,7 +164,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020706-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020709-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020710-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020715-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020807-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020926-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020927-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020930-1.c
@@ -702,7 +701,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/dbl_parm.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/dblbug.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/ddd.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/dead.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/debugvlafunction-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/delay.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/di.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/dic.c
@@ -1068,6 +1066,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45059.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45109.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45182.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45412.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45728.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45771.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45876.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr45919.c
@@ -1226,7 +1225,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78883.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79197.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79386.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79411.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79413.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79780.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr80216.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr80233.c
@@ -1577,6 +1575,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030914-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030914-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030920-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030928-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031003-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031010-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031011-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031012-1.c
@@ -1984,6 +1983,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/divconst-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/divmod-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/doloop-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/doloop-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/eeprof-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/enum-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/enum-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/enum-3.c
@@ -2194,6 +2194,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42248.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42269-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42512.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42544.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42691.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42721.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr42833.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43008.c
@@ -2452,6 +2453,86 @@ assets/github.com/AbsInt/CompCert/test/c/qsort.c
 assets/github.com/AbsInt/CompCert/test/c/sha1.c
 assets/github.com/AbsInt/CompCert/test/c/siphash24.c
 assets/github.com/AbsInt/CompCert/test/c/spectral.c
+assets/github.com/cxgo/abs.c
+assets/github.com/cxgo/add int to bool.c
+assets/github.com/cxgo/array lit indexes.c
+assets/github.com/cxgo/array lit.c
+assets/github.com/cxgo/bool arithm.c
+assets/github.com/cxgo/bool include.c
+assets/github.com/cxgo/bool to int.c
+assets/github.com/cxgo/char var init.c
+assets/github.com/cxgo/comp lit zero compare and assign.c
+assets/github.com/cxgo/comp lit zero init.c
+assets/github.com/cxgo/complex var.c
+assets/github.com/cxgo/double negate.c
+assets/github.com/cxgo/enum fixed.c
+assets/github.com/cxgo/enum in func.c
+assets/github.com/cxgo/enum no zero 2.c
+assets/github.com/cxgo/enum no zero.c
+assets/github.com/cxgo/enum start.c
+assets/github.com/cxgo/enum zero.c
+assets/github.com/cxgo/extern var.c
+assets/github.com/cxgo/float div literal.c
+assets/github.com/cxgo/forward enum.c
+assets/github.com/cxgo/func arg.c
+assets/github.com/cxgo/func ptr.c
+assets/github.com/cxgo/function decl.c
+assets/github.com/cxgo/function forward decl 2.c
+assets/github.com/cxgo/function forward decl.c
+assets/github.com/cxgo/function var.c
+assets/github.com/cxgo/go ints.c
+assets/github.com/cxgo/if bool eq int 0.c
+assets/github.com/cxgo/if bool neq int 0.c
+assets/github.com/cxgo/if int eq.c
+assets/github.com/cxgo/if int.c
+assets/github.com/cxgo/if not int.c
+assets/github.com/cxgo/init byte string.c
+assets/github.com/cxgo/int overflow.c
+assets/github.com/cxgo/literal statement.c
+assets/github.com/cxgo/local func var.c
+assets/github.com/cxgo/macro empty.c
+assets/github.com/cxgo/macro order.c
+assets/github.com/cxgo/macro string.c
+assets/github.com/cxgo/macro typed int.c
+assets/github.com/cxgo/macro untyped int.c
+assets/github.com/cxgo/main no args.c
+assets/github.com/cxgo/main with args.c
+assets/github.com/cxgo/math.c
+assets/github.com/cxgo/multiple vars 2.c
+assets/github.com/cxgo/multiple vars.c
+assets/github.com/cxgo/named enum.c
+assets/github.com/cxgo/negative char.c
+assets/github.com/cxgo/negative uchar.c
+assets/github.com/cxgo/negative uint.c
+assets/github.com/cxgo/negative ushort.c
+assets/github.com/cxgo/nested struct fields init.c
+assets/github.com/cxgo/panic.c
+assets/github.com/cxgo/recursive struct.c
+assets/github.com/cxgo/rename decl func.c
+assets/github.com/cxgo/return enum.c
+assets/github.com/cxgo/stdbool override.c
+assets/github.com/cxgo/stdint const override.c
+assets/github.com/cxgo/stdlib forward decl.c
+assets/github.com/cxgo/string literal ternary.c
+assets/github.com/cxgo/string to byte ptr.c
+assets/github.com/cxgo/struct and func.c
+assets/github.com/cxgo/struct forward decl.c
+assets/github.com/cxgo/tcc 10.c
+assets/github.com/cxgo/typedef alias.c
+assets/github.com/cxgo/typedef bool.c
+assets/github.com/cxgo/typedef enum.c
+assets/github.com/cxgo/typedef primitive.c
+assets/github.com/cxgo/typedef struct 3.c
+assets/github.com/cxgo/typedef struct.c
+assets/github.com/cxgo/undef malloc.c
+assets/github.com/cxgo/unnamed enum.c
+assets/github.com/cxgo/unnamed struct var.c
+assets/github.com/cxgo/unused vars.c
+assets/github.com/cxgo/var init sum.c
+assets/github.com/cxgo/var init.c
+assets/github.com/cxgo/var.c
+assets/github.com/cxgo/varargs.c
+assets/github.com/cxgo/wstring to wchar ptr.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000112-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000121-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000205-1.c
@@ -2654,6 +2735,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030914-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030914-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030920-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030928-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031010-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031011-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031012-1.c
@@ -3063,6 +3145,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/divconst-3.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/divmod-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/doloop-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/doloop-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/eeprof-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/enum-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/enum-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/enum-3.c
@@ -3273,6 +3356,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42248.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42269-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42512.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42544.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42691.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42721.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr42833.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43008.c
@@ -3450,6 +3534,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr91632.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr92140.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr93402.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr93582.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr93744-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr93744-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr93744-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr94134.c
@@ -3603,27 +3688,167 @@ assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits08.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits09.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0029-ptrarith1.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0029-ptrarith2.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/address-deref-offset.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/array-nested-init.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/array-param.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/array-registers.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/array.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/assign-deref-float.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/assignment-type.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-complement.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-constant.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-expression.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-sign-extend.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/byte-load.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/cast-float-union.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/cast-float.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/cast-function-args.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/cast-immediate-truncate.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/cast.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/comment.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/compare.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/compound-assignment-basic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-basic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-constant.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/conditional.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/constant-address-index.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/constant-integer-type.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/convert-assign-immediate.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/convert-float-double.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/convert-int-float.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/convert-unsigned-float.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/copy-struct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/declaration-default-int.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/declarator-complex.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/declarator-parens.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/declare-auto-func.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/deref-address-offset.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/deref-array.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/deref-deep.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/deref-store.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/deref.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/dereference-extern.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/directive-number.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/do-continue.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/do-while.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/exit.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/expression-div-mod.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/expression.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/fact.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/float-arithmetic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/float-branch.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/float-compare-nan.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/float-function.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/float-load-deref.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/for-empty-expr.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/for-side-effects.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/for.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/function-char-args.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/function-implicit-declare.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/function.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/hello.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-branch.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-expr.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/include.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/increment.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-address.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-array.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-float.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-null.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-object.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-union.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/initialize.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/integer-suffix.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/ldouble-load-direct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/line-directive.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/linebreak.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-deref-assign.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-global.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-loop.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-param-pointer.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-pointer.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/logical-and-bitwise-false.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-arithmetic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-compare.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-function.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-struct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-union.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-empty-arg.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-function-paren.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-keyword-arg.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-keyword-define.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-name-arg.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-param-space.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/macro-paste.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-predefined.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-recursive.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/macro-refill-expand.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/macro-repeat-expand.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro-skip-expand.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/macro.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/main42.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/negate.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/nested-macro.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/offsetof.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/old-style-declaration.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/old-style-definition.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/padded-initialization.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/params-mixed.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/params-system-v.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/partial-initialization.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/pointer-diff.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/pointer.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/preprocess-expression.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/preprocess.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/preprocessor-expression.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/printstr.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/promote-unsigned.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/prototype-scope-enum.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/ptrdiff.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/push-immediate.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/qualifier-repeat.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/register-param.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-compare-int.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-float-struct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-partial-register.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-struct-basic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-struct-integers.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/return-struct-mem.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/self-referential-struct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/shift-assign.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/shift.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/short-circuit.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/shortcircuit-loop.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/signed-division.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/string-concat.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/string-escape.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/string-index.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/string-length.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/strings.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/struct-alignment.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/struct-assign.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/struct-comma-call.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/struct-eightbyte-write.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/struct-init-swap.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/struct.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/switch-basic.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/switch-nested.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/switch-side-effect.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/token.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/tokenize-partial-keyword.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/typedef-function.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/typedef.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/unary-minus-float.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/unary-plus.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/union-float-assign.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/union-float-param.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/union.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/unsigned-compare-ge.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/unsigned-compare.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/unsigned-sign-extend.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/void-statement.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/whitespace.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/zero-init.c
 assets/github.com/vnmakarov/mir/c-tests/new/array-address-in-initializer.c
@@ -3690,6 +3915,7 @@ assets/tcc-0.9.27/tests/tests2/42_function_pointer.c
 assets/tcc-0.9.27/tests/tests2/43_void_param.c
 assets/tcc-0.9.27/tests/tests2/44_scoped_declarations.c
 assets/tcc-0.9.27/tests/tests2/45_empty_for.c
+assets/tcc-0.9.27/tests/tests2/46_grep.c
 assets/tcc-0.9.27/tests/tests2/47_switch_return.c
 assets/tcc-0.9.27/tests/tests2/48_nested_break.c
 assets/tcc-0.9.27/tests/tests2/49_bracket_evaluation.c

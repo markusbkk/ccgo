@@ -894,7 +894,7 @@ out:
 			b.w("(*(*%s)(%s))", c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprVoid:
 			rt, rmode = n.Type(), mode
-			b.w("%s_ = (*(*%s)(%s))", tag(preserve), c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
+			b.w("(*(*%s)(%s))", c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprUintptr:
 			rt, rmode = n.CastExpression.Type(), mode
 			b.w("%s", c.expr(w, n.CastExpression, nil, exprDefault))
@@ -1606,6 +1606,30 @@ func (c *ctx) expressionList(w writer, n *cc.ExpressionList, t cc.Type, mode mod
 	}
 	c.err(errorf("TODO internal error", n))
 	return r, rt, rmode
+}
+
+func (c *ctx) expressionListLast(n cc.ExpressionNode) cc.ExpressionNode {
+	for {
+		switch x := n.(type) {
+		case *cc.ExpressionList:
+			for n := x; n != nil; n = n.ExpressionList {
+				switch {
+				case n.ExpressionList == nil:
+					return n.AssignmentExpression
+				}
+			}
+			return nil
+		case *cc.PrimaryExpression:
+			if x.Case == cc.PrimaryExpressionExpr {
+				n = x.ExpressionList
+				break
+			}
+
+			return n
+		default:
+			return n
+		}
+	}
 }
 
 func (c *ctx) primaryExpression(w writer, n *cc.PrimaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {

@@ -201,6 +201,15 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 	}
 	fs := pt.Size()
 	switch x := pt.(type) {
+	case *cc.ArrayType:
+		switch {
+		case fs < ts:
+			b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s; _ [%d]byte}{f: %s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, x), ts-fs, c.initializerArray(w, n, a, x, off0))
+		case fs == ts:
+			b.w("*(*%s)(%sunsafe.%sPointer(&%s))", c.typ(n, t), tag(importQualifier), tag(preserve), c.initializerArray(w, n, a, x, off0))
+		default:
+			c.err(errorf("TODO %s %d, ft %s %d", t, t.Size(), x, x.Size()))
+		}
 	case *cc.StructType:
 		switch {
 		case fs < ts:
@@ -219,7 +228,11 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 
 			v0 := a[0]
 			switch y := v0.Type().(type) {
-			case *cc.PredefinedType:
+			case
+				*cc.EnumType,
+				*cc.PointerType,
+				*cc.PredefinedType:
+
 				switch fs := y.Size(); {
 				case fs < ts:
 					b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s; _ [%d]byte}{f: %s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, y), ts-fs, c.expr(w, v0.AssignmentExpression, y, exprDefault))

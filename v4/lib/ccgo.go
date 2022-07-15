@@ -66,6 +66,8 @@ type Task struct {
 	stdout                io.Writer
 	tlsQualifier          string
 
+	intSize int
+
 	E               bool // -E
 	ansi            bool // -ansi
 	c               bool // -c
@@ -90,6 +92,11 @@ func NewTask(goos, goarch string, args []string, stdout, stderr io.Writer, fs fs
 		d = []string{"-D_FILE_OFFSET_BITS=64"}
 	}
 
+	intSize := 8
+	switch goarch {
+	case "arm", "386":
+		intSize = 4
+	}
 	return &Task{
 		D:              d,
 		args:           args,
@@ -97,6 +104,7 @@ func NewTask(goos, goarch string, args []string, stdout, stderr io.Writer, fs fs
 		fs:             fs,
 		goarch:         goarch,
 		goos:           goos,
+		intSize:        intSize,
 		stderr:         stderr,
 		stdout:         stdout,
 		tlsQualifier:   tag(importQualifier) + "libc.",

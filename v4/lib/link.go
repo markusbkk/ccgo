@@ -1478,10 +1478,22 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 						break
 					}
 
-					for i, v := range x.ExprList {
-						if e, changed := c.unconvertExpr(v.Expr, false); changed {
-							x.ExprList[i].Expr = e
+					switch y := x.PrimaryExpr.Type().(type) {
+					case *gc.FunctionType:
+						params := y.Parameters.Types
+						for i, v := range x.ExprList {
+							expr := v.Expr
+							t := expr.Type()
+							if y.IsVariadic && i >= len(params)-1 && l.isIntegerType(t) { // var args integer
+								break
+							}
+
+							if e, changed := c.unconvertExpr(expr, false); changed {
+								x.ExprList[i].Expr = e
+							}
 						}
+					default:
+						return
 					}
 				}
 				return
@@ -1502,4 +1514,53 @@ func (l *linker) unconvert(sf *gc.SourceFile) {
 		},
 		&uctx{linker: l},
 	)
+}
+
+func (l *linker) isIntegerType(t gc.Type) bool {
+	switch t.Kind() {
+	case
+		gc.Int,
+		gc.Int16,
+		gc.Int32,
+		gc.Int64,
+		gc.Int8,
+		gc.Uint,
+		gc.Uint16,
+		gc.Uint32,
+		gc.Uint64,
+		gc.Uint8,
+		gc.Uintptr:
+		return true
+	default:
+		return false
+	}
+}
+
+func (l *linker) sizeOf(t gc.Type) int64 {
+	switch t.Kind() {
+	case gc.Int:
+		return int64(l.task.intSize)
+	case gc.Int16:
+		return 2
+	case gc.Int32:
+		return 4
+	case gc.Int64:
+		return 8
+	case gc.Int8:
+		return 1
+	case gc.Uint:
+		return int64(l.task.intSize)
+	case gc.Uint16:
+		return 2
+	case gc.Uint32:
+		return 4
+	case gc.Uint64:
+		return 8
+	case gc.Uint8:
+		return 1
+	case gc.Uintptr:
+		return int64(l.task.intSize)
+	default:
+		return -1
+	}
 }

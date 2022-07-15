@@ -134,6 +134,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 			c.defineTaggedStructs[nm] = x
 		default:
 			b.WriteString("struct {")
+			var off int64
 			for i := 0; ; i++ {
 				f := x.FieldByIndex(i)
 				if f == nil {
@@ -146,6 +147,16 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					return
 				}
 
+				ft := f.Type()
+				abiAlign := ft.Align()
+				goAlign := c.goAlign(ft)
+				off = roundup(off, int64(goAlign))
+				if abiAlign > goAlign && off%int64(abiAlign) != 0 {
+					b.WriteByte('\n')
+					fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, abiAlign-goAlign)
+					off += int64(abiAlign - goAlign)
+				}
+
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -154,7 +165,8 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteByte(' ')
-				c.typ0(b, n, f.Type(), true, true, true)
+				c.typ0(b, n, ft, true, true, true)
+				off += ft.Size()
 			}
 			b.WriteString("\n}")
 		}
@@ -226,6 +238,22 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 		c.err(errorf("TODO %T", x))
 		return
 	}
+}
+
+// Exceptions to the usual C and Go alignment agreement.
+func (c *ctx) goAlign(t cc.Type) (r int) {
+	r = t.Align()
+	switch c.task.goos {
+	case "linux":
+		switch c.task.goarch {
+		case "arm":
+			switch t.Kind() {
+			case cc.Double:
+				return 4
+			}
+		}
+	}
+	return r
 }
 
 func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {

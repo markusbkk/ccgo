@@ -279,9 +279,9 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			case info != nil && info.pinned():
 				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d, d.Type()))
 			default:
-				if d.Linkage() != cc.External && d.WriteCount()+d.ReadCount() == 0 {
-					return
-				}
+				//TODO- if d.Linkage() != cc.External && d.WriteCount()+d.ReadCount() == 0 {
+				//TODO- 	return
+				//TODO- }
 
 				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
 			}
