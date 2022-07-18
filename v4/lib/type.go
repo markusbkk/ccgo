@@ -246,9 +246,8 @@ func (c *ctx) goAlign(t cc.Type) (r int) {
 	switch c.task.goos {
 	case "linux":
 		switch c.task.goarch {
-		case "arm":
-			switch t.Kind() {
-			case cc.Double:
+		case "arm", "386":
+			if t.Size() == 8 {
 				return 4
 			}
 		}

@@ -1874,6 +1874,11 @@ func (c *ctx) primaryExpressionStringConst(w writer, n *cc.PrimaryExpression, t 
 
 				c.err(errorf("TODO"))
 			default:
+				if cc.IsIntegerType(t) {
+					b.w("(%s(%q))", c.typ(n, t), s)
+					break
+				}
+
 				trc("%v: %s <- %q, convert to %s", n.Position(), x, s, t)
 				c.err(errorf("TODO %s", t))
 			}

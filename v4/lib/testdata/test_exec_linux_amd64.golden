@@ -42,6 +42,7 @@ assets/ccgo/bug/sizeof.c
 assets/ccgo/bug/sqlite2.c
 assets/ccgo/bug/tk.c
 assets/ccgo/bug/webp.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000105-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000120-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000120-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000127-1.c
@@ -886,6 +887,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27571.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28675.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28776-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28776-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28865.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28905.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr29241.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr29250.c
