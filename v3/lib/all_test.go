@@ -2742,7 +2742,7 @@ func testSQLite(t *testing.T, dir string) {
 
 	shell := "./shell"
 	if runtime.GOOS == "windows" {
-		shell = "shell.exe"
+		shell = "./shell.exe"
 	}
 	args := []string{"build"}
 	if s := *oXTags; s != "" {
