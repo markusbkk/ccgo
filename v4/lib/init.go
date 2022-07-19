@@ -33,15 +33,15 @@ func (c *ctx) initalizerFlatten(n *cc.Initializer, a []*cc.Initializer) (r []*cc
 }
 
 func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, off0 int64, arrayElem bool) (r *buf) {
-	if len(a) == 0 {
-		c.err(errorf("TODO"))
-		return nil
-	}
-
 	// trc("==== (init A) typ %s off0 %#0x (%v:)", t, off0, a[0].Position())
 	// dumpInitializer(a, "")
 	// trc("---- (init Z)")
 	if cc.IsScalarType(t) {
+		if len(a) == 0 {
+			c.err(errorf("TODO"))
+			return nil
+		}
+
 		if a[0].Offset()-off0 != 0 {
 			c.err(errorf("TODO"))
 			return nil
@@ -194,6 +194,11 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 			}
 		}
 	}
+	if p == nil {
+		c.err(errorf("TODO"))
+		return &b
+	}
+
 	ts := t.Size()
 	pt := p.Type()
 	if _, ok := pt.(*cc.ArrayType); ok && arrayElem {

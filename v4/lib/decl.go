@@ -199,7 +199,6 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 			}
 
 			if n.DeclarationSpecifiers == nil {
-				c.err(errorf("TODO %v:", n.Position()))
 				break
 			}
 

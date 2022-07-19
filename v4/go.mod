@@ -11,7 +11,7 @@ require (
 	modernc.org/cc/v4 v4.0.0-20220718142957-05fc03bb5d14
 	modernc.org/ccorpus2 v0.0.15
 	modernc.org/fileutil v1.1.0
-	modernc.org/gc/v2 v2.0.0-20220708192943-89f1f8fe63d7
+	modernc.org/gc/v2 v2.0.0-20220719153057-8483c1de97ea
 	modernc.org/opt v0.1.3
 )
 

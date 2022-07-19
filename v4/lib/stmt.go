@@ -280,7 +280,6 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("for %s; %s;  {", b, b2)
 			c.unbracedStatement(w, n.Statement)
 			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
-			w.w("};")
 		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
 			w.w("for %s; ; %s {", b, b3)
 			w.w("\n%s", a2.bytes())
@@ -316,7 +315,36 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			c.err(errorf("TODO"))
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
-		c.err(errorf("TODO %v", n.Case))
+		w.w("{")
+		c.declaration(w, n.Declaration, false)
+		var a, a2 buf
+		var b []byte
+		if n.ExpressionList != nil {
+			b = c.expr(&a, n.ExpressionList, nil, exprBool).bytes()
+		}
+		switch b2 := c.expr(&a2, n.ExpressionList2, nil, exprVoid); {
+		case a.len() == 0 && a2.len() == 0:
+			w.w("for ; %s; %s {", b, b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
+		case a.len() == 0 && a2.len() != 0:
+			w.w("for %s  {", b)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a2.bytes(), b2.bytes())
+		case a.len() != 0 && a2.len() == 0:
+			w.w("for ; ; %s {", b2)
+			w.w("\n%s", a.bytes())
+			w.w("\nif !(%s) { break };", b)
+			c.unbracedStatement(w, n.Statement)
+			w.w("};")
+		default: // case a.len() != 0 && a.len() != 0:
+			w.w("for {")
+			w.w("\n%s", a.bytes())
+			w.w("\nif !(%s) { break };", b)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a2.bytes(), b2.bytes())
+		}
+		w.w("};")
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}

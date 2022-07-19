@@ -157,6 +157,10 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					off += int64(abiAlign - goAlign)
 				}
 
+				if ft.Size() == 0 && i == x.NumFields()-1 {
+					break
+				}
+
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
@@ -322,6 +326,9 @@ func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 
 		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
 	}
+	for _, v := range c.unionEnums(t) {
+		c.defineEnum(w, "\n", n, v)
+	}
 }
 
 type fielder interface {
@@ -384,6 +391,29 @@ func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 
 		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
 	}
+	for _, v := range c.structEnums(t) {
+		c.defineEnum(w, "\n", n, v)
+	}
+}
+
+func (c *ctx) structEnums(t *cc.StructType) (r []*cc.EnumType) {
+	for i := 0; i < t.NumFields(); i++ {
+		switch f := t.FieldByIndex(i); x := f.Type().(type) {
+		case *cc.EnumType:
+			r = append(r, x)
+		}
+	}
+	return r
+}
+
+func (c *ctx) unionEnums(t *cc.UnionType) (r []*cc.EnumType) {
+	for i := 0; i < t.NumFields(); i++ {
+		switch f := t.FieldByIndex(i); x := f.Type().(type) {
+		case *cc.EnumType:
+			r = append(r, x)
+		}
+	}
+	return r
 }
 
 func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {

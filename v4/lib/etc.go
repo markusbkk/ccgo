@@ -425,14 +425,6 @@ type parallel struct {
 
 func newParallel(resultTag string) *parallel {
 	limit := runtime.GOMAXPROCS(0)
-	//TODO- switch runtime.GOARCH {
-	//TODO- case "386", "arm": // 32 bit targets
-	//TODO- 	limit = 1
-	//TODO- default:
-	//TODO- 	if totalRam <= 1<<32 {
-	//TODO- 		limit = 1
-	//TODO- 	}
-	//TODO- }
 	return &parallel{
 		limit:     make(chan struct{}, limit),
 		resultTag: resultTag,
