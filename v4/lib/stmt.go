@@ -20,7 +20,7 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 		w.w("%s%s", sep, c.posComment(n))
 		c.labeledStatement(w, n.LabeledStatement)
 	case cc.StatementCompound: // CompoundStatement
-		c.compoundStatement(w, n.CompoundStatement, false)
+		c.compoundStatement(w, n.CompoundStatement, false, "")
 	case cc.StatementExpr: // ExpressionStatement
 		var a buf
 		b := c.expr(&a, n.ExpressionStatement.ExpressionList, nil, exprVoid)
@@ -116,7 +116,9 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 	}
 }
 
-func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool) {
+func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool, value string) {
+	defer func() { c.compoundStmtValue = value }()
+
 	switch {
 	case fnBlock:
 		w.w(" {")
@@ -144,6 +146,36 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool)
 	var bi *cc.BlockItem
 	for l := n.BlockItemList; l != nil; l = l.BlockItemList {
 		bi = l.BlockItem
+		if l.BlockItemList == nil && value != "" {
+			switch bi.Case {
+			case cc.BlockItemStmt:
+				switch s := bi.Statement; s.Case {
+				case cc.StatementExpr:
+					switch e := s.ExpressionStatement.ExpressionList; x := e.(type) {
+					case *cc.PrimaryExpression:
+						switch x.Case {
+						case cc.PrimaryExpressionStmt:
+							c.blockItem(w, bi)
+							w.w("%s = %s;", value, c.compoundStmtValue)
+						default:
+							w.w("%s = ", value)
+							c.blockItem(w, bi)
+						}
+					default:
+						w.w("%s = ", value)
+						c.blockItem(w, bi)
+					}
+				default:
+					c.err(errorf("TODO %v", s.Case))
+				}
+			default:
+				c.err(errorf("TODO %v", bi.Case))
+			}
+			// c.blockItem(w, bi)
+			// w.w("%s = 42;", value)
+			break
+		}
+
 		c.blockItem(w, bi)
 	}
 	switch {
@@ -309,10 +341,13 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
 			w.w("};")
-		//TODO case a.len() != 0 && a2.len() != 0 && a3.len() != 0:
-		default:
-			trc("", c.pos(n), a.len() != 0, a2.len() != 0, a3.len() != 0)
-			c.err(errorf("TODO"))
+		case a.len() != 0 && a2.len() != 0 && a3.len() != 0:
+			w.w("%s%s", a.bytes(), b.bytes())
+			w.w("\nfor ; ; %s {", b3)
+			w.w("\n%s", a2.bytes())
+			w.w("\nif !(%s) { break };", b2)
+			c.unbracedStatement(w, n.Statement)
+			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
 		w.w("{")

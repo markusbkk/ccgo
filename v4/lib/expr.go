@@ -1218,6 +1218,15 @@ out:
 		case exprUintptr:
 			rt, rmode = n.Type().Pointer(), mode
 			b.w("((%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), fldOff(f.Offset()))
+		case exprCall:
+			rt, rmode = n.Type().(*cc.PointerType), exprUintptr
+			b.w("((*%s)(%s).", c.typ(n, pe.Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
+			switch {
+			case f.Parent() != nil:
+				c.err(errorf("TODO %v", n.Case))
+			default:
+				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			}
 		default:
 			c.err(errorf("TODO %v", mode))
 		}
@@ -1718,6 +1727,9 @@ out:
 				}
 			default:
 				switch mode {
+				case exprVoid:
+					r, rt, _ = c.primaryExpression(w, n, t, exprDefault)
+					return r, rt, exprDefault
 				case exprDefault:
 					switch x.Type().Kind() {
 					case cc.Array:
@@ -1824,7 +1836,11 @@ out:
 	case cc.PrimaryExpressionExpr: // '(' ExpressionList ')'
 		return c.expr0(w, n.ExpressionList, nil, mode)
 	case cc.PrimaryExpressionStmt: // '(' CompoundStatement ')'
-		c.err(errorf("TODO %v", n.Case))
+		rt, rmode = n.Type(), exprDefault
+		v := fmt.Sprintf("%sv%d", tag(ccgo), c.id())
+		w.w("var %s %s;", v, c.typ(n, n.Type()))
+		c.compoundStatement(w, n.CompoundStatement, false, v)
+		b.w("%s", v)
 	case cc.PrimaryExpressionGeneric: // GenericSelection
 		c.err(errorf("TODO %v", n.Case))
 	default:

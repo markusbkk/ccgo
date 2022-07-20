@@ -170,6 +170,7 @@ type errHandler func(msg string, args ...interface{})
 type ctx struct {
 	ast                 *cc.AST
 	cfg                 *cc.Config
+	compoundStmtValue   string
 	defineTaggedStructs map[string]*cc.StructType
 	eh                  errHandler
 	enumerators         nameSet

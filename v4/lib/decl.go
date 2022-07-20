@@ -93,7 +93,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	c.f = c.newFnCtx(ft)
 	defer func() { c.f = f0; c.pass = pass }()
 	c.pass = 1
-	c.compoundStatement(discard{}, cs, true)
+	c.compoundStatement(discard{}, cs, true, "")
 	var a []*cc.Declarator
 	for d, n := range c.f.declInfos {
 		if n.pinned() {
@@ -129,7 +129,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	default:
 		w.w("%sfunc %s%s%s ", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
 	}
-	c.compoundStatement(w, cs, true)
+	c.compoundStatement(w, cs, true, "")
 }
 
 func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
@@ -261,7 +261,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 	case cc.InitDeclaratorDecl: // Declarator Asm
 		switch {
 		case d.IsTypename():
-			if external && c.typenames.add(nm) {
+			if external && c.typenames.add(nm) && !d.Type().IsIncomplete() {
 				w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
 				c.defineEnumStructUnion(w, sep, n, d.Type())
 			}
