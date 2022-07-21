@@ -32,42 +32,6 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 		if a.len() != 0 {
 			w.w("%s;", a.bytes())
 		}
-		e := c.expressionListLast(n.ExpressionStatement.ExpressionList)
-		switch {
-		case e.Type().Kind() == cc.Void:
-			switch x := e.(type) {
-			case *cc.CastExpression:
-				if x.Case == cc.CastExpressionCast && x.CastExpression.Type().Kind() != cc.Void {
-					w.w("%s_ = ", tag(preserve))
-				}
-			}
-		default:
-			blank := true
-			switch x := e.(type) {
-			case *cc.AssignmentExpression:
-				blank = false
-			case *cc.PostfixExpression:
-				switch x.Case {
-				case
-					cc.PostfixExpressionCall,
-					cc.PostfixExpressionDec,
-					cc.PostfixExpressionInc:
-
-					blank = false
-				}
-			case *cc.UnaryExpression:
-				switch x.Case {
-				case
-					cc.UnaryExpressionDec,
-					cc.UnaryExpressionInc:
-
-					blank = false
-				}
-			}
-			if blank {
-				w.w("%s_ = ", tag(preserve))
-			}
-		}
 		w.w("%s;", b.bytes())
 	case cc.StatementSelection: // SelectionStatement
 		w.w("%s%s", sep, c.posComment(n))
@@ -149,7 +113,11 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 		if l.BlockItemList == nil && value != "" {
 			switch bi.Case {
 			case cc.BlockItemStmt:
-				switch s := bi.Statement; s.Case {
+				s := bi.Statement
+				for s.Case == cc.StatementLabeled {
+					s = s.LabeledStatement.Statement
+				}
+				switch s.Case {
 				case cc.StatementExpr:
 					switch e := s.ExpressionStatement.ExpressionList; x := e.(type) {
 					case *cc.PrimaryExpression:
@@ -166,13 +134,12 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 						c.blockItem(w, bi)
 					}
 				default:
+					// trc("%v: %s", bi.Position(), cc.NodeSource(bi))
 					c.err(errorf("TODO %v", s.Case))
 				}
 			default:
 				c.err(errorf("TODO %v", bi.Case))
 			}
-			// c.blockItem(w, bi)
-			// w.w("%s = 42;", value)
 			break
 		}
 
@@ -400,10 +367,7 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 		case n.ExpressionList != nil:
 			switch {
 			case c.f.t.Result().Kind() == cc.Void:
-				if n.ExpressionList.Type().Kind() != cc.Void {
-					w.w("%s_ = ", tag(preserve))
-				}
-				w.w("%s; return;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
+				w.w("%s; return;", c.expr(w, n.ExpressionList, nil, exprVoid))
 			default:
 				w.w("return %s;", c.expr(w, n.ExpressionList, c.f.t.Result(), exprDefault))
 			}

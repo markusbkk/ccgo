@@ -124,7 +124,7 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 		return &b
 	}
 
-	if from == to || from != nil && from.IsCompatible(to) {
+	if from == to || from != nil && from.IsCompatible(to) || fromMode == exprBool && cc.IsIntegerType(to) {
 		if fromMode == toMode {
 			return s
 		}
@@ -158,6 +158,7 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 		return c.convertToPointer(n, s, from, to.(*cc.PointerType), fromMode, toMode)
 	}
 
+	// trc("%v: %s", n.Position(), cc.NodeSource(n))
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
 }
@@ -365,6 +366,8 @@ func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mode mode) (r *buf
 	// defer func() {
 	// 	trc("%v: %T (%q), %v, %v (RET)", n.Position(), n, cc.NodeSource(n), t, mode)
 	// }()
+	blank := false
+out:
 	switch {
 	case mode == exprBool:
 		mode = exprDefault
@@ -372,6 +375,50 @@ func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mode mode) (r *buf
 		if d := c.declaratorOf(n); d == nil || !d.IsParam() {
 			mode = exprUintptr
 		}
+	case mode == exprVoid:
+		if _, ok := n.(*cc.ExpressionList); ok {
+			break out
+		}
+
+		if n.Type().Kind() == cc.Void {
+			switch x := n.(type) {
+			case *cc.CastExpression:
+				if x.Case == cc.CastExpressionCast && x.CastExpression.Type().Kind() != cc.Void {
+					blank = true
+				}
+			}
+			break out
+		}
+
+		switch x := n.(type) {
+		case *cc.AssignmentExpression:
+			break out
+		case *cc.PostfixExpression:
+			switch x.Case {
+			case cc.PostfixExpressionCall, cc.PostfixExpressionDec, cc.PostfixExpressionInc:
+				break out
+			}
+		case *cc.UnaryExpression:
+			switch x.Case {
+			case cc.UnaryExpressionDec, cc.UnaryExpressionInc:
+				break out
+			}
+		case *cc.PrimaryExpression:
+			switch x.Case {
+			case cc.PrimaryExpressionExpr:
+				break out
+			}
+		}
+
+		blank = true
+
+	}
+	if blank {
+		defer func() {
+			var b buf
+			b.w("%s_ = %s", tag(preserve), r.bytes())
+			r.b = b.b
+		}()
 	}
 	if t == nil {
 		t = n.Type()
@@ -557,7 +604,6 @@ func (c *ctx) logicalOrExpression(w writer, n *cc.LogicalOrExpression, t cc.Type
 			w.w("%s;", al.bytes())
 			b.w("((%s) || (%s))", bl, br)
 		case al.len() != 0 && ar.len() != 0:
-			c.err(errorf("TODO %v", n.Case))
 			// Sequence point
 			// al; if v = bl; !v { ar };
 			// v || br
@@ -1176,6 +1222,15 @@ out:
 				c.err(errorf("TODO %v", n.Case))
 			default:
 				b.w("%s%s)))", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			}
+		case exprCall:
+			rt, rmode = n.Type().(*cc.PointerType), exprUintptr
+			b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
+			switch {
+			case f.Parent() != nil:
+				c.err(errorf("TODO %v", n.Case))
+			default:
+				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 			}
 		default:
 			c.err(errorf("TODO %v", mode))
@@ -1836,11 +1891,18 @@ out:
 	case cc.PrimaryExpressionExpr: // '(' ExpressionList ')'
 		return c.expr0(w, n.ExpressionList, nil, mode)
 	case cc.PrimaryExpressionStmt: // '(' CompoundStatement ')'
-		rt, rmode = n.Type(), exprDefault
-		v := fmt.Sprintf("%sv%d", tag(ccgo), c.id())
-		w.w("var %s %s;", v, c.typ(n, n.Type()))
-		c.compoundStatement(w, n.CompoundStatement, false, v)
-		b.w("%s", v)
+		// trc("%v: %v %s", n.Position(), n.Type(), cc.NodeSource(n))
+		switch n.Type().Kind() {
+		case cc.Void:
+			rt, rmode = n.Type(), exprVoid
+			c.compoundStatement(w, n.CompoundStatement, false, "")
+		default:
+			rt, rmode = n.Type(), exprDefault
+			v := fmt.Sprintf("%sv%d", tag(ccgo), c.id())
+			w.w("var %s %s;", v, c.typ(n, n.Type()))
+			c.compoundStatement(w, n.CompoundStatement, false, v)
+			b.w("%s", v)
+		}
 	case cc.PrimaryExpressionGeneric: // GenericSelection
 		c.err(errorf("TODO %v", n.Case))
 	default:
