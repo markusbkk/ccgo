@@ -43,9 +43,10 @@ var (
 	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
 	oShellTime  = flag.Duration("shelltimeout", 100*time.Second, "shell() time limit")
 	oStackTrace = flag.Bool("trcstack", false, "")
-	oTrace      = flag.Bool("trc", false, "Print tested paths.")
-	oTraceF     = flag.Bool("trcf", false, "Print test file content")
-	oTraceO     = flag.Bool("trco", false, "Print test output")
+	oTrace      = flag.Bool("trc", false, "print tested paths.")
+	oTraceC     = flag.Bool("trcc", false, "trace TestExec transiple errors")
+	oTraceF     = flag.Bool("trcf", false, "print test file content")
+	oTraceO     = flag.Bool("trco", false, "print test output")
 	oXTags      = flag.String("xtags", "", "passed to go build of TestSQLite")
 
 	cfs    fs.FS
@@ -387,7 +388,9 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 
 	var out bytes.Buffer
 	if err := NewTask(goos, goarch, []string{"ccgo", flag, ofn, "--prefix-field=F", path}, &out, &out, nil).Main(); err != nil {
-		// trc("ccgo %v %v", fullPath, err)
+		if *oTraceC {
+			trc("ccgo %v %v", fullPath, err)
+		}
 		if cCompilerFailed || isTestExecKnownFail(fullPath) {
 			p.skip()
 			return nil

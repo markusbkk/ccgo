@@ -84,7 +84,7 @@ func (c *ctx) expr(w writer, n cc.ExpressionNode, to cc.Type, toMode mode) *buf 
 	r, from, fromMode := c.expr0(w, n, to, toMode)
 	// trc("%v: EXPR post call EXPR0 %v %v -> %v %v (%s) %T", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), n)
 	if from == nil || fromMode == 0 {
-		// trc("", cpos(n))
+		// trc("IN %v: from %v, %v to %v %v, src '%s', buf '%s'", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), r.bytes())
 		c.err(errorf("TODO %T %v %v -> %v %v", n, from, fromMode, to, toMode))
 		return r
 	}
@@ -556,7 +556,6 @@ func (c *ctx) logicalAndExpression(w writer, n *cc.LogicalAndExpression, t cc.Ty
 			w.w("%s;", al.bytes())
 			b.w("((%s) && (%s))", bl, br)
 		case al.len() != 0 && ar.len() != 0:
-			c.err(errorf("TODO %v", n.Case))
 			// Sequence point
 			// al; if v = bl; v { ar };
 			// v && br
@@ -844,7 +843,14 @@ out:
 					w.w("\n%s = %s;", v, ds)
 					b.w("%s", v)
 				default:
-					c.err(errorf("TODO")) // 1: bit field
+					v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+					v2 := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+					w.w("var %s %s;/**/", v, c.typ(n, n.UnaryExpression.Type()))
+					w.w("\nvar %s %s;/**/", v2, c.typ(n, n.UnaryExpression.Type().Pointer()))
+					w.w("\n%s = %s;", v2, c.expr(w, n.UnaryExpression, n.UnaryExpression.Type().Pointer(), exprUintptr))
+					w.w("(*(*%s)(%s))++;", c.typ(n, n.UnaryExpression.Type()), unsafePointer(v2))
+					w.w("%s = (*(*%s)(%s));", v, c.typ(n, n.UnaryExpression.Type()), unsafePointer(v2))
+					b.w("%s", v)
 				}
 			default:
 				c.err(errorf("TODO %v", mode)) // -
@@ -1175,6 +1181,15 @@ out:
 				default:
 					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 				}
+			case exprCall:
+				rt, rmode = n.Type().(*cc.PointerType), exprUintptr
+				switch {
+				case f.Offset() != 0:
+					//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
+					c.err(errorf("TODO"))
+				default:
+					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
+				}
 			case exprUintptr:
 				rt, rmode = n.Type().Pointer(), mode
 				switch {
@@ -1245,7 +1260,7 @@ out:
 
 		if _, ok := pe.Elem().(*cc.UnionType); ok && f.Index() != 0 {
 			switch mode {
-			case exprSelect, exprLvalue:
+			case exprSelect, exprLvalue, exprDefault:
 				rt, rmode = n.Type(), mode
 				switch {
 				case f.Offset() != 0:
@@ -1341,12 +1356,13 @@ out:
 			}
 		}
 	case cc.PostfixExpressionDec: // PostfixExpression "--"
+		rt, rmode = n.Type(), mode
 		switch pe := n.PostfixExpression.Type(); {
 		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Size() != 1:
 			sz := pe.(*cc.PointerType).Elem().Size()
 			switch mode {
 			case exprVoid:
-				b.w("%s = %d", c.expr(w, n.PostfixExpression, nil, exprDefault), sz)
+				b.w("%s--", c.expr(w, n.PostfixExpression, nil, exprDefault))
 			case exprDefault:
 				v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 				switch d := c.declaratorOf(n.PostfixExpression); {
@@ -1371,10 +1387,8 @@ out:
 		default:
 			switch mode {
 			case exprVoid:
-				rt, rmode = n.Type(), exprVoid
 				b.w("%s--", c.expr(w, n.PostfixExpression, nil, exprDefault))
 			case exprDefault:
-				rt, rmode = n.Type(), exprDefault
 				v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 				switch d := c.declaratorOf(n.PostfixExpression); {
 				case d != nil:
