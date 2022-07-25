@@ -172,8 +172,15 @@ func (c *ctx) convertToPointer(n cc.ExpressionNode, s *buf, from cc.Type, to *cc
 			b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, s)))
 			return &b
 		}
+	case exprBool:
+		switch toMode {
+		case exprDefault:
+			b.w("%s%sBool%s(%s)", c.task.tlsQualifier, tag(preserve), c.helper(n, to), s)
+			return &b
+		}
 	}
 
+	// trc("%v: from %v, %v to %v %v, src '%s', buf '%s'", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), s.bytes())
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
 }
@@ -250,6 +257,9 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 		switch toMode {
 		case exprDefault:
 			return s
+		case exprBool:
+			b.w("(%s != 0)", s)
+			return &b
 		case exprCall:
 			v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 			ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
@@ -274,6 +284,7 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 			return s
 		}
 	}
+	// trc("%v: from %v, %v to %v %v, src '%s', buf '%s'", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), s.bytes())
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
 }
@@ -637,7 +648,7 @@ func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.
 			w.w("};")
 			b.w("%s", v)
 		default:
-			rt, rmode = n.Type(), exprDefault
+			rt, rmode = n.Type(), mode
 			w.w("var %s %s;/**/", v, c.typ(n, n.Type()))
 			w.w("\nif %s {", c.expr(w, n.LogicalOrExpression, nil, exprBool))
 			w.w("%s = %s;", v, c.expr(w, n.ExpressionList, n.Type(), exprDefault))
@@ -1077,7 +1088,23 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 		case *cc.PointerType:
 			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
 		default:
-			trc("%v: %s[%s] %v %T", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode, x)
+			// trc("%v: %s[%s] %v %T", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode, x)
+			c.err(errorf("TODO %T", x))
+		}
+	case exprCall:
+		rt, rmode = t.(*cc.PointerType), exprUintptr
+		switch x := pt.Undecay().(type) {
+		case *cc.ArrayType:
+			if d := c.declaratorOf(p); d != nil && d.IsParam() {
+				b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+				break
+			}
+
+			b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
+		case *cc.PointerType:
+			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+		default:
+			// trc("%v: %s[%s] %v %T", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode, x)
 			c.err(errorf("TODO %T", x))
 		}
 	case exprUintptr:
