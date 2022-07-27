@@ -181,11 +181,11 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 			fmt.Fprintf(b, "%s%s", tag(taggedUnion), nm)
 		default:
 			fmt.Fprintf(b, "struct {")
-			var sz1 int64
-			for i := 1; ; i++ {
+			ff := firstPositiveSizedField(x)
+			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
-				if f == nil {
-					break
+				if f == ff || f.Type().Size() == 0 {
+					continue
 				}
 
 				if f.IsBitfield() {
@@ -203,32 +203,30 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
 				b.WriteByte(' ')
-				if i != 0 {
-					b.WriteString("[0]")
-				}
+				b.WriteString("[0]")
 				c.typ0(b, n, f.Type(), true, true, true)
 			}
-			f := x.FieldByIndex(0)
-			if f == nil {
+			if ff == nil {
 				c.err(errorf("TODO"))
 				return
 			}
 
-			if f.IsBitfield() {
+			if ff.IsBitfield() {
 				c.err(errorf("TODO bitfield"))
 				return
 			}
-			sz1 = f.Type().Size()
+
+			sz1 := ff.Type().Size()
 			b.WriteByte('\n')
-			switch nm := f.Name(); {
+			switch nm := ff.Name(); {
 			case nm == "":
 				c.err(errorf("TODO"))
 				return
 			default:
-				fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
+				fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, ff))
 			}
 			b.WriteByte(' ')
-			c.typ0(b, n, f.Type(), true, true, true)
+			c.typ0(b, n, ff.Type(), true, true, true)
 			if n := t.Size() - sz1; n != 0 {
 				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
 			}
@@ -534,6 +532,15 @@ func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, t
 		}
 	default:
 		panic(todo("%T %s", x, x.Source(false)))
+	}
+	return nil
+}
+
+func firstPositiveSizedField(n *cc.UnionType) *cc.Field {
+	for i := 0; i < n.NumFields(); i++ {
+		if f := n.FieldByIndex(i); f.Type().Size() > 0 {
+			return f
+		}
 	}
 	return nil
 }
