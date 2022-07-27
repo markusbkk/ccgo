@@ -1195,88 +1195,7 @@ out:
 			return c.postfixExpressionCall(w, n)
 		}
 	case cc.PostfixExpressionSelect: // PostfixExpression '.' IDENTIFIER
-		b.n = n
-		f := n.Field()
-		if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f.Index() != 0 {
-			switch mode {
-			case exprLvalue, exprDefault, exprSelect:
-				rt, rmode = n.Type(), mode
-				switch {
-				case f.Offset() != 0:
-					//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
-					c.err(errorf("TODO"))
-				default:
-					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
-				}
-			case exprCall:
-				rt, rmode = n.Type().(*cc.PointerType), exprUintptr
-				switch {
-				case f.Offset() != 0:
-					//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
-					c.err(errorf("TODO"))
-				default:
-					b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
-				}
-			case exprUintptr:
-				rt, rmode = n.Type().Pointer(), mode
-				switch {
-				case f.Offset() != 0:
-					// b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
-					c.err(errorf("TODO"))
-				default:
-					b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
-				}
-			case exprIndex:
-				switch x := n.Type().Undecay().(type) {
-				case *cc.ArrayType:
-					rt, rmode = n.Type(), mode
-					switch {
-					case f.Offset() != 0:
-						// b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
-						c.err(errorf("TODO"))
-					default:
-						b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
-					}
-				default:
-					c.err(errorf("TODO %T", x))
-				}
-			default:
-				c.err(errorf("TODO %v", mode))
-			}
-			break
-		}
-
-		switch mode {
-		case exprLvalue, exprDefault, exprSelect, exprIndex:
-			rt, rmode = n.Type(), mode
-			b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
-			switch {
-			case f.Parent() != nil:
-				c.err(errorf("TODO %v", n.Case))
-			default:
-				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
-			}
-		case exprUintptr:
-			rt, rmode = n.Type().Pointer(), mode
-			b.w("%suintptr(%sunsafe.%[1]sPointer(&(%[3]s.", tag(preserve), tag(importQualifier), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)))
-			switch {
-			case f.Parent() != nil:
-				c.err(errorf("TODO %v", n.Case))
-			default:
-				b.w("%s%s)))", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
-			}
-		case exprCall:
-			rt, rmode = n.Type().(*cc.PointerType), exprUintptr
-			b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
-			switch {
-			case f.Parent() != nil:
-				c.err(errorf("TODO %v", n.Case))
-			default:
-				b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
-			}
-		default:
-			c.err(errorf("TODO %v", mode))
-		}
+		return c.postfixExpressionSelect(w, n, t, mode)
 	case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
 		f := n.Field()
 		pe, ok := n.PostfixExpression.Type().(*cc.PointerType)
@@ -1446,6 +1365,151 @@ out:
 		return c.initializer(w, n, a, t, 0, false), t, exprDefault
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
+	}
+	return &b, rt, rmode
+}
+
+// PostfixExpression '.' IDENTIFIER
+func (c *ctx) postfixExpressionSelectBitField(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	b.n = n
+	f := n.Field()
+	ab := f.AccessBytes()
+	foff := f.Offset()
+	fboff := f.OffsetBits()
+	ft := f.Type()
+	m := f.Mask()
+	vb := f.ValueBits()
+	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok {
+		c.err(errorf("TODO %v %v", n.Case, mode))
+		return &b, rt, rmode
+	}
+
+	switch mode {
+	case exprDefault:
+		// rt, rmode = n.Type(), mode
+		// b.w("((%s((((%s.", c.typ(n, rt), c.expr(w, n.PostfixExpression, nil, exprSelect))
+		// switch {
+		// case f.Parent() != nil:
+		// 	c.err(errorf("TODO %v", n.Case))
+		// default:
+		// 	b.w("%s__ccgo%d)", tag(field), foff)
+		// }
+		// if fboff != 0 {
+		// 	b.w(">>%d", fboff)
+		// }
+		// b.w(")")
+		// b.w("&%#0x)", m>>fboff)
+		// b.w("))")
+		// if cc.IsSignedInteger(ft) {
+		// 	w := n.Type().Size() * 8
+		// 	b.w("<<%d>>%[1]d", w-vb)
+		// }
+		// b.w(")")
+		rt, rmode = n.Type(), mode
+		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), ab*8, tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintptr), foff, m, fboff)
+		if cc.IsSignedInteger(ft) {
+			w := n.Type().Size() * 8
+			b.w("<<%d>>%[1]d", w-vb)
+		}
+		b.w(")")
+	default:
+		_ = ab
+		_ = vb
+		// trc("%q: ab %v, foff %v, fboff %v m %#0b, vb %v, ft %s", f.Name(), ab, foff, fboff, m, vb, ft)
+		c.err(errorf("TODO %v %v", n.Case, mode))
+	}
+	return &b, rt, rmode
+}
+
+// PostfixExpression '.' IDENTIFIER
+func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	b.n = n
+	f := n.Field()
+	if f.IsBitfield() {
+		return c.postfixExpressionSelectBitField(w, n, t, mode)
+	}
+
+	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f.Index() != 0 { // Use firstPositiveSizedField instead of zero
+		switch mode {
+		case exprLvalue, exprDefault, exprSelect:
+			rt, rmode = n.Type(), mode
+			switch {
+			case f.Offset() != 0:
+				//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
+				c.err(errorf("TODO"))
+			default:
+				b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
+			}
+		case exprCall:
+			rt, rmode = n.Type().(*cc.PointerType), exprUintptr
+			switch {
+			case f.Offset() != 0:
+				//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
+				c.err(errorf("TODO"))
+			default:
+				b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
+			}
+		case exprUintptr:
+			rt, rmode = n.Type().Pointer(), mode
+			switch {
+			case f.Offset() != 0:
+				// b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+				c.err(errorf("TODO"))
+			default:
+				b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
+			}
+		case exprIndex:
+			switch x := n.Type().Undecay().(type) {
+			case *cc.ArrayType:
+				rt, rmode = n.Type(), mode
+				switch {
+				case f.Offset() != 0:
+					// b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
+					c.err(errorf("TODO"))
+				default:
+					b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
+				}
+			default:
+				c.err(errorf("TODO %T", x))
+			}
+		default:
+			c.err(errorf("TODO %v", mode))
+		}
+		return &b, rt, rmode
+	}
+
+	switch mode {
+	case exprLvalue, exprDefault, exprSelect, exprIndex:
+		rt, rmode = n.Type(), mode
+		b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
+		switch {
+		case f.Parent() != nil:
+			c.err(errorf("TODO %v", n.Case))
+		default:
+			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+		}
+	case exprUintptr:
+		rt, rmode = n.Type().Pointer(), mode
+		b.w("%suintptr(%sunsafe.%[1]sPointer(&(%[3]s.", tag(preserve), tag(importQualifier), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)))
+		switch {
+		case f.Parent() != nil:
+			c.err(errorf("TODO %v", n.Case))
+		default:
+			b.w("%s%s)))", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+		}
+	case exprCall:
+		rt, rmode = n.Type().(*cc.PointerType), exprUintptr
+		b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
+		switch {
+		case f.Parent() != nil:
+			c.err(errorf("TODO %v", n.Case))
+		default:
+			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+		}
+	default:
+		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode
 }
@@ -1647,6 +1711,29 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 	case cc.AssignmentExpressionCond: // ConditionalExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.AssignmentExpressionAssign: // UnaryExpression '=' AssignmentExpression
+		switch x := n.UnaryExpression.(type) {
+		case *cc.PostfixExpression:
+			switch x.Case {
+			case cc.PostfixExpressionSelect:
+				f := x.Field()
+				if !f.IsBitfield() {
+					break
+				}
+
+				switch mode {
+				case exprDefault:
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.AccessBytes()*8, f.OffsetBits(), f.Mask())
+					return &b, n.Type(), exprDefault
+				case exprVoid:
+					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
+					return &b, n.Type(), exprVoid
+				default:
+					c.err(errorf("TODO %v", mode))
+					return &b, rt, rmode
+				}
+				//TODO case cc.PostfixExpressionPSelect:
+			}
+		}
 		switch mode {
 		case exprDefault:
 			rt, rmode = n.Type(), exprDefault

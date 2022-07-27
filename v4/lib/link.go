@@ -1152,6 +1152,28 @@ func VaList(p uintptr, args ...interface{}) uintptr
 		b.w("\n\nfunc %s(bool) %s", nm, v)
 	}
 	for _, v := range []string{
+		"int16",
+		"int32",
+		"int64",
+		"int8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uint8",
+	} {
+		for _, bits := range []int{8, 16, 32, 64} {
+			nm := fmt.Sprintf("SetBitFieldPtr%d%s", bits, export(v))
+			taken.add(nm)
+			uv := v
+			if !strings.HasPrefix(uv, "u") {
+				uv = "u" + uv
+			}
+			b.w("\n\nfunc %s(uintptr, %s, int, %s)", nm, v, uv)
+			nm = fmt.Sprintf("AssignBitFieldPtr%d%s", bits, export(v))
+			b.w("\n\nfunc %s(uintptr, %s, int, int, %s) %s", nm, v, uv, v)
+		}
+	}
+	for _, v := range []string{
 		"complex128",
 		"complex64",
 		"float32",

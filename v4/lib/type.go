@@ -6,10 +6,12 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"modernc.org/cc/v4"
 	"modernc.org/gc/v2"
+	"modernc.org/mathutil"
 )
 
 func (c *ctx) typedef(n cc.Node, t cc.Type) string {
@@ -133,44 +135,50 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 			fmt.Fprintf(b, "%s%s", tag(taggedStruct), nm)
 			c.defineTaggedStructs[nm] = x
 		default:
+			groups := c.bitFieldGroups(x)
 			b.WriteString("struct {")
 			var off int64
-			for i := 0; ; i++ {
+			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
-				if f == nil {
-					break
-				}
-
-				if f.IsBitfield() {
-					// trc("%q %s %v %#0x", f.Name(), f.Type(), f.IsBitfield(), f.Type().Size())
-					c.err(errorf("TODO bitfield"))
-					return
-				}
-
-				ft := f.Type()
-				abiAlign := ft.Align()
-				goAlign := c.goAlign(ft)
-				off = roundup(off, int64(goAlign))
-				if abiAlign > goAlign && off%int64(abiAlign) != 0 {
-					b.WriteByte('\n')
-					fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, abiAlign-goAlign)
-					off += int64(abiAlign - goAlign)
-				}
-
-				if ft.Size() == 0 && i == x.NumFields()-1 {
-					break
-				}
-
-				b.WriteByte('\n')
-				switch nm := f.Name(); {
-				case nm == "":
-					fmt.Fprintf(b, "%s__ccgo%d", tag(field), i)
+				switch {
+				case f.IsBitfield():
+					var ab int64
+					if _, ok := groups[f.Offset()]; ok {
+						foff := f.Offset()
+						for _, v := range groups[f.Offset()] {
+							ab = mathutil.MaxInt64(v.AccessBytes(), ab)
+						}
+						off = roundup(off, ab)
+						delete(groups, foff)
+						fmt.Fprintf(b, "\n%s__ccgo%d uint%d", tag(field), foff, ab*8)
+					}
+					off += ab
 				default:
-					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
+					ft := f.Type()
+					abiAlign := ft.Align()
+					goAlign := c.goAlign(ft)
+					off = roundup(off, int64(goAlign))
+					if abiAlign > goAlign && off%int64(abiAlign) != 0 {
+						b.WriteByte('\n')
+						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, abiAlign-goAlign)
+						off += int64(abiAlign - goAlign)
+					}
+
+					if ft.Size() == 0 && i == x.NumFields()-1 {
+						break
+					}
+
+					b.WriteByte('\n')
+					switch nm := f.Name(); {
+					case nm == "":
+						fmt.Fprintf(b, "%s__ccgo%d", tag(field), f.Offset())
+					default:
+						fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
+					}
+					b.WriteByte(' ')
+					c.typ0(b, n, ft, true, true, true)
+					off += ft.Size()
 				}
-				b.WriteByte(' ')
-				c.typ0(b, n, ft, true, true, true)
-				off += ft.Size()
 			}
 			b.WriteString("\n}")
 		}
@@ -180,6 +188,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 		case nm != "" && x.LexicalScope().Parent == nil && useStructUnionTag:
 			fmt.Fprintf(b, "%s%s", tag(taggedUnion), nm)
 		default:
+			c.bitFieldGroups(x)
 			fmt.Fprintf(b, "struct {")
 			ff := firstPositiveSizedField(x)
 			for i := 0; i < x.NumFields(); i++ {
@@ -240,6 +249,50 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 		c.err(errorf("TODO %T", x))
 		return
 	}
+}
+
+type bitFieldGroup struct {
+	off, size int64
+}
+
+func (c *ctx) bitFieldGroups(n fielder) (m map[int64][]*cc.Field) {
+	for i := 0; i < n.NumFields(); i++ {
+		f := n.FieldByIndex(i)
+		if !f.IsBitfield() {
+			continue
+		}
+
+		if m == nil {
+			m = map[int64][]*cc.Field{}
+		}
+
+		m[f.Offset()] = append(m[f.Offset()], f)
+		// trc("%q off %d, boff %d, ab %d, vb %d, m %#032b", f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits(), f.Mask())
+	}
+	if m == nil {
+		return nil
+	}
+
+	var s []bitFieldGroup
+	for k, v := range m {
+		ab := int64(-1)
+		for _, f := range v {
+			ab = mathutil.MaxInt64(ab, f.AccessBytes())
+		}
+		s = append(s, bitFieldGroup{k, ab})
+	}
+	sort.Slice(s, func(i, j int) bool { return s[i].off < s[j].off })
+	var g bitFieldGroup
+	for _, v := range s {
+		if g.size == 0 || v.off > g.off+g.size {
+			g = v
+			continue
+		}
+
+		delete(m, v.off)
+		trc("delete %v", v.off)
+	}
+	return m
 }
 
 // Exceptions to the usual C and Go alignment agreement.
@@ -330,6 +383,7 @@ func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 }
 
 type fielder interface {
+	NumFields() int
 	FieldByIndex(int) *cc.Field
 }
 
