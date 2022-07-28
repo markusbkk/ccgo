@@ -37,8 +37,8 @@ editor:
 	go install -v -tags=ccgo.assert modernc.org/ccgo/v4 2>&1 | tee log-editor
 
 tmp:
-	go test -tags=ccgo.assert -v -run TestSQL -trc -shelltimeout 5s 2>&1 | tee log
-	grep -a '^ \+TODO' log | sort | uniq -c | sort -n | tee log-2
+	go test -tags=ccgo.assert -v -run TestExec/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute -trc -trctodo -shelltimeout 5s 2>&1 | tee log
+	grep -a '^TODO' log | sort | uniq -c | sort -n | tee log-2
 	grep -a 'TOTAL\|PASS' log || true
 
 x:

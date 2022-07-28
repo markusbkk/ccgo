@@ -24,8 +24,9 @@ import (
 )
 
 var (
+	trcTODOs bool
+
 	extendedErrors bool // true: Errors will include origin info.
-	// totalRam       = memory.TotalMemory()
 
 	reservedNames = nameSet{
 		// Keywords
@@ -400,6 +401,10 @@ func errorf(s string, args ...interface{}) error {
 		s = fmt.Sprintf(strings.Repeat("%v ", len(args)), args...)
 	default:
 		s = fmt.Sprintf(s, args...)
+	}
+	if trcTODOs && strings.HasPrefix(s, "TODO") {
+		fmt.Fprintf(os.Stderr, "%s (%v)\n", s, origin(2))
+		os.Stderr.Sync()
 	}
 	switch {
 	case extendedErrors:

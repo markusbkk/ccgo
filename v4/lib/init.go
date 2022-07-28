@@ -6,6 +6,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
 
 	"modernc.org/cc/v4"
@@ -76,12 +77,50 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 	}
 }
 
+func (c *ctx) isZeroInitializerSlice(s []*cc.Initializer) bool {
+	for _, v := range s {
+		if !c.isZero(v.AssignmentExpression.Value()) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (c *ctx) isZero(v cc.Value) bool {
+	switch x := v.(type) {
+	case cc.Int64Value:
+		return x == 0
+	case cc.UInt64Value:
+		return x == 0
+	case cc.Float64Value:
+		return x == 0
+	case *cc.ZeroValue:
+		return true
+	case cc.Complex128Value:
+		return x == 0
+	case cc.Complex64Value:
+		return x == 0
+	case *cc.ComplexLongDoubleValue:
+		return c.isZero(x.Re) && c.isZero(x.Im)
+	case *cc.LongDoubleValue:
+		return !(*big.Float)(x).IsInf() && (*big.Float)(x).Sign() == 0
+	default:
+		return false
+	}
+}
+
 func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.ArrayType, off0 int64) (r *buf) {
 	// trc("==== (array A) %s off0 %#0x", t, off0)
 	// dumpInitializer(a, "")
 	// trc("---- (array Z)")
 	var b buf
 	b.w("%s{", c.typ(n, t))
+	if c.isZeroInitializerSlice(a) {
+		b.w("}")
+		return &b
+	}
+
 	et := t.Elem()
 	esz := et.Size()
 	s := sortInitializers(a, func(n int64) int64 { n -= off0; return n - n%esz })
@@ -100,6 +139,11 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 	// trc("---- (struct Z)")
 	var b buf
 	b.w("%s{", c.typ(n, t))
+	if c.isZeroInitializerSlice(a) {
+		b.w("}")
+		return &b
+	}
+
 	var flds []*cc.Field
 	for i := 0; ; i++ {
 		if f := t.FieldByIndex(i); f != nil {
@@ -175,13 +219,13 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 	// dumpInitializer(a, "")
 	// trc("---- (union Z)")
 	var b buf
-	if len(a) == 0 {
-		c.err(errorf("TODO"))
+	if t.NumFields() == 1 {
+		b.w("%s{%s}", c.typ(n, t), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
 		return &b
 	}
 
-	if t.NumFields() == 1 {
-		b.w("%s{%s}", c.typ(n, t), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
+	if c.isZeroInitializerSlice(a) {
+		b.w("%s{}", c.typ(n, t))
 		return &b
 	}
 

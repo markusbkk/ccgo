@@ -90,6 +90,7 @@ func TestMain(m *testing.M) {
 	extendedErrors = true
 	gc.ExtendedErrors = true
 	oRE := flag.String("re", "", "")
+	flag.BoolVar(&trcTODOs, "trctodo", false, "")
 	flag.Parse()
 	if *oRE != "" {
 		re = regexp.MustCompile(*oRE)
@@ -2302,6 +2303,9 @@ func testSQLite(t *testing.T, dir string) {
 		"-o", main,
 		path.Join(dir, "shell.c"),
 		path.Join(dir, "sqlite3.c"),
+	}
+	if *oKeep {
+		ccgoArgs = append(ccgoArgs, "-keep-object-files", "-extended-errors", "-debug-linker-save")
 	}
 	if *oDebug {
 		ccgoArgs = append(ccgoArgs, "-DSQLITE_DEBUG_OS_TRACE", "-DSQLITE_FORCE_OS_TRACE", "-DSQLITE_LOCK_TRACE")
