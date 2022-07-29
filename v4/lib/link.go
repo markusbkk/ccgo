@@ -1169,7 +1169,14 @@ func VaList(p uintptr, args ...interface{}) uintptr
 				uv = "u" + uv
 			}
 			b.w("\n\nfunc %s(uintptr, %s, int, %s)", nm, v, uv)
+
 			nm = fmt.Sprintf("AssignBitFieldPtr%d%s", bits, export(v))
+			b.w("\n\nfunc %s(uintptr, %s, int, int, %s) %s", nm, v, uv, v)
+
+			nm = fmt.Sprintf("PostDecBitFieldPtr%d%s", bits, export(v))
+			b.w("\n\nfunc %s(uintptr, %s, int, int, %s) %s", nm, v, uv, v)
+
+			nm = fmt.Sprintf("PostIncBitFieldPtr%d%s", bits, export(v))
 			b.w("\n\nfunc %s(uintptr, %s, int, int, %s) %s", nm, v, uv, v)
 		}
 	}

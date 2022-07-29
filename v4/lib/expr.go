@@ -2,33 +2,52 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// libc bit field helpers
-//
-// func AssignBitFieldPtr32Int32(p uintptr, v int32, w, off int, mask uint32) int32 {
-// 	*(*uint32)(unsafe.Pointer(p)) = *(*uint32)(unsafe.Pointer(p))&^uint32(mask) | uint32(v)<<off&mask
-// 	s := 32 - w
-// 	return v << s >> s
-// }
-//
-// func SetBitFieldPtr32Int32(p uintptr, v int32, off int, mask uint32) {
-// 	*(*uint32)(unsafe.Pointer(p)) = *(*uint32)(unsafe.Pointer(p))&^uint32(mask) | uint32(v)<<off&mask
-// }
-//
-// func PostIncBitFieldPtr32Int32(p uintptr, d int32, w, off int, mask uint32) (r int32) {
-// 	x0 := *(*uint32)(unsafe.Pointer(p))
-// 	s := 32 - w
-// 	r = int32(x0) & int32(mask) << s >> (s + off)
-// 	*(*uint32)(unsafe.Pointer(p)) = x0&^uint32(mask) | uint32(r+d)<<off&mask
-// 	return r
-// }
-//
-// func PostDecBitFieldPtr32Int32(p uintptr, d int32, w, off int, mask uint32) (r int32) {
-// 	x0 := *(*uint32)(unsafe.Pointer(p))
-// 	s := 32 - w
-// 	r = int32(x0) & int32(mask) << s >> (s + off)
-// 	*(*uint32)(unsafe.Pointer(p)) = x0&^uint32(mask) | uint32(r-d)<<off&mask
-// 	return r
-// }
+//TODO /* PR middle-end/55750 */
+//TODO
+//TODO extern void abort (void);
+//TODO
+//TODO struct S
+//TODO {
+//TODO   int m : 1;
+//TODO   int n : 7;
+//TODO } arr[2];
+//TODO
+//TODO unsigned char *p = &arr, *q = &arr[1];
+//TODO
+//TODO __attribute__((noinline, noclone)) void
+//TODO foo (unsigned i)
+//TODO {
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   arr[i].n++;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO }
+//TODO
+//TODO int
+//TODO main ()
+//TODO {
+//TODO   printf("%i\n", 2*(int)(sizeof(struct S)));
+//TODO   int i = 0;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   arr[0].m = -1;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   arr[0].n = (1 << 6) - 1;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   arr[1].m = 0;
+//TODO   i = 1;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   arr[1].n = -1;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   foo (0);
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   foo (1);
+//TODO   i = 0;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   i = 1;
+//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
+//TODO   if (arr[0].m != -1 || arr[0].n != -(1 << 6) || arr[1].m != 0 || arr[1].n != 0)
+//TODO     abort ();
+//TODO   return 0;
+//TODO }
 
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
@@ -811,6 +830,78 @@ func (c *ctx) usualArithmeticConversions(a, b cc.Type) (r cc.Type) {
 	return cc.UsualArithmeticConversions(a, b)
 }
 
+func (c *ctx) isBitField(n cc.ExpressionNode) bool {
+	for {
+		switch x := n.(type) {
+		case *cc.PostfixExpression:
+			switch x.Case {
+			case cc.PostfixExpressionSelect: // PostfixExpression '.' IDENTIFIER
+				return x.Field().IsBitfield()
+			case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
+				return x.Field().IsBitfield()
+			default:
+				return false
+			}
+		case *cc.PrimaryExpression:
+			switch x.Case {
+			case cc.PrimaryExpressionExpr: // '(' ExpressionList ')'
+				n = x.ExpressionList
+			default:
+				return false
+			}
+		case *cc.UnaryExpression:
+			switch x.Case {
+			case cc.UnaryExpressionPostfix: // PostfixExpression
+				n = x.PostfixExpression
+			default:
+				return false
+			}
+		default:
+			trc("TODO %T", x)
+			return false
+		}
+	}
+}
+
+func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	var p *buf
+	var f *cc.Field
+	switch x := n.(type) {
+	case *cc.PostfixExpression:
+		switch x.Case {
+		case cc.PostfixExpressionSelect:
+			p = c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
+			f = x.Field()
+		//TODO case cc.PostfixExpressionPSelect:
+		default:
+			trc("%v: BITFIELD %v", n.Position(), x.Case)
+			c.err(errorf("TODO %T", x))
+			return &b, rt, rmode
+		}
+	default:
+		trc("%v: BITFIELD %v", n.Position(), mode)
+		c.err(errorf("TODO %T", x))
+		return &b, rt, rmode
+	}
+
+	switch mode {
+	case exprDefault:
+		v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
+		w.w("var %s %s;/**/", v, c.typ(n, f.Type()))
+		bf, _, _ := c.bitField(w, n, p, f, exprDefault)
+		w.w("\n%v = %sAssignBitFieldPtr%d%s(%s+%d, (%s)%s1, %d, %d, %#0x);", v, c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), bf, op, f.ValueBits(), f.OffsetBits(), f.Mask())
+		b.w("%s", v)
+		return &b, n.Type(), exprDefault
+	default:
+		_ = p
+		_ = f
+		trc("%v: BITFIELD %v", n.Position(), mode)
+		c.err(errorf("TODO %v", mode))
+	}
+	return &b, rt, rmode
+}
+
 func (c *ctx) unaryExpression(w writer, n *cc.UnaryExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 out:
@@ -818,6 +909,10 @@ out:
 	case cc.UnaryExpressionPostfix: // PostfixExpression
 		c.err(errorf("TODO %v", n.Case))
 	case cc.UnaryExpressionInc: // "++" UnaryExpression
+		if c.isBitField(n.UnaryExpression) {
+			return c.preIncDecBitField("+", w, n.UnaryExpression, mode)
+		}
+
 		rt, rmode = n.Type(), mode
 		switch ue := n.UnaryExpression.Type(); {
 		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Size() != 1:
@@ -868,6 +963,10 @@ out:
 			}
 		}
 	case cc.UnaryExpressionDec: // "--" UnaryExpression
+		if c.isBitField(n.UnaryExpression) {
+			return c.preIncDecBitField("-", w, n.UnaryExpression, mode)
+		}
+
 		rt, rmode = n.Type(), mode
 		switch ue := n.UnaryExpression.Type(); {
 		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Size() != 1:
@@ -1124,6 +1223,39 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 	return &b, rt, rmode
 }
 
+func (c *ctx) postIncDecBitField(op string, w writer, n cc.ExpressionNode, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	var p *buf
+	var f *cc.Field
+	switch x := n.(type) {
+	case *cc.PostfixExpression:
+		switch x.Case {
+		case cc.PostfixExpressionSelect:
+			p = c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
+			f = x.Field()
+		//TODO case cc.PostfixExpressionPSelect:
+		default:
+			trc("%v: BITFIELD %v", n.Position(), x.Case)
+			c.err(errorf("TODO %T", x))
+			return &b, rt, rmode
+		}
+	default:
+		trc("%v: BITFIELD %v", n.Position(), mode)
+		c.err(errorf("TODO %T", x))
+		return &b, rt, rmode
+	}
+
+	switch mode {
+	case exprDefault, exprVoid:
+		b.w("%sPost%sBitFieldPtr%d%s(%s+%d, 1, %d, %d, %#0x)", c.task.tlsQualifier, op, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), f.ValueBits(), f.OffsetBits(), f.Mask())
+		return &b, n.Type(), exprDefault
+	default:
+		trc("%v: BITFIELD %v", n.Position(), mode)
+		c.err(errorf("TODO %v", mode))
+	}
+	return &b, rt, rmode
+}
+
 func (c *ctx) postfixExpression(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 out:
@@ -1199,6 +1331,10 @@ out:
 	case cc.PostfixExpressionPSelect: // PostfixExpression "->" IDENTIFIER
 		return c.postfixExpressionPSelect(w, n, t, mode)
 	case cc.PostfixExpressionInc: // PostfixExpression "++"
+		if c.isBitField(n.PostfixExpression) {
+			return c.postIncDecBitField("Inc", w, n.PostfixExpression, mode)
+		}
+
 		rt, rmode = n.Type(), mode
 		switch pe := n.PostfixExpression.Type(); {
 		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Size() != 1:
@@ -1254,6 +1390,10 @@ out:
 			}
 		}
 	case cc.PostfixExpressionDec: // PostfixExpression "--"
+		if c.isBitField(n.PostfixExpression) {
+			return c.postIncDecBitField("Dec", w, n.PostfixExpression, mode)
+		}
+
 		rt, rmode = n.Type(), mode
 		switch pe := n.PostfixExpression.Type(); {
 		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Size() != 1:
@@ -1321,39 +1461,20 @@ out:
 	return &b, rt, rmode
 }
 
-// PostfixExpression "->" IDENTIFIER
-func (c *ctx) postfixExpressionPSelectBitField(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
-	b.n = n
-	f := n.Field()
-	ab := f.AccessBytes()
-	foff := f.Offset()
-	fboff := f.OffsetBits()
-	ft := f.Type()
-	m := f.Mask()
-	vb := f.ValueBits()
-	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok {
-		c.err(errorf("TODO %v %v", n.Case, mode))
-		return &b, rt, rmode
-	}
-
 	switch mode {
 	case exprDefault:
-		rt, rmode = n.Type(), mode
-		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), ab*8, tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), foff, m, fboff)
-		if cc.IsSignedInteger(ft) {
-			w := n.Type().Size() * 8
-			b.w("<<%d>>%[1]d", w-vb)
+		rt, rmode = f.Type(), mode
+		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
+		if cc.IsSignedInteger(f.Type()) {
+			w := f.Type().Size() * 8
+			b.w("<<%d>>%[1]d", w-f.ValueBits())
 		}
 		b.w(")")
 	default:
-		_ = ab
-		_ = vb
-		_ = foff
-		_ = fboff
-		_ = ft
-		_ = m
-		c.err(errorf("TODO %v %v", n.Case, mode))
+		trc("%v: BITFIELD %v", n.Position(), mode)
+		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode
 }
@@ -1363,7 +1484,7 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 	var b buf
 	f := n.Field()
 	if f.IsBitfield() {
-		return c.postfixExpressionPSelectBitField(w, n, t, mode)
+		return c.bitField(w, n, c.expr(w, n.PostfixExpression, nil, exprDefault), n.Field(), mode)
 	}
 
 	pe, ok := n.PostfixExpression.Type().(*cc.PointerType)
@@ -1372,7 +1493,7 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 		return &b, rt, rmode
 	}
 
-	if _, ok := pe.Elem().(*cc.UnionType); ok && f.Index() != 0 {
+	if _, ok := pe.Elem().(*cc.UnionType); ok && f.Index() != 0 { //TODO use firstPositiveSizedField
 		switch mode {
 		case exprSelect, exprLvalue, exprDefault:
 			rt, rmode = n.Type(), mode
@@ -1418,49 +1539,12 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 }
 
 // PostfixExpression '.' IDENTIFIER
-func (c *ctx) postfixExpressionSelectBitField(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
-	var b buf
-	b.n = n
-	f := n.Field()
-	ab := f.AccessBytes()
-	foff := f.Offset()
-	fboff := f.OffsetBits()
-	ft := f.Type()
-	m := f.Mask()
-	vb := f.ValueBits()
-	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok {
-		c.err(errorf("TODO %v %v", n.Case, mode))
-		return &b, rt, rmode
-	}
-
-	switch mode {
-	case exprDefault:
-		rt, rmode = n.Type(), mode
-		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), ab*8, tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintptr), foff, m, fboff)
-		if cc.IsSignedInteger(ft) {
-			w := n.Type().Size() * 8
-			b.w("<<%d>>%[1]d", w-vb)
-		}
-		b.w(")")
-	case exprUintptr:
-		trc("", n.Token.Position())
-		c.err(errorf("TODO %v %v", n.Case, mode))
-	default:
-		_ = ab
-		_ = vb
-		// trc("%q: ab %v, foff %v, fboff %v m %#0b, vb %v, ft %s", f.Name(), ab, foff, fboff, m, vb, ft)
-		c.err(errorf("TODO %v %v", n.Case, mode))
-	}
-	return &b, rt, rmode
-}
-
-// PostfixExpression '.' IDENTIFIER
 func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 	b.n = n
 	f := n.Field()
 	if f.IsBitfield() {
-		return c.postfixExpressionSelectBitField(w, n, t, mode)
+		return c.bitField(w, n, c.pin(n, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintptr)), f, mode)
 	}
 
 	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f.Index() != 0 { // Use firstPositiveSizedField instead of zero
@@ -1754,12 +1838,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 
 				switch mode {
 				case exprDefault:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.AccessBytes()*8, f.OffsetBits(), f.Mask())
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprDefault
 				case exprVoid:
 					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprVoid
 				default:
+					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
 					return &b, rt, rmode
 				}
@@ -1771,12 +1856,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 
 				switch mode {
 				case exprDefault:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.AccessBytes()*8, f.OffsetBits(), f.Mask())
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprDefault
 				case exprVoid:
 					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprVoid
 				default:
+					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
 					return &b, rt, rmode
 				}
@@ -1818,7 +1904,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 
 				switch mode {
 				default:
-					// trc("%v: BITFIELD", n.Position())
+					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
 					return &b, rt, rmode
 				}
@@ -1830,7 +1916,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 
 				switch mode {
 				default:
-					// trc("%v: BITFIELD", n.Position())
+					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
 					return &b, rt, rmode
 				}

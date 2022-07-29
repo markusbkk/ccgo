@@ -183,6 +183,10 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 					off += ft.Size()
 				}
 			}
+			if p := x.Padding(); p != 0 {
+				b.WriteByte('\n')
+				fmt.Fprintf(b, "%s__ccgo_pad [%d]byte", tag(field), p)
+			}
 			b.WriteString("\n}")
 		}
 	case *cc.UnionType:
@@ -240,6 +244,10 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 			c.typ0(b, n, ff.Type(), true, true, true)
 			if n := t.Size() - sz1; n != 0 {
 				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
+			}
+			if p := x.Padding(); p != 0 {
+				b.WriteByte('\n')
+				fmt.Fprintf(b, "%s__ccgo_pad [%d]byte", tag(field), p)
 			}
 			b.WriteString("\n}")
 		}

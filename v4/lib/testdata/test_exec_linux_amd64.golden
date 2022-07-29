@@ -1772,6 +1772,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040309-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040311-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040313-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040319-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040331-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040409-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040409-1w.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040409-2.c
@@ -2095,6 +2096,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980506-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980526-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980526-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980602-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980602-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980604-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980605-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/980608-1.c
@@ -2485,6 +2487,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr53688.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr54937.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr54985.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr55137.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr55750.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr55875.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr56051.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr56250.c
@@ -3040,6 +3043,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040309-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040311-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040313-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040319-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040331-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040409-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040409-1w.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040409-2.c
@@ -3365,6 +3369,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980506-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980526-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980526-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980602-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980602-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980604-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980605-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/980608-1.c
@@ -3760,6 +3765,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr53688.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr54937.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr54985.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr55137.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr55750.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr55875.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr56051.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr56250.c
@@ -4094,6 +4100,8 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/array-registers.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/array.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/assign-deref-float.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/assignment-type.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-extend.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-immediate-assign.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-unsigned-promote.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-complement.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitwise-constant.c
