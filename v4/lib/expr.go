@@ -2,54 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//TODO /* PR middle-end/55750 */
-//TODO
-//TODO extern void abort (void);
-//TODO
-//TODO struct S
-//TODO {
-//TODO   int m : 1;
-//TODO   int n : 7;
-//TODO } arr[2];
-//TODO
-//TODO unsigned char *p = &arr, *q = &arr[1];
-//TODO
-//TODO __attribute__((noinline, noclone)) void
-//TODO foo (unsigned i)
-//TODO {
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   arr[i].n++;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO }
-//TODO
-//TODO int
-//TODO main ()
-//TODO {
-//TODO   printf("%i\n", 2*(int)(sizeof(struct S)));
-//TODO   int i = 0;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   arr[0].m = -1;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   arr[0].n = (1 << 6) - 1;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   arr[1].m = 0;
-//TODO   i = 1;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   arr[1].n = -1;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   foo (0);
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   foo (1);
-//TODO   i = 0;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   i = 1;
-//TODO   printf("%i: %3i\ %3i, 0x%02x 0x%02x\n", __LINE__, arr[i].m, arr[i].n, *p, *q);
-//TODO   if (arr[0].m != -1 || arr[0].n != -(1 << 6) || arr[1].m != 0 || arr[1].n != 0)
-//TODO     abort ();
-//TODO   return 0;
-//TODO }
-
 package ccgo // import "modernc.org/ccgo/v4/lib"
+
+//TODO probably wrong layout generated
+//	struct s {
+//	  int f1 : 26;
+//	  int f2 : 8;
+//	};
+//	type s = struct {
+//		__ccgo0    uint32
+//		__ccgo4    uint16
+//		__ccgo_pad [3]byte
+//	}
 
 import (
 	"bytes"
@@ -873,7 +837,9 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 		case cc.PostfixExpressionSelect:
 			p = c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
 			f = x.Field()
-		//TODO case cc.PostfixExpressionPSelect:
+		case cc.PostfixExpressionPSelect:
+			p = c.expr(w, x.PostfixExpression, nil, exprDefault)
+			f = x.Field()
 		default:
 			trc("%v: BITFIELD %v", n.Position(), x.Case)
 			c.err(errorf("TODO %T", x))
@@ -886,7 +852,7 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 	}
 
 	switch mode {
-	case exprDefault:
+	case exprDefault, exprVoid:
 		v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 		w.w("var %s %s;/**/", v, c.typ(n, f.Type()))
 		bf, _, _ := c.bitField(w, n, p, f, exprDefault)
@@ -894,8 +860,6 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 		b.w("%s", v)
 		return &b, n.Type(), exprDefault
 	default:
-		_ = p
-		_ = f
 		trc("%v: BITFIELD %v", n.Position(), mode)
 		c.err(errorf("TODO %v", mode))
 	}
@@ -1233,7 +1197,9 @@ func (c *ctx) postIncDecBitField(op string, w writer, n cc.ExpressionNode, mode 
 		case cc.PostfixExpressionSelect:
 			p = c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
 			f = x.Field()
-		//TODO case cc.PostfixExpressionPSelect:
+		case cc.PostfixExpressionPSelect:
+			p = c.expr(w, x.PostfixExpression, nil, exprDefault)
+			f = x.Field()
 		default:
 			trc("%v: BITFIELD %v", n.Position(), x.Case)
 			c.err(errorf("TODO %T", x))
@@ -1836,12 +1802,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 					break
 				}
 
+				p := c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
 				switch mode {
 				case exprDefault:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprDefault
 				case exprVoid:
-					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
+					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprVoid
 				default:
 					trc("%v: BITFIELD", n.Position())
@@ -1893,6 +1860,9 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		cc.AssignmentExpressionXor, // UnaryExpression "^=" AssignmentExpression
 		cc.AssignmentExpressionOr:  // UnaryExpression "|=" AssignmentExpression
 
+		rt, rmode = n.Type(), mode
+		op := n.Token.SrcStr()
+		op = op[:len(op)-1]
 		switch x := n.UnaryExpression.(type) {
 		case *cc.PostfixExpression:
 			switch x.Case {
@@ -1902,9 +1872,14 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 					break
 				}
 
+				p := c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
+				bf, _, _ := c.bitField(w, n, p, f, exprDefault)
 				switch mode {
+				case exprDefault, exprVoid:
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, (%s)%s(%s), %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
+					return &b, n.Type(), exprDefault
 				default:
-					trc("%v: BITFIELD", n.Position())
+					trc("%v: BITFIELD %v", n.Position(), mode)
 					c.err(errorf("TODO %v", mode))
 					return &b, rt, rmode
 				}
@@ -1914,7 +1889,12 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 					break
 				}
 
+				p := c.expr(w, x.PostfixExpression, nil, exprDefault)
+				bf, _, _ := c.bitField(w, n, p, f, exprDefault)
 				switch mode {
+				case exprDefault, exprVoid:
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, (%s)%s(%s), %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
+					return &b, n.Type(), exprDefault
 				default:
 					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
@@ -1923,9 +1903,6 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			}
 		}
 
-		rt, rmode = n.Type(), mode
-		op := n.Token.SrcStr()
-		op = op[:len(op)-1]
 		x, y := n.UnaryExpression.Type(), n.AssignmentExpression.Type()
 		var mul, div string
 		switch n.Case {
