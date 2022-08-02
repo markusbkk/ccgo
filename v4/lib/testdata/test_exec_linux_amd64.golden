@@ -22,6 +22,7 @@ assets/CompCert-3.6/test/c/spectral.c
 assets/benchmarksgame-team.pages.debian.net/binary-trees.c
 assets/benchmarksgame-team.pages.debian.net/fannkuchredux-3.c
 assets/benchmarksgame-team.pages.debian.net/fasta-3.c
+assets/benchmarksgame-team.pages.debian.net/fasta-8.c
 assets/benchmarksgame-team.pages.debian.net/fasta-9.c
 assets/benchmarksgame-team.pages.debian.net/fasta.c
 assets/benchmarksgame-team.pages.debian.net/nbody-2.c
@@ -2379,6 +2380,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34070-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34099-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34099.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34130.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34176.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34415.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34456.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34768-1.c
@@ -2466,6 +2468,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr47299.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr47337.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr47538.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48197.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48717.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48809.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48814-1.c
@@ -2665,6 +2668,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strct-pack-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/string-opt-17.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/string-opt-5.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-cpy-1.c
@@ -3660,6 +3664,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34070-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34099-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34099.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34130.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34176.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34415.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34456.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34768-1.c
@@ -3746,6 +3751,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr47299.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr47337.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr47538.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48197.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48717.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48809.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48814-1.c
@@ -3982,6 +3988,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strct-pack-
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/string-opt-17.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/string-opt-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-cpy-1.c
@@ -4244,6 +4251,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/shift.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/short-circuit.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/shortcircuit-loop.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/signed-division.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/sizeof.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/string-concat.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/string-conversion.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/string-escape.c

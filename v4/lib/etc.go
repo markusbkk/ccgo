@@ -997,3 +997,11 @@ func isZero(v cc.Value) bool {
 		return false
 	}
 }
+
+type scope struct {
+	cScope      *cc.Scope
+	declarators map[*cc.Declarator]struct{}
+	ns          nameSpace
+}
+
+func newScope() *scope { return &scope{} }

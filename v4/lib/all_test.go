@@ -519,12 +519,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 
-	//TODO
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr36339.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr36339.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c`:               {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/new/issue36.c`:                          {}, // EXEC FAIL
-
 	// ====================================================================
 	// Compiles but does not build.
 
@@ -564,14 +558,6 @@ var testExecKnownFails = map[string]struct{}{
 	// Long double constant overflows floa64.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:                 {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960405-1.c`: {}, // BUILD FAIL
-
-	// LHS conversion
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34176.c`:                 {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34176.c`: {}, // BUILD FAIL
-
-	//TODO
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c`:                 {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr48571-1.c`: {}, // BUILD FAIL
 
 	// ====================================================================
 	// Does not compile (transpile).
@@ -2160,6 +2146,9 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c`:                                           {}, // COMPILE FAIL
 	`assets/tcc-0.9.27/tests/tests2/98_al_ax_extend.c`:                                                  {}, // COMPILE FAIL
 	`assets/tcc-0.9.27/tests/tests2/99_fastcall.c`:                                                      {}, // COMPILE FAIL
+	`assets\benchmarksgame-team.pages.debian.net\fasta-9.c`:                                             {}, // COMPILE FAIL
+	`assets\benchmarksgame-team.pages.debian.net\nbody-7.c`:                                             {}, // COMPILE FAIL
+	`assets\ccgo\bug\init2.c`: {}, // COMPILE FAIL
 }
 
 func getArgs(src string) (args []string, err error) {

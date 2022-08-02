@@ -278,10 +278,6 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			case info != nil && info.pinned():
 				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d, d.Type()))
 			default:
-				//TODO- if d.Linkage() != cc.External && d.WriteCount()+d.ReadCount() == 0 {
-				//TODO- 	return
-				//TODO- }
-
 				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
 			}
 		}
@@ -311,7 +307,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 	}
 	if info != nil {
 		// w.w("\n// read: %d, write: %d, address taken %v\n", d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
-		if d.StorageDuration() == cc.Automatic && d.ReadCount() == 0 && !info.pinned() {
+		if d.StorageDuration() == cc.Automatic && d.ReadCount() == d.SizeofCount() && !info.pinned() {
 			w.w("\n%s_ = %s%s;", tag(preserve), c.declaratorTag(d), nm)
 		}
 	}

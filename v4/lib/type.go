@@ -139,8 +139,10 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 			groups := map[int64]struct{}{}
 			b.WriteString("struct {")
 			var off int64
+			// trc("%s", x)
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
+				// trc("%v: %q, off %v, bitoff %v, ab %v, vbits %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits())
 				switch {
 				case f.IsBitfield():
 					if f.InOverlapGroup() {

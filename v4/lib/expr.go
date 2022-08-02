@@ -1027,15 +1027,12 @@ out:
 		}
 
 		switch mode {
-		case exprDefault, exprLvalue:
-			rt, rmode = n.Type(), exprDefault
+		case exprDefault, exprLvalue, exprVoid:
+			rt, rmode = n.Type(), mode
 			b.w("(*(*%s)(%s))", c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprSelect:
 			rt, rmode = n.Type(), mode
 			b.w("((*%s)(%s))", c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
-		case exprVoid:
-			rt, rmode = n.Type(), mode
-			b.w("(*(*%s)(%s))", c.typ(n, n.CastExpression.Type().(*cc.PointerType).Elem()), unsafePointer(c.expr(w, n.CastExpression, nil, exprDefault)))
 		case exprUintptr:
 			rt, rmode = n.CastExpression.Type(), mode
 			b.w("%s", c.expr(w, n.CastExpression, nil, exprDefault))
@@ -1059,40 +1056,58 @@ out:
 		rt, rmode = n.Type(), exprBool
 		b.w("(!(%s))", c.expr(w, n.CastExpression, nil, exprBool))
 	case cc.UnaryExpressionSizeofExpr: // "sizeof" UnaryExpression
-		rt, rmode = n.Type(), exprDefault
-		switch n.UnaryExpression.Type().Undecay().Kind() {
-		case cc.Array:
-			b.w("%s(%s)", c.typ(n, n.Type()), unsafe("Sizeof", c.expr(w, n.UnaryExpression, nil, exprIndex)))
-		default:
-			b.w("%s(%s)", c.typ(n, n.Type()), unsafe("Sizeof", c.expr(w, n.UnaryExpression, nil, exprDefault)))
+		if t.Kind() == cc.Void {
+			t = n.Type()
 		}
-	case cc.UnaryExpressionSizeofType: // "sizeof" '(' TypeName ')'
-		rt, rmode = n.Type(), exprDefault
-		switch tn := n.TypeName.Type(); {
-		case cc.IsScalarType(tn):
-			b.w("%s(%sunsafe.%sSizeof(%s(0)))", c.typ(n, n.Type()), tag(importQualifier), tag(preserve), c.typ(n, tn))
-		case tn.Kind() == cc.Array && tn.(*cc.ArrayType).IsVLA():
+		rt, rmode = t, exprDefault
+		switch x := n.UnaryExpression.Type().Undecay(); {
+		case cc.IsScalarType(x):
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s(0)", c.typ(n, x))))
+		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
 			c.err(errorf("TODO %v", n.Case))
 		default:
-			b.w("%s(%sunsafe.%sSizeof(%s{}))", c.typ(n, n.Type()), tag(importQualifier), tag(preserve), c.typ(n, tn.Undecay()))
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s{}", c.typ(n, x))))
+		}
+	case cc.UnaryExpressionSizeofType: // "sizeof" '(' TypeName ')'
+		if t.Kind() == cc.Void {
+			t = n.Type()
+		}
+		rt, rmode = t, exprDefault
+		switch x := n.TypeName.Type(); {
+		case cc.IsScalarType(x):
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s(0)", c.typ(n, x))))
+		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
+			c.err(errorf("TODO %v", n.Case))
+		default:
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s{}", c.typ(n, x.Undecay()))))
 		}
 	case cc.UnaryExpressionLabelAddr: // "&&" IDENTIFIER
 		c.err(errorf("TODO %v", n.Case))
 	case cc.UnaryExpressionAlignofExpr: // "_Alignof" UnaryExpression
-		rt, rmode = n.Type(), exprDefault
-		switch n.UnaryExpression.Type().Undecay().Kind() {
-		case cc.Array:
-			b.w("%s(%s)", c.typ(n, n.Type()), unsafe("Alignof", c.expr(w, n.UnaryExpression, nil, exprIndex)))
+		if t.Kind() == cc.Void {
+			t = n.Type()
+		}
+		rt, rmode = t, exprDefault
+		switch x := n.UnaryExpression.Type().Undecay(); {
+		case cc.IsScalarType(x):
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Alignof", fmt.Sprintf("%s(0)", c.typ(n, x))))
+		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
+			c.err(errorf("TODO %v", n.Case))
 		default:
-			b.w("%s(%s)", c.typ(n, n.Type()), unsafe("Alignof", c.expr(w, n.UnaryExpression, nil, exprDefault)))
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Alignof", fmt.Sprintf("%s{}", c.typ(n, x))))
 		}
 	case cc.UnaryExpressionAlignofType: // "_Alignof" '(' TypeName ')'
-		rt, rmode = n.Type(), exprDefault
-		switch tn := n.TypeName.Type(); {
-		case cc.IsScalarType(tn):
-			b.w("%s(%sunsafe.%sAlignof(%s(0)))", c.typ(n, n.Type()), tag(importQualifier), tag(preserve), c.typ(n, tn))
+		if t.Kind() == cc.Void {
+			t = n.Type()
+		}
+		rt, rmode = t, exprDefault
+		switch x := n.TypeName.Type(); {
+		case cc.IsScalarType(x):
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Alignof", fmt.Sprintf("%s(0)", c.typ(n, x))))
+		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
+			c.err(errorf("TODO %v", n.Case))
 		default:
-			b.w("%s(%sunsafe.%sAlignof(%s{}))", c.typ(n, n.Type()), tag(importQualifier), tag(preserve), c.typ(n, tn.Undecay()))
+			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Alignof", fmt.Sprintf("%s{}", c.typ(n, x.Undecay()))))
 		}
 	case cc.UnaryExpressionImag: // "__imag__" UnaryExpression
 		c.err(errorf("TODO %v", n.Case))
