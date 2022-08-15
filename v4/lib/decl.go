@@ -46,6 +46,7 @@ func (n *declInfos) takeAddress(d *cc.Declarator) { n.info(d).addressTaken = tru
 type fnCtx struct {
 	c         *ctx
 	declInfos declInfos
+	statics   map[*cc.Declarator]string // storage: static, linkage: none -> C renamed
 	t         *cc.FunctionType
 	tlsAllocs int64
 
@@ -55,6 +56,40 @@ type fnCtx struct {
 
 func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
 	return &fnCtx{c: c, t: t}
+}
+
+func (f *fnCtx) registerStatic(d *cc.Declarator) {
+	if f == nil {
+		return
+	}
+
+	if f.statics == nil {
+		f.statics = map[*cc.Declarator]string{}
+	}
+	f.statics[d] = ""
+}
+
+func (f *fnCtx) renameStatics() {
+	var a []*cc.Declarator
+	for k := range f.statics {
+		a = append(a, k)
+	}
+	sort.Slice(a, func(i, j int) bool {
+		x, y := a[i], a[j]
+		if x.Name() < y.Name() {
+			return true
+		}
+
+		if x.Name() > y.Name() {
+			return false
+		}
+
+		return x.Visible() < y.Visible()
+	})
+	var r nameRegister
+	for _, d := range a {
+		f.statics[d] = r.put(f.c.declaratorTag(d) + d.Name())
+	}
 }
 
 func (f *fnCtx) id() int { f.nextID++; return f.nextID }
@@ -94,6 +129,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	defer func() { c.f = f0; c.pass = pass }()
 	c.pass = 1
 	c.compoundStatement(discard{}, cs, true, "")
+	c.f.renameStatics()
 	var a []*cc.Declarator
 	for d, n := range c.f.declInfos {
 		if n.pinned() {
@@ -277,6 +313,20 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			switch {
 			case info != nil && info.pinned():
 				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d, d.Type()))
+			case d.IsStatic():
+				switch c.pass {
+				case 1:
+					c.f.registerStatic(d)
+				case 2:
+					if nm := c.f.statics[d]; nm != "" {
+						w.w("%s%svar %s %s;", sep, c.posComment(n), nm, c.typ(d, d.Type()))
+						break
+					}
+
+					fallthrough
+				default:
+					w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
+				}
 			default:
 				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
 			}
@@ -287,7 +337,19 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		case d.Linkage() == cc.Internal:
 			w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 		case d.IsStatic():
-			w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			switch c.pass {
+			case 1:
+				c.f.registerStatic(d)
+			case 2:
+				if nm := c.f.statics[d]; nm != "" {
+					w.w("%s%svar %s = %s;", sep, c.posComment(n), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					break
+				}
+
+				fallthrough
+			default:
+				w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			}
 		default:
 			switch {
 			case info != nil && info.pinned():

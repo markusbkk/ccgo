@@ -832,6 +832,15 @@ func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
 			*static = append(*static, n)
 			return nil
 		}
+	case *gc.Block:
+		w := 0
+		for _, stmt := range x.StatementList {
+			if stmt := l.stmtPrune(stmt, info, static); stmt != nil {
+				x.StatementList[w] = stmt
+				w++
+			}
+		}
+		x.StatementList = x.StatementList[:w]
 	}
 	return n
 }

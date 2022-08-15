@@ -2027,6 +2027,12 @@ out:
 		switch x := n.ResolvedTo().(type) {
 		case *cc.Declarator:
 			nm := x.Name()
+			goName := c.declaratorTag(x) + nm
+			if c.pass == 2 {
+				if nm := c.f.statics[x]; nm != "" {
+					goName = nm
+				}
+			}
 			c.externsMentioned[nm] = struct{}{}
 			b.n = x
 			var info *declInfo
@@ -2073,22 +2079,22 @@ out:
 					switch x.Type().Kind() {
 					case cc.Array:
 						p := &buf{n: x}
-						p.w("%s%s", c.declaratorTag(x), nm)
+						p.w("%s", goName)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					case cc.Function:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s%s;", v, c.declaratorTag(x), nm)
+							w.w("var %s = %s;", v, goName)
 						default:
-							w.w("%s := %s%s;", v, c.declaratorTag(x), nm)
+							w.w("%s := %s;", v, goName)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
 					default:
-						b.w("%s%s", c.declaratorTag(x), nm)
+						b.w("%s", goName)
 					}
 				case exprLvalue, exprSelect:
-					b.w("%s%s", c.declaratorTag(x), nm)
+					b.w("%s", goName)
 				case exprCall:
 					switch y := x.Type().(type) {
 					case *cc.FunctionType:
@@ -2097,12 +2103,12 @@ out:
 								nm = "__builtin_" + nm
 							}
 						}
-						b.w("%s%s", c.declaratorTag(x), nm)
+						b.w("%s", goName)
 					case *cc.PointerType:
 						switch z := y.Elem().(type) {
 						case *cc.FunctionType:
 							rmode = exprUintptr
-							b.w("%s%s", c.declaratorTag(x), nm)
+							b.w("%s", goName)
 						default:
 							// trc("%v: %s", x.Position(), cc.NodeSource(n))
 							c.err(errorf("TODO %T", z))
@@ -2113,7 +2119,7 @@ out:
 				case exprIndex:
 					switch x.Type().Kind() {
 					case cc.Array:
-						b.w("%s%s", c.declaratorTag(x), nm)
+						b.w("%s", goName)
 					default:
 						panic(todo(""))
 						c.err(errorf("TODO %v", mode))
@@ -2125,14 +2131,14 @@ out:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s%s;", v, c.declaratorTag(x), nm)
+							w.w("var %s = %s;", v, goName)
 						default:
-							w.w("%s := %s%s;", v, c.declaratorTag(x), nm)
+							w.w("%s := %s;", v, goName)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
 					default:
 						p := &buf{n: x}
-						p.w("%s%s", c.declaratorTag(x), nm)
+						p.w("%s", goName)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					}
 				default:
