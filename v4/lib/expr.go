@@ -2027,10 +2027,10 @@ out:
 		switch x := n.ResolvedTo().(type) {
 		case *cc.Declarator:
 			nm := x.Name()
-			goName := c.declaratorTag(x) + nm
+			linkName := c.declaratorTag(x) + nm
 			if c.pass == 2 {
-				if nm := c.f.statics[x]; nm != "" {
-					goName = nm
+				if nm := c.f.locals[x]; nm != "" {
+					linkName = nm
 				}
 			}
 			c.externsMentioned[nm] = struct{}{}
@@ -2079,22 +2079,22 @@ out:
 					switch x.Type().Kind() {
 					case cc.Array:
 						p := &buf{n: x}
-						p.w("%s", goName)
+						p.w("%s", linkName)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					case cc.Function:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s;", v, goName)
+							w.w("var %s = %s;", v, linkName)
 						default:
-							w.w("%s := %s;", v, goName)
+							w.w("%s := %s;", v, linkName)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
 					default:
-						b.w("%s", goName)
+						b.w("%s", linkName)
 					}
 				case exprLvalue, exprSelect:
-					b.w("%s", goName)
+					b.w("%s", linkName)
 				case exprCall:
 					switch y := x.Type().(type) {
 					case *cc.FunctionType:
@@ -2103,12 +2103,12 @@ out:
 								nm = "__builtin_" + nm
 							}
 						}
-						b.w("%s", goName)
+						b.w("%s", linkName)
 					case *cc.PointerType:
 						switch z := y.Elem().(type) {
 						case *cc.FunctionType:
 							rmode = exprUintptr
-							b.w("%s", goName)
+							b.w("%s", linkName)
 						default:
 							// trc("%v: %s", x.Position(), cc.NodeSource(n))
 							c.err(errorf("TODO %T", z))
@@ -2119,7 +2119,7 @@ out:
 				case exprIndex:
 					switch x.Type().Kind() {
 					case cc.Array:
-						b.w("%s", goName)
+						b.w("%s", linkName)
 					default:
 						panic(todo(""))
 						c.err(errorf("TODO %v", mode))
@@ -2131,14 +2131,14 @@ out:
 						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 						switch {
 						case c.f == nil:
-							w.w("var %s = %s;", v, goName)
+							w.w("var %s = %s;", v, linkName)
 						default:
-							w.w("%s := %s;", v, goName)
+							w.w("%s := %s;", v, linkName)
 						}
 						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
 					default:
 						p := &buf{n: x}
-						p.w("%s", goName)
+						p.w("%s", linkName)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					}
 				default:

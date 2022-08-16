@@ -1002,6 +1002,9 @@ func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 			}
 
 			obj := fi.linker.externs[id]
+			if assert && obj == nil {
+				panic(todo("%v: %q", x.Position(), id))
+			}
 			if obj.kind == objectPkg {
 				w.w("%s.%s", obj.qualifier, nm)
 				return
@@ -1155,6 +1158,10 @@ func VaList(p uintptr, args ...interface{}) uintptr
 		"int32",
 		"int64",
 		"int8",
+		"uint16",
+		"uint32",
+		"uint64",
+		"uint8",
 	} {
 		nm := fmt.Sprintf("Bool%s", export(v))
 		taken.add(nm)

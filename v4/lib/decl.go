@@ -46,7 +46,7 @@ func (n *declInfos) takeAddress(d *cc.Declarator) { n.info(d).addressTaken = tru
 type fnCtx struct {
 	c         *ctx
 	declInfos declInfos
-	statics   map[*cc.Declarator]string // storage: static, linkage: none -> C renamed
+	locals    map[*cc.Declarator]string // storage: static or automatic, linkage: none -> C renamed
 	t         *cc.FunctionType
 	tlsAllocs int64
 
@@ -58,20 +58,20 @@ func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
 	return &fnCtx{c: c, t: t}
 }
 
-func (f *fnCtx) registerStatic(d *cc.Declarator) {
+func (f *fnCtx) registerLocal(d *cc.Declarator) {
 	if f == nil {
 		return
 	}
 
-	if f.statics == nil {
-		f.statics = map[*cc.Declarator]string{}
+	if f.locals == nil {
+		f.locals = map[*cc.Declarator]string{}
 	}
-	f.statics[d] = ""
+	f.locals[d] = ""
 }
 
-func (f *fnCtx) renameStatics() {
+func (f *fnCtx) renameLocals() {
 	var a []*cc.Declarator
-	for k := range f.statics {
+	for k := range f.locals {
 		a = append(a, k)
 	}
 	sort.Slice(a, func(i, j int) bool {
@@ -88,8 +88,28 @@ func (f *fnCtx) renameStatics() {
 	})
 	var r nameRegister
 	for _, d := range a {
-		f.statics[d] = r.put(f.c.declaratorTag(d) + d.Name())
+		f.locals[d] = r.put(f.c.declaratorTag(d) + d.Name())
 	}
+}
+
+func (f *fnCtx) declareLocals() string {
+	var a []string
+	for k, v := range f.locals {
+		if info := f.declInfos[k]; info != nil && info.pinned() {
+			a = append(a, fmt.Sprintf("var %s_ /* %s at bp%+d */ %s;", tag(preserve), k.Name(), info.bpOff, f.c.typ(k, k.Type())))
+			continue
+		}
+
+		if k.IsTypename() {
+			continue
+		}
+
+		if k.StorageDuration() != cc.Static && v != "" {
+			a = append(a, fmt.Sprintf("var %s %s;", v, f.c.typ(k, k.Type())))
+		}
+	}
+	sort.Strings(a)
+	return strings.Join(a, "")
 }
 
 func (f *fnCtx) id() int { f.nextID++; return f.nextID }
@@ -129,7 +149,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	defer func() { c.f = f0; c.pass = pass }()
 	c.pass = 1
 	c.compoundStatement(discard{}, cs, true, "")
-	c.f.renameStatics()
+	c.f.renameLocals()
 	var a []*cc.Declarator
 	for d, n := range c.f.declInfos {
 		if n.pinned() {
@@ -147,6 +167,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 		c.f.tlsAllocs = info.bpOff + d.Type().Size()
 	}
 	c.pass = 2
+	c.f.nextID = 0
 	isMain := d.Linkage() == cc.External && d.Name() == "main"
 	if isMain {
 		c.hasMain = true
@@ -264,6 +285,19 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 
 func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, external bool) {
 	d := n.Declarator
+	if sc := d.LexicalScope(); sc.Parent == nil {
+		hasInitializer := false
+		for _, v := range sc.Nodes[d.Name()] {
+			if x, ok := v.(*cc.Declarator); ok && x.HasInitializer() {
+				hasInitializer = true
+				break
+			}
+		}
+		if hasInitializer && !d.HasInitializer() {
+			return
+		}
+	}
+
 	if attr := d.Type().Attributes(); attr != nil {
 		if attr.Alias() != "" {
 			c.err(errorf("TODO unsupported attribute(s)"))
@@ -288,17 +322,28 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
 	}
 
+	nm := d.Name()
+	linkName := c.declaratorTag(d) + nm
 	var info *declInfo
 	if c.f != nil {
 		info = c.f.declInfos.info(d)
 	}
-	nm := d.Name()
+	switch c.pass {
+	case 1:
+		if d.Linkage() == cc.None {
+			c.f.registerLocal(d)
+		}
+	case 2:
+		if nm := c.f.locals[d]; nm != "" {
+			linkName = nm
+		}
+	}
 	switch n.Case {
 	case cc.InitDeclaratorDecl: // Declarator Asm
 		switch {
 		case d.IsTypename():
 			if external && c.typenames.add(nm) && !d.Type().IsIncomplete() {
-				w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
+				w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
 				c.defineEnumStructUnion(w, sep, n, d.Type())
 			}
 			if !external {
@@ -311,44 +356,45 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 
 			c.defineEnumStructUnion(w, sep, n, d.Type())
 			switch {
-			case info != nil && info.pinned():
-				w.w("%s%svar %s_ /* %s */ %s;", sep, c.posComment(n), tag(preserve), nm, c.typ(d, d.Type()))
 			case d.IsStatic():
 				switch c.pass {
 				case 1:
-					c.f.registerStatic(d)
+					// nop
 				case 2:
-					if nm := c.f.statics[d]; nm != "" {
+					if nm := c.f.locals[d]; nm != "" {
 						w.w("%s%svar %s %s;", sep, c.posComment(n), nm, c.typ(d, d.Type()))
 						break
 					}
 
 					fallthrough
 				default:
-					w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
+					w.w("%s%svar %s %s;", sep, c.posComment(n), linkName, c.typ(d, d.Type()))
 				}
 			default:
-				w.w("%s%svar %s%s %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.typ(d, d.Type()))
+				switch c.pass {
+				case 0:
+					w.w("%s%svar %s %s;", sep, c.posComment(n), linkName, c.typ(d, d.Type()))
+				}
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
 		c.defineEnumStructUnion(w, sep, n, d.Type())
 		switch {
 		case d.Linkage() == cc.Internal:
-			w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
 		case d.IsStatic():
 			switch c.pass {
 			case 1:
-				c.f.registerStatic(d)
+				// nop
 			case 2:
-				if nm := c.f.statics[d]; nm != "" {
+				if nm := c.f.locals[d]; nm != "" {
 					w.w("%s%svar %s = %s;", sep, c.posComment(n), nm, c.initializerOuter(w, n.Initializer, d.Type()))
 					break
 				}
 
 				fallthrough
 			default:
-				w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
 			}
 		default:
 			switch {
@@ -357,9 +403,9 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:
-					w.w("%s%svar %s%s = %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
 				default:
-					w.w("%s%s%s%s := %s;", sep, c.posComment(n), c.declaratorTag(d), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%s%s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
 				}
 			}
 		}
@@ -370,7 +416,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 	if info != nil {
 		// w.w("\n// read: %d, write: %d, address taken %v\n", d.ReadCount(), d.WriteCount(), d.AddressTaken()) //TODO-
 		if d.StorageDuration() == cc.Automatic && d.ReadCount() == d.SizeofCount() && !info.pinned() {
-			w.w("\n%s_ = %s%s;", tag(preserve), c.declaratorTag(d), nm)
+			w.w("\n%s_ = %s;", tag(preserve), linkName)
 		}
 	}
 }

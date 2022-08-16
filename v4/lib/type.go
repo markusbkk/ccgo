@@ -343,7 +343,7 @@ func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
+		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
 	}
 	for _, v := range c.unionEnums(t) {
 		c.defineEnum(w, "\n", n, v)
@@ -409,7 +409,7 @@ func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
+		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
 	}
 	for _, v := range c.structEnums(t) {
 		c.defineEnum(w, "\n", n, v)
@@ -447,7 +447,7 @@ func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 			return
 		}
 
-		w.w("%s%stype %s%s = %s;", sepStr, c.posComment(n), tag(taggedEum), nm, c.typ(n, t.UnderlyingType()))
+		w.w("\n\n%s%stype %s%s = %s;", sepStr, c.posComment(n), tag(taggedEum), nm, c.typ(n, t.UnderlyingType()))
 	}
 	enums := t.Enumerators()
 	if len(enums) == 0 {

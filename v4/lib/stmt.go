@@ -63,7 +63,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 			w.w("fallthrough;")
 		}
 		w.w("case %s:", c.expr(nil, n.ConstantExpression, c.switchExpr, exprDefault))
-		c.statement(w, n.Statement)
+		c.unbracedStatement(w, n.Statement)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
 			w.w("fallthrough;")
@@ -74,7 +74,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 			w.w("fallthrough;")
 		}
 		w.w("default:")
-		c.statement(w, n.Statement)
+		c.unbracedStatement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -85,6 +85,10 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 
 	switch {
 	case fnBlock:
+		if c.pass != 2 {
+			break
+		}
+
 		w.w(" {")
 		switch {
 		case c.f.tlsAllocs+int64(c.f.maxValist) != 0:
@@ -104,6 +108,7 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 		default:
 			w.w("%s%s", strings.TrimSpace(sep(n.Token)), c.posComment(n))
 		}
+		w.w("%s", c.f.declareLocals())
 	default:
 		w.w(" { %s%s", sep(n.Token), c.posComment(n))
 	}
