@@ -41,7 +41,7 @@ var (
 	oErr1       = flag.Bool("err1", false, "first error line only")
 	oKeep       = flag.Bool("keep", false, "keep temp directories")
 	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime  = flag.Duration("shelltimeout", 100*time.Second, "shell() time limit")
+	oShellTime  = flag.Duration("shelltimeout", 200*time.Second, "shell() time limit")
 	oStackTrace = flag.Bool("trcstack", false, "")
 	oTrace      = flag.Bool("trc", false, "print tested paths.")
 	oTraceC     = flag.Bool("trcc", false, "trace TestExec transiple errors")
