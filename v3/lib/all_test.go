@@ -2666,6 +2666,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
 		"-DSQLITE_MEMDEBUG",
 		"-DSQLITE_THREADSAFE=0",
+		"-D__attribute__(x)=", // bypass parser bug on windows/386
 		"-export-fields", "F",
 		"-ignore-unsupported-alignment",
 		"-all-errors",
@@ -2686,6 +2687,7 @@ func testSQLite(t *testing.T, dir string) {
 			"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
 			"-DSQLITE_MEMDEBUG",
 			"-DSQLITE_THREADSAFE=0",
+			"-D__attribute__(x)=", // bypass parser bug on windows/386
 			"-export-fields", "F",
 			"-ignore-unsupported-alignment",
 			"-all-errors",
