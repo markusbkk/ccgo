@@ -80,7 +80,6 @@ func (o *object) load() (file *gc.SourceFile, err error) {
 		return nil, err
 	}
 
-	b = bytes.ReplaceAll(b, []byte("/**/\n"), []byte{'\n'})
 	if file, err = gc.ParseSourceFile(&gc.ParseSourceFileConfig{}, o.id, b); err != nil {
 		return nil, err
 	}

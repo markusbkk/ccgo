@@ -44,6 +44,7 @@ func (n *declInfos) info(d *cc.Declarator) (r *declInfo) {
 func (n *declInfos) takeAddress(d *cc.Declarator) { n.info(d).addressTaken = true }
 
 type fnCtx struct {
+	autovars  []string
 	c         *ctx
 	declInfos declInfos
 	locals    map[*cc.Declarator]string // storage: static or automatic, linkage: none -> C renamed
@@ -57,6 +58,18 @@ type fnCtx struct {
 func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
 	return &fnCtx{c: c, t: t}
 }
+
+func (f *fnCtx) newAutovarName() (nm string) {
+	return fmt.Sprintf("%sv%d", tag(ccgoAutomatic), f.c.id())
+}
+
+func (f *fnCtx) newAutovar(n cc.Node, t cc.Type) (nm string) {
+	nm = f.newAutovarName()
+	f.registerAutoVar(fmt.Sprintf("var %s %s;", nm, f.c.typ(n, t)))
+	return nm
+}
+
+func (f *fnCtx) registerAutoVar(s string) { f.autovars = append(f.autovars, s) }
 
 func (f *fnCtx) registerLocal(d *cc.Declarator) {
 	if f == nil {
@@ -108,6 +121,7 @@ func (f *fnCtx) declareLocals() string {
 			a = append(a, fmt.Sprintf("var %s %s;", v, f.c.typ(k, k.Type())))
 		}
 	}
+	a = append(a, f.autovars...)
 	sort.Strings(a)
 	return strings.Join(a, "")
 }

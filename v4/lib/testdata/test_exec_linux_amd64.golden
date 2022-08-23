@@ -1934,6 +1934,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920411-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920428-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920429-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-8.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-9.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920506-1.c
@@ -3239,6 +3240,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920411-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920428-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920429-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-6.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-8.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-9.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920506-1.c
@@ -4253,6 +4255,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-loop.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-param-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/liveness-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/logical-and-bitwise-false.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/logical-operators-basic.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-arithmetic.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-compare.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-function.c
