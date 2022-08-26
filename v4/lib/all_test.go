@@ -52,8 +52,9 @@ var (
 	cfs    fs.FS
 	goarch = runtime.GOARCH
 	goos   = runtime.GOOS
-	re     *regexp.Regexp
 	hostCC string
+	re     *regexp.Regexp
+	testWD string
 )
 
 type diskFS string
@@ -81,11 +82,12 @@ func (f *overlayFS) Open(name string) (fs.File, error) {
 }
 
 func TestMain(m *testing.M) {
-	overlay, err := filepath.Abs("testdata/overlay")
+	testWD, err := filepath.Abs("testdata")
 	if err != nil {
 		panic(todo("", err))
 	}
 
+	overlay := filepath.Join(testWD, "overlay")
 	cfs = newOverlayFS(ccorpus2.FS, newDiskFS(overlay))
 	extendedErrors = true
 	gc.ExtendedErrors = true
@@ -638,6 +640,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-o", main,
 		path.Join(dir, "shell.c"),
 		path.Join(dir, "sqlite3.c"),
+		path.Join(dir, "patch.c"),
 	}
 	if *oKeep {
 		ccgoArgs = append(ccgoArgs, "-keep-object-files", "-extended-errors", "-debug-linker-save")
@@ -673,7 +676,9 @@ func testSQLite(t *testing.T, dir string) {
 			}
 		}()
 
-		if err := NewTask(goos, goarch, ccgoArgs, nil, nil, cfs).Main(); err != nil {
+		task := NewTask(goos, goarch, ccgoArgs, nil, nil, cfs)
+		task.enableSignal = true
+		if err := task.Main(); err != nil {
 			if *oTrace {
 				fmt.Println(err)
 			}

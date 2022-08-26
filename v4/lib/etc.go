@@ -909,6 +909,13 @@ func walk(n interface{}, fn func(n gc.Node, pre bool, arg interface{}), arg inte
 	}
 }
 
+func argumentExpressionList(n *cc.ArgumentExpressionList) (r []cc.ExpressionNode) {
+	for ; n != nil; n = n.ArgumentExpressionList {
+		r = append(r, n.AssignmentExpression)
+	}
+	return r
+}
+
 func argumentExpressionListLen(n *cc.ArgumentExpressionList) (r int) {
 	for ; n != nil; n = n.ArgumentExpressionList {
 		r++

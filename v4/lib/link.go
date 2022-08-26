@@ -545,7 +545,8 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 		object := objects[linkFile]
 		for nm := range object.externs {
 			if _, ok := l.externs[nm]; !ok {
-				if _, ok := hide[nm]; !ok {
+				_, hidden := hide[nm]
+				if !hidden || l.task.enableSignal && nm == tag(external)+"signal" {
 					l.externs[nm] = object
 				}
 			}

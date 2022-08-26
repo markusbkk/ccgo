@@ -196,6 +196,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 		switch nm := nmTag.SrcStr(); {
 		case nm != "" && x.LexicalScope().Parent == nil && useStructUnionTag:
 			fmt.Fprintf(b, "%s%s", tag(taggedUnion), nm)
+			c.defineTaggedUnions[nm] = x
 		default:
 			fmt.Fprintf(b, "struct {")
 			ff := firstPositiveSizedField(x)
@@ -332,24 +333,6 @@ func (c *ctx) structLiteral(n cc.Node, t *cc.StructType) string {
 	return b.String()
 }
 
-func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
-	if t.IsIncomplete() {
-		return
-	}
-
-	nmt := t.Tag()
-	if nm := nmt.SrcStr(); nm != "" && t.LexicalScope().Parent == nil {
-		if !c.taggedUnions.add(nm) {
-			return
-		}
-
-		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
-	}
-	for _, v := range c.unionEnums(t) {
-		c.defineEnum(w, "\n", n, v)
-	}
-}
-
 type fielder interface {
 	NumFields() int
 	FieldByIndex(int) *cc.Field
@@ -412,6 +395,24 @@ func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
 	}
 	for _, v := range c.structEnums(t) {
+		c.defineEnum(w, "\n", n, v)
+	}
+}
+
+func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
+	if t.IsIncomplete() {
+		return
+	}
+
+	nmt := t.Tag()
+	if nm := nmt.SrcStr(); nm != "" && t.LexicalScope().Parent == nil {
+		if !c.taggedUnions.add(nm) {
+			return
+		}
+
+		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
+	}
+	for _, v := range c.unionEnums(t) {
 		c.defineEnum(w, "\n", n, v)
 	}
 }

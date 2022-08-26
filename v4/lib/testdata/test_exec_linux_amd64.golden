@@ -4335,6 +4335,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/unary-minus-float.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/unary-plus.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/union-float-assign.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/union-float-param.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/union-zero-init.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/union.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/unsigned-compare-ge.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/unsigned-compare.c

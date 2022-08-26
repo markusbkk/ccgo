@@ -154,6 +154,7 @@ type ctx struct {
 	cfg                 *cc.Config
 	compoundStmtValue   string
 	defineTaggedStructs map[string]*cc.StructType
+	defineTaggedUnions  map[string]*cc.UnionType
 	eh                  errHandler
 	enumerators         nameSet
 	externsDeclared     map[string]*cc.Declarator
@@ -185,6 +186,7 @@ func newCtx(task *Task, eh errHandler) *ctx {
 	return &ctx{
 		cfg:                 task.cfg,
 		defineTaggedStructs: map[string]*cc.StructType{},
+		defineTaggedUnions:  map[string]*cc.UnionType{},
 		eh:                  eh,
 		externsDeclared:     map[string]*cc.Declarator{},
 		externsDefined:      map[string]struct{}{},
@@ -287,6 +289,17 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		for k, t := range c.defineTaggedStructs {
 			c.defineStruct(c, "\n\n", nil, t)
 			delete(c.defineTaggedStructs, k)
+		}
+	}
+	for len(c.defineTaggedUnions) != 0 {
+		var a []string
+		for k := range c.defineTaggedUnions {
+			a = append(a, k)
+		}
+		sort.Strings(a)
+		for k, t := range c.defineTaggedUnions {
+			c.defineUnion(c, "\n\n", nil, t)
+			delete(c.defineTaggedUnions, k)
 		}
 	}
 	c.w("%s", sep(c.ast.EOF))

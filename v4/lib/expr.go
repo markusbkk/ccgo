@@ -568,7 +568,7 @@ func (c *ctx) logicalAndExpression(w writer, n *cc.LogicalAndExpression, t cc.Ty
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
-	return &b, rt, rmode
+	return &b, c.ast.Int, rmode
 }
 
 func (c *ctx) logicalOrExpression(w writer, n *cc.LogicalOrExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
@@ -614,7 +614,7 @@ func (c *ctx) logicalOrExpression(w writer, n *cc.LogicalOrExpression, t cc.Type
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
-	return &b, rt, rmode
+	return &b, c.ast.Int, rmode
 }
 
 func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
@@ -1304,6 +1304,16 @@ out:
 			rt, rmode = n.Type(), mode
 			w.w("%s_ = %s;", tag(preserve), c.expr(w, n.ArgumentExpressionList.AssignmentExpression, nil, exprDefault))
 			break out
+		case "__atomic_load_n":
+			return c.atomicLoadN(w, n, t, mode)
+		case "__atomic_store_n":
+			return c.atomicStoreN(w, n, t, mode)
+		case "__builtin_sub_overflow":
+			return c.subOverflow(w, n, t, mode)
+		case "__builtin_mul_overflow":
+			return c.mulOverflow(w, n, t, mode)
+		case "__builtin_add_overflow":
+			return c.addOverflow(w, n, t, mode)
 		}
 
 		switch mode {
@@ -1442,6 +1452,152 @@ out:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	return &b, rt, rmode
+}
+
+func (c *ctx) mulOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	args := argumentExpressionList(n.ArgumentExpressionList)
+	if len(args) != 3 {
+		c.err(errorf("%v: invalid number of arguments to __builtin_mul_overflow", n.ArgumentExpressionList.Position()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[0].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid first argument to __builtin_mul_overflow: %s", n.ArgumentExpressionList.Position(), args[0].Type()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[1].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid second argument to __builtin_mul_overflow: %s", n.ArgumentExpressionList.Position(), args[1].Type()))
+		return &b, t, mode
+	}
+
+	if args[2].Type().Kind() != cc.Ptr {
+		c.err(errorf("%v: invalid third argument to __builtin_mul_overflow: %s", n.ArgumentExpressionList.Position(), args[2].Type()))
+		return &b, t, mode
+	}
+
+	b.w("%s__builtin_mul_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	return &b, c.ast.Int, exprDefault
+}
+
+func (c *ctx) addOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	args := argumentExpressionList(n.ArgumentExpressionList)
+	if len(args) != 3 {
+		c.err(errorf("%v: invalid number of arguments to __builtin_add_overflow", n.ArgumentExpressionList.Position()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[0].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid first argument to __builtin_add_overflow: %s", n.ArgumentExpressionList.Position(), args[0].Type()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[1].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid second argument to __builtin_add_overflow: %s", n.ArgumentExpressionList.Position(), args[1].Type()))
+		return &b, t, mode
+	}
+
+	if args[2].Type().Kind() != cc.Ptr {
+		c.err(errorf("%v: invalid third argument to __builtin_add_overflow: %s", n.ArgumentExpressionList.Position(), args[2].Type()))
+		return &b, t, mode
+	}
+
+	b.w("%s__builtin_add_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	return &b, c.ast.Int, exprDefault
+}
+
+func (c *ctx) subOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	args := argumentExpressionList(n.ArgumentExpressionList)
+	if len(args) != 3 {
+		c.err(errorf("%v: invalid number of arguments to __builtin_sub_overflow", n.ArgumentExpressionList.Position()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[0].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid first argument to __builtin_sub_overflow: %s", n.ArgumentExpressionList.Position(), args[0].Type()))
+		return &b, t, mode
+	}
+
+	switch {
+	case cc.IsScalarType(args[1].Type()):
+		// ok
+	default:
+		c.err(errorf("%v: invalid second argument to __builtin_sub_overflow: %s", n.ArgumentExpressionList.Position(), args[1].Type()))
+		return &b, t, mode
+	}
+
+	if args[2].Type().Kind() != cc.Ptr {
+		c.err(errorf("%v: invalid third argument to __builtin_add_overflow: %s", n.ArgumentExpressionList.Position(), args[2].Type()))
+		return &b, t, mode
+	}
+
+	b.w("%s__builtin_sub_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	return &b, c.ast.Int, exprDefault
+}
+
+func (c *ctx) atomicLoadN(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+
+	args := argumentExpressionList(n.ArgumentExpressionList)
+	if len(args) != 2 {
+		c.err(errorf("%v: invalid number of arguments to __atomic_store_n", n.ArgumentExpressionList.Position()))
+		return &b, t, mode
+	}
+
+	pt, ok := args[0].Type().(*cc.PointerType)
+	if !ok {
+		c.err(errorf("%v: invalid first argument to __atomic_store_n: %s", n.ArgumentExpressionList.Position(), args[0].Type()))
+		return &b, t, mode
+	}
+
+	rt = pt.Elem()
+	b.w("%sAtomicLoadN%s(%stls, %s, %s)", c.task.tlsQualifier, c.helper(n, rt), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], nil, exprDefault))
+	return &b, rt, mode
+}
+
+func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	var b buf
+	if mode != exprVoid {
+		c.err(errorf("%v: __atomic_store_n used as a value", n.Position()))
+		return &b, t, mode
+	}
+
+	args := argumentExpressionList(n.ArgumentExpressionList)
+	if len(args) != 3 {
+		c.err(errorf("%v: invalid number of arguments to __atomic_store_n", n.ArgumentExpressionList.Position()))
+		return &b, t, mode
+	}
+
+	if args[0].Type().Kind() != cc.Ptr {
+		c.err(errorf("%v: invalid first argument to __atomic_store_n: %s", n.ArgumentExpressionList.Position(), args[0].Type()))
+		return &b, t, mode
+	}
+
+	switch a1 := args[1]; {
+	case cc.IsScalarType(a1.Type()):
+		b.w("%sAtomicStoreN%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, a1.Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, a1, nil, exprDefault), c.expr(w, args[2], nil, exprDefault))
+	default:
+		c.err(errorf("%v: invalid second argument to __atomic_store_n: %s", n.ArgumentExpressionList.Position(), a1.Type()))
+	}
+	return &b, t, mode
 }
 
 func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
