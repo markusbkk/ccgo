@@ -489,8 +489,8 @@ func typeID(in map[string]gc.Node, out map[string]string, typ gc.Node) (r string
 		return "", err
 	}
 
-	// trc("%s -> T%s", typ.Source(false), b.String())
-	return "T" + b.String(), nil
+	// trc("%s -> %s", typ.Source(false), b.String())
+	return b.String(), nil
 }
 
 func typeID0(b *strings.Builder, in map[string]gc.Node, out map[string]string, typ gc.Node, m map[string]struct{}) (err error) {

@@ -598,7 +598,7 @@ func getCorpusFile(path string) ([]byte, error) {
 
 func TestSQLite(t *testing.T) {
 	return //TODO-
-	testSQLite(t, "assets/sqlite-amalgamation-3380100")
+	testSQLite(t, "assets/sqlite-amalgamation")
 }
 
 func testSQLite(t *testing.T, dir string) {

@@ -105,7 +105,7 @@ func (o *object) collectTypes(file *gc.SourceFile) (types map[string]string, err
 					return nil, errorf("%v: type %s redeclared", o.id, nm)
 				}
 
-				in[nm] = ts.TypeNode
+				in[nm] = ts.TypeNode // eg. in["tn__itimer_which_t"] = TypeNode for ppint32
 				a = append(a, nm)
 			}
 		}
