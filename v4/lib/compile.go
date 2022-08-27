@@ -380,6 +380,10 @@ func (c *ctx) posComment(n cc.Node) string {
 }
 
 func (c *ctx) pos(n cc.Node) (r token.Position) {
+	if n == nil {
+		return r
+	}
+
 	if r = token.Position(n.Position()); r.IsValid() {
 		switch {
 		case c.task.fullPaths:

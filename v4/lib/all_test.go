@@ -597,7 +597,7 @@ func getCorpusFile(path string) ([]byte, error) {
 }
 
 func TestSQLite(t *testing.T) {
-	return //TODO-
+	t.Skip("TODO")
 	testSQLite(t, "assets/sqlite-amalgamation")
 }
 
@@ -637,6 +637,9 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
 		"-DSQLITE_MEMDEBUG",
 		"-DSQLITE_THREADSAFE=0",
+		"-D_GNU_SOURCE",
+		// "-positions",
+		// "-full-paths",
 		"-o", main,
 		path.Join(dir, "shell.c"),
 		path.Join(dir, "sqlite3.c"),

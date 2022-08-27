@@ -89,6 +89,7 @@ func (o *object) load() (file *gc.SourceFile, err error) {
 
 // link name -> type ID
 func (o *object) collectTypes(file *gc.SourceFile) (types map[string]string, err error) {
+	// trc("==== %s (%v:)", o.id, origin(0))
 	var a []string
 	in := map[string]gc.Node{}
 	for _, decl := range file.TopLevelDecls {

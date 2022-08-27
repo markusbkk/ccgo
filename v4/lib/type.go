@@ -489,7 +489,7 @@ func typeID(in map[string]gc.Node, out map[string]string, typ gc.Node) (r string
 		return "", err
 	}
 
-	// trc("%s -> %s", typ.Source(false), b.String())
+	// trc("`%s` -> type ID: `%s`", typ.Source(false), b.String())
 	return b.String(), nil
 }
 
