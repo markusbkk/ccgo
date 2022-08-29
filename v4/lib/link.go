@@ -139,6 +139,10 @@ func (o *object) collectConsts(file *gc.SourceFile) (consts map[string]string, e
 
 					var b strings.Builder
 					b.WriteByte('C') //TODO ?
+					if assert && len(spec.ExprList) == 0 {
+						panic(todo("%q", x.Source(false)))
+					}
+
 					b.Write(spec.ExprList[i].Expr.Source(true))
 					in[nm] = b.String()
 					a = append(a, nm)
@@ -429,10 +433,11 @@ type linker struct {
 	forceExternalPrefix   nameSet
 	fset                  *token.FileSet
 	goTags                []string
-	goTypeNamesEmited     nameSet
+	goSynthDeclsProduced  nameSet
 	imports               []*object
 	importsByPath         map[string]*object
 	libc                  *object
+	maxUintptr            uint64
 	out                   io.Writer
 	reflectName           string
 	stringLiterals        map[string]int64
@@ -444,7 +449,6 @@ type linker struct {
 	textSegmentOff        int64
 	tld                   nameSpace
 	unsafeName            string
-	maxUintptr            uint64
 
 	closed bool
 }
@@ -642,7 +646,8 @@ var (
 	_ %s.Pointer
 )
 
-type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
+type float128 = struct { __ccgo [2]float64 }
+`, l.reflectName, l.unsafeName)
 
 	for _, linkFile := range linkFiles {
 		object := objects[linkFile]
@@ -694,14 +699,12 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 			constID := fileLinkNames2IDs[linkName]
 			associatedConstID, ok := l.fileLinkNames2IDs[linkName]
 			switch {
-			case !ok:
-				l.fileLinkNames2IDs.put(linkName, constID)
-				goName := l.tld.registerName(l, linkName)
-				l.fileLinkNames2GoNames[linkName] = goName
 			case ok && associatedConstID == constID:
 				l.fileLinkNames2GoNames[linkName] = l.tld.dict[linkName]
 			default:
-				l.err(errorf("TODO obj %s, linkName %s, constID %s, ok %v, associatedConstID %s", object.id, linkName, constID, ok, associatedConstID))
+				l.fileLinkNames2IDs.put(linkName, constID)
+				goName := l.tld.registerName(l, linkName)
+				l.fileLinkNames2GoNames[linkName] = goName
 			}
 		}
 
@@ -719,7 +722,22 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 		for _, n := range file.TopLevelDecls {
 			switch x := n.(type) {
 			case *gc.ConstDecl:
-				l.print(l.newFnInfo(nil), n)
+				if len(x.ConstSpecs) != 1 {
+					panic(todo(""))
+				}
+
+				spec := x.ConstSpecs[0]
+				nm := spec.IdentifierList[0].Ident.Src()
+				if _, ok := l.goSynthDeclsProduced[nm]; ok {
+					break
+				}
+
+				l.goSynthDeclsProduced.add(nm)
+				fi := l.newFnInfo(nil)
+				l.print(fi, n)
+				var b buf
+				l.print0(&b, fi, n)
+				l.synthDecls[nm] = b.bytes()
 			case *gc.VarDecl:
 				if ln := x.VarSpecs[0].IdentifierList[0].Ident.Src(); l.meta(x, ln) {
 					break
@@ -733,11 +751,11 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 
 				spec := x.TypeSpecs[0]
 				nm := spec.(*gc.AliasDecl).Ident.Src()
-				if _, ok := l.goTypeNamesEmited[nm]; ok {
+				if _, ok := l.goSynthDeclsProduced[nm]; ok {
 					break
 				}
 
-				l.goTypeNamesEmited.add(nm)
+				l.goSynthDeclsProduced.add(nm)
 				fi := l.newFnInfo(nil)
 				l.print(fi, n)
 				var b buf

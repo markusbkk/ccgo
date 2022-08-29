@@ -196,17 +196,17 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	}
 	switch {
 	case local:
-		w.w("%s%s%s := func%s", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, false))
+		w.w("%s%s%s := func%s", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, false, true))
 	default:
-		w.w("%sfunc %s%s%s ", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain))
+		w.w("%sfunc %s%s%s ", s, c.declaratorTag(d), d.Name(), c.signature(ft, true, isMain, true))
 	}
 	c.compoundStatement(w, cs, true, "")
 }
 
-func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
+func (c *ctx) signature(f *cc.FunctionType, paramNames, isMain, useNames bool) string {
 	var b strings.Builder
 	switch {
-	case names:
+	case paramNames:
 		fmt.Fprintf(&b, "(%stls *%s%sTLS", tag(ccgo), c.task.tlsQualifier, tag(preserve))
 	default:
 		fmt.Fprintf(&b, "(*%s%sTLS", c.task.tlsQualifier, tag(preserve))
@@ -218,7 +218,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 			}
 
 			b.WriteString(", ")
-			if names {
+			if paramNames {
 				switch nm := v.Name(); {
 				case nm == "":
 					fmt.Fprintf(&b, "%sp%d ", tag(ccgo), i)
@@ -231,7 +231,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 					}
 				}
 			}
-			b.WriteString(c.typ(v, v.Type().Decay()))
+			b.WriteString(c.typ2(v, v.Type().Decay(), useNames))
 		}
 	}
 	switch {
@@ -241,7 +241,7 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 		fmt.Fprintf(&b, ", %sargv %suintptr", tag(ccgo), tag(preserve))
 	case f.IsVariadic():
 		switch {
-		case names:
+		case paramNames:
 			fmt.Fprintf(&b, ", %s%s %suintptr", tag(ccgo), vaArgName, tag(preserve))
 		default:
 			fmt.Fprintf(&b, ", %suintptr", tag(preserve))
@@ -249,11 +249,11 @@ func (c *ctx) signature(f *cc.FunctionType, names, isMain bool) string {
 	}
 	b.WriteByte(')')
 	if f.Result().Kind() != cc.Void {
-		if names {
+		if paramNames {
 			fmt.Fprintf(&b, "(%s%s ", tag(ccgo), retvalName)
 		}
-		b.WriteString(c.typ(nil, f.Result()))
-		if names {
+		b.WriteString(c.typ2(nil, f.Result(), useNames))
+		if paramNames {
 			b.WriteByte(')')
 		}
 	}

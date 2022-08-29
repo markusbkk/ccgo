@@ -637,7 +637,6 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
 		"-DSQLITE_MEMDEBUG",
 		"-DSQLITE_THREADSAFE=0",
-		"-D_GNU_SOURCE",
 		// "-positions",
 		// "-full-paths",
 		"-o", main,

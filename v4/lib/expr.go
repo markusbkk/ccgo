@@ -246,7 +246,7 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 		case exprCall:
 			v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
 			ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
-			vs := fmt.Sprintf("var %s func%s;", v, c.signature(ft, false, false))
+			vs := fmt.Sprintf("var %s func%s;", v, c.signature(ft, false, false, true))
 			switch {
 			case c.f != nil:
 				c.f.registerAutoVar(vs)
@@ -627,7 +627,7 @@ func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.
 		switch mode {
 		case exprCall:
 			rt, rmode = n.Type(), mode
-			vs := fmt.Sprintf("var %s func%s;", v, c.signature(n.Type().(*cc.PointerType).Elem().(*cc.FunctionType), false, false))
+			vs := fmt.Sprintf("var %s func%s;", v, c.signature(n.Type().(*cc.PointerType).Elem().(*cc.FunctionType), false, false, true))
 			switch {
 			case c.f != nil:
 				c.f.registerAutoVar(vs)
@@ -998,7 +998,6 @@ out:
 		// trc("%v: nt %v, ct %v, '%s' %v", n.Token.Position(), n.Type(), n.CastExpression.Type(), cc.NodeSource(n), mode)
 		switch n.Type().Undecay().(type) {
 		case *cc.FunctionType:
-			trc("")
 			rt, rmode = n.Type(), mode
 			b.w("%s", c.expr(w, n.CastExpression, nil, mode))
 			break out
@@ -2216,7 +2215,7 @@ out:
 					switch y := x.Type().Undecay().(type) {
 					case *cc.PointerType:
 						if ft, ok := y.Elem().(*cc.FunctionType); ok {
-							b.w("(*(*func%s)(%s))", c.signature(ft, false, false), unsafePointer(bpOff(info.bpOff)))
+							b.w("(*(*func%s)(%s))", c.signature(ft, false, false, true), unsafePointer(bpOff(info.bpOff)))
 							break
 						}
 

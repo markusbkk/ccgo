@@ -322,9 +322,9 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 	for _, k := range a {
 		switch d := c.externsDeclared[k]; t := d.Type().(type) {
 		case *cc.FunctionType:
-			c.w("\n\nfunc %s%s%s", tag(meta), k, c.signature(t, false, false))
+			c.w("\n\nfunc %s%s%s", tag(meta), k, c.signature(t, false, false, false))
 		default:
-			c.w("\n\nvar %s%s %s", tag(meta), k, c.typ(d, t))
+			c.w("\n\nvar %s%s %s", tag(meta), k, c.typ2(d, t, false))
 		}
 	}
 	return nil
@@ -342,31 +342,22 @@ func (c *ctx) defines(w writer) {
 	}
 
 	sort.Slice(a, func(i, j int) bool { return a[i].Name.SrcStr() < a[j].Name.SrcStr() })
-	var b []string
-	w.w("\n\nconst (")
 	for _, m := range a {
 		r := m.ReplacementList()[0].SrcStr()
+		w.w("const %s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
 		switch x := m.Value().(type) {
 		case cc.Int64Value:
-			b = append(b, fmt.Sprintf("%s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x))
+			w.w("const %s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
 		case cc.UInt64Value:
-			b = append(b, fmt.Sprintf("%s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x))
+			w.w("const %s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
 		case cc.Float64Value:
 			if s := fmt.Sprint(x); s == r {
-				b = append(b, fmt.Sprintf("%s%s%s%s = %s;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), s))
+				w.w("const %s%s%s%s = %s;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), s)
 			}
 		case cc.StringValue:
-			b = append(b, fmt.Sprintf("%s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x[:len(x)-1]))
+			w.w("const %s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x[:len(x)-1])
 		}
-
-		w.w("%s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
 	}
-	w.w("\n)\n\n")
-	if len(b) == 0 {
-		return
-	}
-
-	w.w("\n\nconst (%s\n)\n\n", strings.Join(b, "\n"))
 }
 
 var home = os.Getenv("HOME")

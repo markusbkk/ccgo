@@ -36,14 +36,20 @@ func (c *ctx) typ(n cc.Node, t cc.Type) string {
 	return b.String()
 }
 
-func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStructUnionTag, isField bool) {
+func (c *ctx) typ2(n cc.Node, t cc.Type, useNames bool) string {
+	var b strings.Builder
+	c.typ0(&b, n, t, useNames, useNames, false)
+	return b.String()
+}
+
+func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTags, isField bool) {
 	if !c.checkValidType(n, t) {
 		b.WriteString(tag(preserve))
 		b.WriteString("int32")
 		return
 	}
 
-	if tn := t.Typedef(); tn != nil && useTypename && tn.LexicalScope().Parent == nil {
+	if tn := t.Typedef(); tn != nil && useTypenames && tn.LexicalScope().Parent == nil {
 		fmt.Fprintf(b, "%s%s", tag(typename), tn.Name())
 		return
 	}
@@ -124,7 +130,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 	case *cc.EnumType:
 		nmTag := x.Tag()
 		switch nm := nmTag.SrcStr(); {
-		case nm != "" && x.LexicalScope().Parent == nil:
+		case nm != "" && x.LexicalScope().Parent == nil && useTags:
 			fmt.Fprintf(b, "%s%s", tag(taggedEum), nm)
 		default:
 			c.typ0(b, n, x.UnderlyingType(), false, false, false)
@@ -132,7 +138,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 	case *cc.StructType:
 		nmTag := x.Tag()
 		switch nm := nmTag.SrcStr(); {
-		case nm != "" && x.LexicalScope().Parent == nil && useStructUnionTag:
+		case nm != "" && x.LexicalScope().Parent == nil && useTags:
 			fmt.Fprintf(b, "%s%s", tag(taggedStruct), nm)
 			c.defineTaggedStructs[nm] = x
 		default:
@@ -194,7 +200,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypename, useStr
 	case *cc.UnionType:
 		nmTag := x.Tag()
 		switch nm := nmTag.SrcStr(); {
-		case nm != "" && x.LexicalScope().Parent == nil && useStructUnionTag:
+		case nm != "" && x.LexicalScope().Parent == nil && useTags:
 			fmt.Fprintf(b, "%s%s", tag(taggedUnion), nm)
 			c.defineTaggedUnions[nm] = x
 		default:
@@ -459,13 +465,11 @@ func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 		return
 	}
 
-	w.w("\n\nconst (")
 	for _, v := range enums {
 		nm := v.Token.SrcStr()
 		c.enumerators.add(nm)
-		w.w("%s%s%s%s = %v;", sep(v), c.posComment(v), tag(enumConst), nm, v.Value())
+		w.w("const %s%s%s%s = %v;", sep(v), c.posComment(v), tag(enumConst), nm, v.Value())
 	}
-	w.w("\n)\n")
 }
 
 func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) {
