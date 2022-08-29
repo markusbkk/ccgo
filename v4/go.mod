@@ -8,7 +8,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
 	golang.org/x/tools v0.1.10
-	modernc.org/cc/v4 v4.0.0-20220826151000-6b18cfd4ff20
+	modernc.org/cc/v4 v4.0.0-20220829172649-b8d7e1519625
 	modernc.org/ccorpus2 v1.1.0
 	modernc.org/fileutil v1.1.1
 	modernc.org/gc/v2 v2.0.2
@@ -19,6 +19,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
-	modernc.org/strutil v1.1.1 // indirect
-	modernc.org/token v1.0.0 // indirect
+	modernc.org/strutil v1.1.3 // indirect
+	modernc.org/token v1.0.1 // indirect
 )

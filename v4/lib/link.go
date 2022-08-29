@@ -671,14 +671,12 @@ type float128 = struct { __ccgo [2]float64 }`, l.reflectName, l.unsafeName)
 			typeID := fileLinkNames2IDs[linkName]
 			associatedTypeID, ok := l.fileLinkNames2IDs[linkName]
 			switch {
-			case !ok:
-				l.fileLinkNames2IDs.put(linkName, typeID)
-				goName := l.tld.registerName(l, linkName)
-				l.fileLinkNames2GoNames[linkName] = goName
 			case ok && associatedTypeID == typeID:
 				l.fileLinkNames2GoNames[linkName] = l.tld.dict[linkName]
 			default:
-				l.err(errorf("TODO obj %s, linkName %s, typeID %s, ok %v, associatedTypeID %s", object.id, linkName, typeID, ok, associatedTypeID))
+				l.fileLinkNames2IDs.put(linkName, typeID)
+				goName := l.tld.registerName(l, linkName)
+				l.fileLinkNames2GoNames[linkName] = goName
 			}
 		}
 
