@@ -244,18 +244,23 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 			b.w("(%s != 0)", s)
 			return &b
 		case exprCall:
-			v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
-			ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
-			vs := fmt.Sprintf("var %s func%s;", v, c.signature(ft, false, false, true))
-			switch {
-			case c.f != nil:
-				c.f.registerAutoVar(vs)
-			default:
-				w.w("%s", vs)
-			}
-			w.w("\n*(*%suintptr)(%s) = %s;", tag(preserve), unsafeAddr(v), s) // Free pass from .pin
+			// v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
+			// ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
+			// vs := fmt.Sprintf("var %s func%s;", v, c.signature(ft, false, false, true))
+			// switch {
+			// case c.f != nil:
+			// 	c.f.registerAutoVar(vs)
+			// default:
+			// 	w.w("%s", vs)
+			// }
+			// w.w("\n*(*%suintptr)(%s) = %s;", tag(preserve), unsafeAddr(v), s) // Free pass from .pin
+			// var b buf
+			// b.w("%s", v)
+			// return &b
+
 			var b buf
-			b.w("%s", v)
+			ft := from.(*cc.PointerType).Elem().(*cc.FunctionType)
+			b.w("(*(*func%s)(%sunsafe.%sPointer(&struct{%[3]suintptr}{%s})))", c.signature(ft, false, false, true), tag(importQualifier), tag(preserve), s)
 			return &b
 		}
 	case exprBool:
@@ -2239,14 +2244,17 @@ out:
 						p.w("%s", linkName)
 						b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n, p)))
 					case cc.Function:
-						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
-						switch {
-						case c.f == nil:
-							w.w("var %s = %s;", v, linkName)
-						default:
-							w.w("%s := %s;", v, linkName)
-						}
-						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
+						// v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
+						// switch {
+						// case c.f != nil:
+						// 	w.w("%s := %s;", v, linkName)
+						// default:
+						// 	w.w("var %s = %s;", v, linkName)
+						// }
+						// b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
+
+						// b.w("(*(*%suintptr)(%sunsafe.%[2]sPointer(&struct{f func%[3]s}{%s})))", tag(preserve), tag(importQualifier), c.signature(x.Type().(*cc.FunctionType), false, false, true), linkName)
+						b.w("%s__ccgofp(%s)", tag(preserve), linkName)
 					default:
 						b.w("%s", linkName)
 					}
@@ -2285,14 +2293,17 @@ out:
 					rt = x.Type().Pointer()
 					switch {
 					case x.Type().Kind() == cc.Function:
-						v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
-						switch {
-						case c.f == nil:
-							w.w("var %s = %s;", v, linkName)
-						default:
-							w.w("%s := %s;", v, linkName)
-						}
-						b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
+						// v := fmt.Sprintf("%sf%d", tag(ccgo), c.id())
+						// switch {
+						// case c.f != nil:
+						// 	w.w("%s := %s;", v, linkName)
+						// default:
+						// 	w.w("var %s = %s;", v, linkName)
+						// }
+						// b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
+
+						// b.w("(*(*%suintptr)(%sunsafe.%[1]sPointer(&struct{f func%[3]s}{%s})))", tag(preserve), tag(importQualifier), c.signature(x.Type().(*cc.FunctionType), false, false, true), linkName)
+						b.w("%s__ccgofp(%s)", tag(preserve), linkName)
 					default:
 						p := &buf{n: x}
 						p.w("%s", linkName)

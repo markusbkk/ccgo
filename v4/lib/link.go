@@ -49,13 +49,13 @@ const (
 )
 
 type object struct {
-	defs      map[string]gc.Node // extern: node
-	externs   nameSet
-	id        string // file name or import path
-	pkg       *gc.Package
-	pkgName   string // for kind == objectPkg
-	qualifier string
-	static    nameSet
+	defs           map[string]gc.Node // extern: node
+	externs        nameSet            // CAPI
+	id             string             // file name or import path
+	pkg            *gc.Package
+	pkgName        string // for kind == objectPkg
+	qualifier      string
+	staticInternal nameSet
 
 	kind int // {objectFile, objectPkg}
 
@@ -85,6 +85,28 @@ func (o *object) load() (file *gc.SourceFile, err error) {
 	}
 
 	return file, nil
+}
+
+func (o *object) collectExternVars(file *gc.SourceFile) (vars map[string][]*gc.VarSpec, err error) {
+	vars = map[string][]*gc.VarSpec{}
+	for _, decl := range file.TopLevelDecls {
+		switch x := decl.(type) {
+		case *gc.VarDecl:
+			for _, spec := range x.VarSpecs {
+				if len(spec.IdentifierList) != 1 {
+					return nil, errorf("collectExternVars: internal error")
+				}
+
+				nm := spec.IdentifierList[0].Ident.Src()
+				if symKind(nm) != external {
+					continue
+				}
+
+				vars[nm] = append(vars[nm], spec)
+			}
+		}
+	}
+	return vars, nil
 }
 
 // link name -> type ID
@@ -233,7 +255,9 @@ func (t *Task) getPkgSymbols(importPath, mode string) (r *object, err error) {
 	case "", "on":
 		// ok
 	default:
-		return nil, errorf("GO111MODULE=%s not supported", mode)
+		if !isTesting {
+			return nil, errorf("GO111MODULE=%s not supported", mode)
+		}
 	}
 
 	pkgs, err := packages.Load(
@@ -414,26 +438,32 @@ func (t *Task) getFileSymbols(fset *token.FileSet, fn string) (r *object, err er
 
 				r.externs.add(k)
 			case staticInternal:
-				if _, ok := r.static[k]; ok {
+				if _, ok := r.staticInternal[k]; ok {
 					return nil, errorf("invalid object file: multiple defintions of %s", k[len(si):])
 				}
 
-				r.static.add(k)
+				r.staticInternal.add(k)
 			}
 		}
 	}
 	return r, nil
 }
 
+type externVar struct {
+	rendered []byte
+	spec     *gc.VarSpec
+}
+
 type linker struct {
 	errors                errors
+	externVars            map[string]*externVar // key: linkname
 	externs               map[string]*object
 	fileLinkNames2GoNames dict
 	fileLinkNames2IDs     dict
 	forceExternalPrefix   nameSet
 	fset                  *token.FileSet
-	goTags                []string
 	goSynthDeclsProduced  nameSet
+	goTags                []string
 	imports               []*object
 	importsByPath         map[string]*object
 	libc                  *object
@@ -503,6 +533,7 @@ func newLinker(task *Task, libc *object) (*linker, error) {
 		maxUintptr = math.MaxUint32
 	}
 	return &linker{
+		externVars:     map[string]*externVar{},
 		externs:        map[string]*object{},
 		fset:           token.NewFileSet(),
 		goTags:         goTags[:],
@@ -708,15 +739,45 @@ type float128 = struct { __ccgo [2]float64 }
 			}
 		}
 
-		// statics
+		// staticInternals
 		linkNames = linkNames[:0]
-		for linkName := range object.static {
+		for linkName := range object.staticInternal {
 			linkNames = append(linkNames, linkName)
 		}
 		sort.Strings(linkNames)
 		for _, linkName := range linkNames {
 			goName := l.tld.registerName(l, linkName)
 			l.fileLinkNames2GoNames[linkName] = goName
+		}
+
+		// vars
+		vars, err := object.collectExternVars(file)
+		if err != nil {
+			return errorf("loading %s: %v", object.id, err)
+		}
+
+		for linkName, specs := range vars {
+			for _, spec := range specs {
+				switch ex := l.externVars[linkName]; {
+				case ex != nil:
+					switch {
+					case len(spec.ExprList) == 0:
+						// nop
+					case len(ex.spec.ExprList) == 0:
+						fi := l.newFnInfo(spec)
+						var b buf
+						l.print0(&b, fi, spec)
+						l.externVars[linkName] = &externVar{rendered: b.bytes(), spec: spec}
+					default:
+						return errorf("loading %s: multiple definitions of %s", object.id, l.rawName(linkName))
+					}
+				default:
+					fi := l.newFnInfo(spec)
+					var b buf
+					l.print0(&b, fi, spec)
+					l.externVars[linkName] = &externVar{rendered: b.bytes(), spec: spec}
+				}
+			}
 		}
 
 		for _, n := range file.TopLevelDecls {
@@ -739,7 +800,7 @@ type float128 = struct { __ccgo [2]float64 }
 				l.print0(&b, fi, n)
 				l.synthDecls[nm] = b.bytes()
 			case *gc.VarDecl:
-				if ln := x.VarSpecs[0].IdentifierList[0].Ident.Src(); l.meta(x, ln) {
+				if ln := x.VarSpecs[0].IdentifierList[0].Ident.Src(); l.meta(x, ln) || symKind(ln) == external {
 					break
 				}
 
@@ -863,6 +924,22 @@ func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
 }
 
 func (l *linker) epilogue() {
+	l.w(`
+
+func __ccgofp(f interface{}) uintptr {
+	type iface [2]uintptr
+	return (*iface)(unsafe.Pointer(&f))[1]
+}
+`)
+	var a []string
+	for k := range l.externVars {
+		a = append(a, k)
+	}
+	sort.Strings(a)
+	for _, k := range a {
+		l.w("\n\nvar %s", l.externVars[k].rendered)
+	}
+
 	if l.textSegment.Len() == 0 {
 		return
 	}
@@ -1071,6 +1148,7 @@ func (l *linker) print0(w writer, fi *fnInfo, n interface{}) {
 }
 
 func (l *linker) postProcess(fn string, b []byte) (r []byte, err error) {
+	return b, nil //TODO-
 	parserCfg := &gc.ParseSourceFileConfig{}
 	sf, err := gc.ParseSourceFile(parserCfg, fn, b)
 	if err != nil {
