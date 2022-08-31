@@ -34,27 +34,20 @@ var testExecKnownFails = map[string]struct{}{
 
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78574.c`:                    {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr38051.c`:                    {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr77766.c`:                    {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040704-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:  {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr38051.c`:    {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:    {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr77766.c`:    {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0010-goto1.c`:             {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0022-namespaces1.c`:       {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/goto.c`:                               {}, // BUILD FAIL
@@ -178,6 +171,323 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/ccgo/bug/union2.c`:                                                                          {}, // COMPILE FAIL
 	`assets/ccgo/bug/union3.c`:                                                                          {}, // COMPILE FAIL
 	`assets/ccgo/bug/union4.c`:                                                                          {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000105-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000211-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000224-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000326-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000405-3.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000518-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000804-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000827-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000923-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001121-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001205-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001221-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001222-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010118-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010202-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010226-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010605-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010903-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010903-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011023-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011205-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011217-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020210-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020304-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020309-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020312-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020318-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020807-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021108-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021110.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021204-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030224-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030410-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030418-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030503-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030530-3.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030716-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030902-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030903-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030910-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031011-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040101-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040310-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040317-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040317-3.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040323-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040611-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040614-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050113-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050119-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050122-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050510-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050801-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20051216-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20060217-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20070603-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20070603-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20070919-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20071107-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20071108-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080114-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080613-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20090907-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20110131-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20110902.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20121107-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20161124-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920301-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920415-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920428-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920428-4.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920501-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920501-22.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920501-7.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920502-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920624-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920808-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920826-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920831-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920928-5.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/921012-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/921203-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/930118-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/930506-2.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/931003-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/931018-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/941014-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/941014-4.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/941019-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/950610-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/950613-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/950919-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/951116-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/951128-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/980506-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/980511-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981001-2.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981001-4.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981006-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981223-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990517-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/991213-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/991213-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/asmgoto-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/bbb.c`:                                        {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-4.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-5.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-6.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/debugvlafunction-1.c`:                         {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/ex.c`:                                         {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/goto-1.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/icfmatch.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/init-3.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/labels-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/labels-2.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/labels-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/mangle-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/nested-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/nested-2.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/nested-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pass.c`:                                       {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pc44485.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr16566-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr16566-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr16566-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr17397.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr17407.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr17529.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr17906.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr17913.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr18903.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr21356.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr21728.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr21839.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr22013-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr22422.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr23237.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr25224.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr26425.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27282.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27341-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27373.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27528.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27863.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27889.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr27907.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr28489.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr29128.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr29201.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30311.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30984.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr32355.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr32571.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr32584.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr32919.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr33173.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr33382.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr33614.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr33617.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr33855.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34091.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34334.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34688.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34856.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34885.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34966.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35006.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35318.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35431.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35432.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr37056.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr37380.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr37395.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr38123.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr38360.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr38771.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr38789.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr39394.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr39845.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr39928-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40233.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40321.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40351.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40556.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr41469.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr41987.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42164.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42196-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42196-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42196-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42398.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42559.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42716.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42717.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr42956.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43066.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43164.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43191.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43367.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43661.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43679.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44038.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44043.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44119.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44197.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44687.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44707.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44937.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44941.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46107.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46547-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46637.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr47428.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr48596.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr48641.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr50009.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51354.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51495.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51694.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51767.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr52750.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53409.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53410-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53748.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-4.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-5.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-6.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54559.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54713-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54713-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54713-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr55851.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr55921.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr56405.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr56571.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58164.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58344.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr59417.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr60502.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr63282.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65241.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69740-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69999.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70061.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70190.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70199.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70240.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70263-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70355.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70633.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70916.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71328.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72749.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72802.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-1.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-2.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-3.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-4.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-5.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-6.c`:                                  {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr78439.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79089.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79413.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79621.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79780.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr80216.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81262.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81595.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82052.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82337.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82564.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82875.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr83487.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr83575.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr84111.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr84136.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr84305.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr84960.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr85704.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr85945.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86122.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86123.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87110.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87468.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87647.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr89655.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr90139.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-1.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-2.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-3.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-4.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-5.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-6.c`:                                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/sra-1.c`:                                      {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/statement-expression-1.c`:                     {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/struct-non-lval-3.c`:                          {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/uuarg.c`:                                      {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-2.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-3.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-4.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-5.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-6.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vector-align-1.c`:                             {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vla-const-1.c`:                                {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/vla-const-2.c`:                                {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/zero-strct-1.c`:                               {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/zero-strct-2.c`:                               {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/zero-strct-3.c`:                               {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/zero-strct-4.c`:                               {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/zero-strct-5.c`:                               {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000112-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000113-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000217-1.c`:                                 {}, // COMPILE FAIL
@@ -819,6 +1129,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/AbsInt/CompCert/test/c/siphash24.c`:                                              {}, // COMPILE FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/spectral.c`:                                               {}, // COMPILE FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/vmach.c`:                                                  {}, // COMPILE FAIL
+	`assets/github.com/cxgo/empty array decl.c`:                                                         {}, // COMPILE FAIL
+	`assets/github.com/cxgo/inet.c`:                                                                     {}, // COMPILE FAIL
+	`assets/github.com/cxgo/rename decl struct.c`:                                                       {}, // COMPILE FAIL
+	`assets/github.com/cxgo/struct and var.c`:                                                           {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000112-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000113-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000217-1.c`:                 {}, // COMPILE FAIL
@@ -1656,7 +1970,4 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c`:                                           {}, // COMPILE FAIL
 	`assets/tcc-0.9.27/tests/tests2/98_al_ax_extend.c`:                                                  {}, // COMPILE FAIL
 	`assets/tcc-0.9.27/tests/tests2/99_fastcall.c`:                                                      {}, // COMPILE FAIL
-	`assets\benchmarksgame-team.pages.debian.net\fasta-9.c`:                                             {}, // COMPILE FAIL
-	`assets\benchmarksgame-team.pages.debian.net\nbody-7.c`:                                             {}, // COMPILE FAIL
-	`assets\ccgo\bug\init2.c`: {}, // COMPILE FAIL
 }

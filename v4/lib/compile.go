@@ -151,8 +151,10 @@ type errHandler func(msg string, args ...interface{})
 
 type ctx struct {
 	ast                 *cc.AST
+	breakLabel          string
 	cfg                 *cc.Config
 	compoundStmtValue   string
+	continueLabel       string
 	defineTaggedStructs map[string]*cc.StructType
 	defineTaggedUnions  map[string]*cc.UnionType
 	eh                  errHandler

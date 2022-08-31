@@ -5,6 +5,7 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
+	"fmt"
 	"strings"
 
 	"modernc.org/cc/v4"
@@ -82,6 +83,16 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 
 func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool, value string) {
 	defer func() { c.compoundStmtValue = value }()
+
+	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
+		if fnBlock {
+			c.err(errorf("%v: internal error", n.Position()))
+			return
+		}
+
+		c.err(errorf("%v: TODO %v", n.Position(), fnBlock))
+		return
+	}
 
 	switch {
 	case fnBlock:
@@ -191,6 +202,19 @@ func (c *ctx) blockItem(w writer, n *cc.BlockItem) {
 }
 
 func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
+	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
+		c.selectionStatementFlat(w, n)
+		return
+	}
+
+	switch n.Statement.Case {
+	case cc.StatementCompound:
+		if _, ok := c.f.flatScopes[n.Statement.CompoundStatement.LexicalScope()]; ok {
+			c.selectionStatementFlat(w, n)
+			return
+		}
+	}
+
 	switch n.Case {
 	case cc.SelectionStatementIf: // "if" '(' ExpressionList ')' Statement
 		w.w("if %s", c.expr(w, n.ExpressionList, nil, exprBool))
@@ -207,6 +231,36 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.switchExpr = cc.IntegerPromotion(n.ExpressionList.Type())
 		w.w("switch %s", c.expr(w, n.ExpressionList, c.switchExpr, exprDefault))
 		c.statement(w, n.Statement)
+	default:
+		c.err(errorf("internal error %T %v", n, n.Case))
+	}
+}
+
+func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
+	switch n.Case {
+	case cc.SelectionStatementIf: // "if" '(' ExpressionList ')' Statement
+		//	if !expr goto a
+		//	stmt
+		// a:
+		a := c.label()
+		w.w("if !(%s) goto %s;", c.expr(w, n.ExpressionList, nil, exprBool), a)
+		c.unbracedStatement(w, n.Statement)
+		w.w("%s:", a)
+	case cc.SelectionStatementIfElse: // "if" '(' ExpressionList ')' Statement "else" Statement
+		//	if !expr goto a
+		//	stmt
+		//	goto b
+		// a:	stmt2
+		// b:
+		a := c.label()
+		b := c.label()
+		w.w("if !(%s) goto %s;", c.expr(w, n.ExpressionList, nil, exprBool), a)
+		c.unbracedStatement(w, n.Statement)
+		w.w("goto %s; %s:", b, a)
+		c.unbracedStatement(w, n.Statement2)
+		w.w("%s:", b)
+	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
+		c.err(errorf("TODO %v", n.Case))
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -235,6 +289,19 @@ func (c *ctx) unbracedStatement(w writer, n *cc.Statement) {
 }
 
 func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
+	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
+		c.iterationStatementFlat(w, n)
+		return
+	}
+
+	switch n.Statement.Case {
+	case cc.StatementCompound:
+		if _, ok := c.f.flatScopes[n.Statement.CompoundStatement.LexicalScope()]; ok {
+			c.iterationStatementFlat(w, n)
+			return
+		}
+	}
+
 	switch n.Case {
 	case cc.IterationStatementWhile: // "while" '(' ExpressionList ')' Statement
 		var a buf
@@ -355,15 +422,98 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 	}
 }
 
+func (c *ctx) iterationStatementFlat(w writer, n *cc.IterationStatement) {
+	bl, cl := c.breakLabel, c.continueLabel
+
+	defer func() {
+		c.breakLabel = bl
+		c.continueLabel = cl
+	}()
+
+	switch n.Case {
+	case cc.IterationStatementWhile: // "while" '(' ExpressionList ')' Statement
+		// a:	if !expr goto b
+		//	stmt
+		//	goto a
+		// b:
+		a := c.label()
+		b := c.label()
+		c.continueLabel = a
+		c.breakLabel = b
+		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList, nil, exprBool), b)
+		c.unbracedStatement(w, n.Statement)
+		w.w("goto %s; %s:", a, b)
+	case cc.IterationStatementDo: // "do" Statement "while" '(' ExpressionList ')' ';'
+		// a:	stmt
+		//	if expr goto a
+		// b:
+		a := c.label()
+		b := c.label()
+		c.continueLabel = a
+		c.breakLabel = b
+		w.w("%s:", a)
+		c.unbracedStatement(w, n.Statement)
+		w.w("if (%s) { goto %s }; goto %s; %[3]s:", c.expr(w, n.ExpressionList, nil, exprBool), a, b)
+	case cc.IterationStatementFor: // "for" '(' ExpressionList ';' ExpressionList ';' ExpressionList ')' Statement
+		//	expr1
+		// a:	if !expr2 goto z
+		//	stmt
+		// b:
+		//	expr3
+		//	goto a
+		// z:
+		a := c.label()
+		b := c.label()
+		z := c.label()
+		c.continueLabel = b
+		c.breakLabel = z
+		c.expr(w, n.ExpressionList, nil, exprVoid)
+		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList2, nil, exprBool), z)
+		c.unbracedStatement(w, n.Statement)
+		w.w("goto %s; %[1]s: %s; goto %s; %s:", b, c.expr(w, n.ExpressionList3, nil, exprVoid), a, z)
+	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
+		//	decl
+		// a:	if !expr goto z
+		//	stmt
+		// b:
+		//	expr2
+		//	goto a
+		// z:
+		a := c.label()
+		b := c.label()
+		z := c.label()
+		c.continueLabel = b
+		c.breakLabel = z
+		c.declaration(w, n.Declaration, false)
+		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList, nil, exprBool), z)
+		c.unbracedStatement(w, n.Statement)
+		w.w("goto %s; %[1]s: %s; goto %s; %s:", b, c.expr(w, n.ExpressionList2, nil, exprVoid), a, z)
+	default:
+		c.err(errorf("internal error %T %v", n, n.Case))
+	}
+}
+
+func (c *ctx) label() string { return fmt.Sprintf("%s_%d", tag(ccgo), c.id()) }
+
 func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	switch n.Case {
 	case cc.JumpStatementGoto: // "goto" IDENTIFIER ';'
-		w.w("goto %s%s;", tag(preserve), n.Token2.Src()) //TODO use nameSpace
+		w.w("goto %s%s;", tag(preserve), n.Token2.Src())
 	case cc.JumpStatementGotoExpr: // "goto" '*' ExpressionList ';'
 		c.err(errorf("TODO %v", n.Case))
 	case cc.JumpStatementContinue: // "continue" ';'
+		if c.continueLabel != "" {
+			w.w("goto %s;", c.continueLabel)
+			break
+		}
+
 		w.w("continue;")
 	case cc.JumpStatementBreak: // "break" ';'
+		if c.breakLabel != "" {
+			w.w("goto %s;", c.breakLabel)
+			break
+		}
+
 		w.w("break;")
 	case cc.JumpStatementReturn: // "return" ExpressionList ';'
 		switch {

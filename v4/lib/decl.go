@@ -44,19 +44,61 @@ func (n *declInfos) info(d *cc.Declarator) (r *declInfo) {
 func (n *declInfos) takeAddress(d *cc.Declarator) { n.info(d).addressTaken = true }
 
 type fnCtx struct {
-	autovars  []string
-	c         *ctx
-	declInfos declInfos
-	locals    map[*cc.Declarator]string // storage: static or automatic, linkage: none -> C renamed
-	t         *cc.FunctionType
-	tlsAllocs int64
+	autovars   []string
+	c          *ctx
+	declInfos  declInfos
+	flatScopes map[*cc.Scope]struct{}
+	locals     map[*cc.Declarator]string // storage: static or automatic, linkage: none -> C renamed
+	t          *cc.FunctionType
+	tlsAllocs  int64
 
 	maxValist int
 	nextID    int
 }
 
-func (c *ctx) newFnCtx(t *cc.FunctionType) (r *fnCtx) {
-	return &fnCtx{c: c, t: t}
+func (c *ctx) newFnCtx(t *cc.FunctionType, n *cc.CompoundStatement) (r *fnCtx) {
+	fnScope := n.LexicalScope()
+	// trc("%v: fnScope %p, parent %p\n%s", n.Position(), fnScope, fnScope.Parent, dumpScope(fnScope))
+	var flatScopes map[*cc.Scope]struct{}
+next:
+	for _, gotoStmt := range n.Gotos() {
+		gotoScope := gotoStmt.LexicalScope()
+		// trc("%v: '%s', gotoScope %p, parent %p\n%s", gotoStmt.Position(), cc.NodeSource(gotoStmt), gotoScope, gotoScope.Parent, dumpScope(gotoScope))
+		var targetScope *cc.Scope
+		switch x := gotoStmt.Label().(type) {
+		case *cc.LabeledStatement:
+			targetScope = x.LexicalScope()
+			// trc("%v: '%s', targetScope %p, parent %p\n%s", x.Position(), cc.NodeSource(x), targetScope, targetScope.Parent, dumpScope(targetScope))
+		default:
+			c.err(errorf("TODO %T", x))
+			continue next
+		}
+
+		m := map[*cc.Scope]struct{}{gotoScope: {}}
+		// targetScope must be the same as gotoScope or any of its parent scopes.
+		for sc := gotoScope; sc != nil && sc.Parent != nil; sc = sc.Parent {
+			m[sc] = struct{}{}
+			// trc("searching scope %p, parent %p\n%s", sc, sc.Parent, dumpScope(sc))
+			if sc == targetScope {
+				// trc("FOUND targetScope")
+				continue next
+			}
+		}
+
+		// Jumping into a block.
+		if flatScopes == nil {
+			flatScopes = map[*cc.Scope]struct{}{}
+		}
+		for sc := targetScope; sc != nil && sc != fnScope; sc = sc.Parent {
+			// trc("FLAT[%p]", sc)
+			flatScopes[sc] = struct{}{}
+			if _, ok := m[sc]; ok {
+				// trc("FOUND common scope")
+				break
+			}
+		}
+	}
+	return &fnCtx{c: c, t: t, flatScopes: flatScopes}
 }
 
 func (f *fnCtx) newAutovarName() (nm string) {
@@ -159,7 +201,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 
 	c.checkValidType(d, ft)
 	f0, pass := c.f, c.pass
-	c.f = c.newFnCtx(ft)
+	c.f = c.newFnCtx(ft, cs)
 	defer func() { c.f = f0; c.pass = pass }()
 	c.pass = 1
 	c.compoundStatement(discard{}, cs, true, "")

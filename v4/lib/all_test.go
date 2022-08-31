@@ -365,13 +365,15 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	var cCompilerFailed, cExecFailed bool
 	ofn := fmt.Sprint(id)
 	bin := "cbin_" + enforceBinaryExt(ofn)
-	flag := "-o"
-	if !execute {
-		flag = "-c"
-	}
-	if _, err = shell(false, hostCC, flag, bin, "-w", path, "-lm"); err != nil {
-		// trc("cc %v %v", path, err)
-		cCompilerFailed = true
+	switch {
+	case !execute:
+		if _, err = shell(false, hostCC, "-c", "-w", path, "-lm"); err != nil {
+			cCompilerFailed = true
+		}
+	default:
+		if _, err = shell(false, hostCC, "-o", bin, "-w", path, "-lm"); err != nil {
+			cCompilerFailed = true
+		}
 	}
 
 	defer os.Remove(ofn)
@@ -380,7 +382,6 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	var cOut []byte
 	if execute && !cCompilerFailed {
 		if cOut, err = shell(false, "./"+bin, args...); err != nil {
-			// trc("cbin %v %v", path, err)
 			cbinRC = exitCode(err)
 			cExecFailed = true
 		}
@@ -391,7 +392,13 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	defer os.Remove(ofn)
 
 	var out bytes.Buffer
-	if err := NewTask(goos, goarch, []string{"ccgo", flag, ofn, "--prefix-field=F", path}, &out, &out, nil).Main(); err != nil {
+	switch {
+	case !execute:
+		err = NewTask(goos, goarch, []string{"ccgo", "-c", "--prefix-field=F", path}, &out, &out, nil).Main()
+	default:
+		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "--prefix-field=F", path}, &out, &out, nil).Main()
+	}
+	if err != nil {
 		if *oTraceC {
 			trc("ccgo %v %v", fullPath, err)
 		}

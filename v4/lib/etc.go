@@ -1005,10 +1005,18 @@ func isZero(v cc.Value) bool {
 	}
 }
 
-type scope struct {
-	cScope      *cc.Scope
-	declarators map[*cc.Declarator]struct{}
-	ns          nameSpace
+func dumpScope(s *cc.Scope) string {
+	var a []string
+	for k := range s.Nodes {
+		a = append(a, k)
+	}
+	sort.Strings(a)
+	for i, k := range a {
+		var b []string
+		for _, v := range s.Nodes[k] {
+			b = append(b, fmt.Sprintf("%v:", v.Position()))
+		}
+		a[i] = fmt.Sprintf("%q: %v", k, b)
+	}
+	return strings.Join(a, "\n")
 }
-
-func newScope() *scope { return &scope{} }
