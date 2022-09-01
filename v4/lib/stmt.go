@@ -86,10 +86,12 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 
 	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
 		if fnBlock {
+			trc("TODO")
 			c.err(errorf("%v: internal error", n.Position()))
 			return
 		}
 
+		trc("TODO")
 		c.err(errorf("%v: TODO %v", n.Position(), fnBlock))
 		return
 	}
@@ -243,7 +245,7 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		//	stmt
 		// a:
 		a := c.label()
-		w.w("if !(%s) goto %s;", c.expr(w, n.ExpressionList, nil, exprBool), a)
+		w.w("if !(%s) { goto %s };", c.expr(w, n.ExpressionList, nil, exprBool), a)
 		c.unbracedStatement(w, n.Statement)
 		w.w("%s:", a)
 	case cc.SelectionStatementIfElse: // "if" '(' ExpressionList ')' Statement "else" Statement
@@ -254,12 +256,13 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		// b:
 		a := c.label()
 		b := c.label()
-		w.w("if !(%s) goto %s;", c.expr(w, n.ExpressionList, nil, exprBool), a)
+		w.w("if !(%s) { goto %s };", c.expr(w, n.ExpressionList, nil, exprBool), a)
 		c.unbracedStatement(w, n.Statement)
 		w.w("goto %s; %s:", b, a)
 		c.unbracedStatement(w, n.Statement2)
 		w.w("%s:", b)
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
+		trc("TODO")
 		c.err(errorf("TODO %v", n.Case))
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))

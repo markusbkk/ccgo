@@ -58,7 +58,7 @@ type fnCtx struct {
 
 func (c *ctx) newFnCtx(t *cc.FunctionType, n *cc.CompoundStatement) (r *fnCtx) {
 	fnScope := n.LexicalScope()
-	// trc("%v: fnScope %p, parent %p\n%s", n.Position(), fnScope, fnScope.Parent, dumpScope(fnScope))
+	// trc("%v: ==== fnScope %p, parent %p\n%s", n.Position(), fnScope, fnScope.Parent, dumpScope(fnScope))
 	var flatScopes map[*cc.Scope]struct{}
 next:
 	for _, gotoStmt := range n.Gotos() {

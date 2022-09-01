@@ -29,20 +29,14 @@ var testExecKnownFails = map[string]struct{}{
 	// --------------------------------------------------------------------
 
 	// goto/label
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:                    {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:   {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:  {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:    {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0010-goto1.c`:             {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/goto.c`:                               {}, // BUILD FAIL
 	`assets/tcc-0.9.27/tests/tests2/54_goto.c`:                                          {}, // BUILD FAIL
@@ -351,7 +345,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011205-1.c`:                                 {}, // COMPILE FAIL: 20011205-1.c:8:3: assembler statements not supported (stmt.go:156:compoundStatement: stmt.go:187:blockItem: stmt.go:55:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011217-2.c`:                                 {}, // COMPILE FAIL: TODO (expr.go:1454:postfixExpression: init.go:72:initializer: init.go:242:initializerUnion)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020210-1.c`:                                 {}, // COMPILE FAIL: 20020210-1.c:2:34: invalid type size: 0 (decl.go:245:signature: type.go:294:checkValidParamType: type.go:323:checkValidType)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020304-1.c`:                                 {}, // COMPILE FAIL: 20020304-1.c:37:1: TODO true (decl.go:182:functionDefinition: decl.go:197:functionDefinition0: stmt.go:88:compoundStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020309-1.c`:                                 {}, // COMPILE FAIL: 20020309-1.c:8:5: nested functions not supported (stmt.go:28:statement: stmt.go:156:compoundStatement: stmt.go:190:blockItem)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020312-1.c`:                                 {}, // COMPILE FAIL: 20020312-1.c:12:3: assembler statements not supported (stmt.go:156:compoundStatement: stmt.go:187:blockItem: stmt.go:55:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020318-1.c`:                                 {}, // COMPILE FAIL: TODO "ppuintptr(iqunsafe.ppPointer(&(anc)))" pointer to char pointer, exprUintptr -> void void, exprDefault (expr.go:75:expr: expr.go:133:convert: expr.go:364:convertFromPointer)
@@ -441,7 +434,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-6.c`:                                  {}, // COMPILE FAIL: TODO *cc.PredefinedType _Complex int _Complex int (expr.go:2595:primaryExpressionIntConst: type.go:29:helper: type.go:128:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/debugvlafunction-1.c`:                         {}, // COMPILE FAIL: debugvlafunction-1.c:6:17: variable length arrays are not supported (type.go:35:typ: type.go:46:typ0: type.go:312:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/ex.c`:                                         {}, // COMPILE FAIL: ex.c:12:19: too few arguments to function 'foo', type 'function(int, int) returning int' in 'foo ()' (expr.go:459:expr0: expr.go:1336:postfixExpression: expr.go:1899:postfixExpressionCall)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/goto-1.c`:                                     {}, // COMPILE FAIL: TODO FLAT *cc.SelectionStatement (stmt.go:187:blockItem: stmt.go:43:statement: stmt.go:200:selectionStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/icfmatch.c`:                                   {}, // COMPILE FAIL: TODO vector (decl.go:389:initDeclarator: type.go:17:typedef: type.go:63:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/init-3.c`:                                     {}, // COMPILE FAIL: init-3.c:1:1: invalid type size: -1 (type.go:338:structLiteral: type.go:46:typ0: type.go:323:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/labels-1.c`:                                   {}, // COMPILE FAIL: TODO UnaryExpressionLabelAddr (expr.go:67:expr: expr.go:467:expr0: expr.go:1103:unaryExpression)
@@ -529,16 +521,13 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43066.c`:                                    {}, // COMPILE FAIL: pr43066.c:1:1: invalid type size: -1 (type.go:190:typ0: type.go:46:typ0: type.go:323:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43164.c`:                                    {}, // COMPILE FAIL: TODO bitfield (init.go:211:initializerStruct: init.go:66:initializer: init.go:151:initializerStruct)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43191.c`:                                    {}, // COMPILE FAIL: pr43191.c:3:1: invalid type size: -1 (type.go:338:structLiteral: type.go:46:typ0: type.go:323:checkValidType)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43367.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:187:blockItem: stmt.go:46:statement: stmt.go:249:iterationStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43661.c`:                                    {}, // COMPILE FAIL: TODO (expr.go:443:expr0: expr.go:658:conditionalExpression: expr.go:51:expr)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43679.c`:                                    {}, // COMPILE FAIL: TODO "pp_ = ((*(*ppint32)(iqunsafe.ppPointer(Xg_29))) != (*(*ppint32)(iqunsafe.ppPointer(anl_39))))" int exprBool -> int exprVoid (expr.go:75:expr: expr.go:125:convert: expr.go:282:convertMode)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44038.c`:                                    {}, // COMPILE FAIL: TODO (expr.go:461:expr0: expr.go:2346:primaryExpression: expr.go:2463:primaryExpressionStringConst)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44043.c`:                                    {}, // COMPILE FAIL: pr44043.c:14:1: invalid type size: -1 (type.go:338:structLiteral: type.go:46:typ0: type.go:323:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44119.c`:                                    {}, // COMPILE FAIL: TODO (expr.go:443:expr0: expr.go:658:conditionalExpression: expr.go:51:expr)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44197.c`:                                    {}, // COMPILE FAIL: pr44197.c:27:55: incomplete type: array of __ctype_mask_t (type.go:35:typ: type.go:46:typ0: type.go:318:checkValidType)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44687.c`:                                    {}, // COMPILE FAIL: pr44687.c:26:1: TODO true (decl.go:182:functionDefinition: decl.go:197:functionDefinition0: stmt.go:88:compoundStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44707.c`:                                    {}, // COMPILE FAIL: pr44707.c:14:3: assembler statements not supported (stmt.go:156:compoundStatement: stmt.go:187:blockItem: stmt.go:55:statement)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44937.c`:                                    {}, // COMPILE FAIL: pr44937.c:9:1: TODO true (decl.go:182:functionDefinition: decl.go:197:functionDefinition0: stmt.go:88:compoundStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44941.c`:                                    {}, // COMPILE FAIL: pr44941.c:1:1: invalid type size: -1 (type.go:338:structLiteral: type.go:46:typ0: type.go:323:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46107.c`:                                    {}, // COMPILE FAIL: TODO <nil> (decl.go:179:functionDefinition: decl.go:191:functionDefinition0: decl.go:69:newFnCtx)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46547-1.c`:                                  {}, // COMPILE FAIL: pr46547-1.c:5:7: unsupported alignment 16 of _Complex long double (type.go:35:typ: type.go:46:typ0: type.go:302:checkValidType)
@@ -571,13 +560,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr56571.c`:                                    {}, // COMPILE FAIL: TODO "pp_ = ((((Xa % Xb) != 0)) && ((Xf(aatls) != 0)))" int exprBool -> int exprVoid (expr.go:75:expr: expr.go:125:convert: expr.go:282:convertMode)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58164.c`:                                    {}, // COMPILE FAIL: TODO <nil> (decl.go:179:functionDefinition: decl.go:191:functionDefinition0: decl.go:69:newFnCtx)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58344.c`:                                    {}, // COMPILE FAIL: pr58344.c:4:1: invalid type size: -1 (type.go:338:structLiteral: type.go:46:typ0: type.go:323:checkValidType)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr59417.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:187:blockItem: stmt.go:46:statement: stmt.go:249:iterationStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr60502.c`:                                    {}, // COMPILE FAIL: TODO vector (decl.go:389:initDeclarator: type.go:17:typedef: type.go:63:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr63282.c`:                                    {}, // COMPILE FAIL: pr63282.c:8:3: assembler statements not supported (stmt.go:156:compoundStatement: stmt.go:187:blockItem: stmt.go:55:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65241.c`:                                    {}, // COMPILE FAIL: pr65241.c: gofmt: exit status 2 (asm_amd64.s:1594:goexit: compile.go:331:compile: compile.go:331:compile)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69740-1.c`:                                  {}, // COMPILE FAIL: pr69740-1.c:3:12: TODO true (decl.go:182:functionDefinition: decl.go:197:functionDefinition0: stmt.go:88:compoundStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:                                  {}, // COMPILE FAIL: pr69989-2.c:4:12: TODO true (decl.go:182:functionDefinition: decl.go:197:functionDefinition0: stmt.go:88:compoundStatement)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69999.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:187:blockItem: stmt.go:46:statement: stmt.go:249:iterationStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70061.c`:                                    {}, // COMPILE FAIL: TODO vector (decl.go:389:initDeclarator: type.go:17:typedef: type.go:63:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70190.c`:                                    {}, // COMPILE FAIL: TODO <nil> (decl.go:179:functionDefinition: decl.go:191:functionDefinition0: decl.go:69:newFnCtx)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70199.c`:                                    {}, // COMPILE FAIL: TODO <nil> (decl.go:179:functionDefinition: decl.go:191:functionDefinition0: decl.go:69:newFnCtx)
@@ -586,8 +572,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70355.c`:                                    {}, // COMPILE FAIL: pr70355.c:4:27: unsupported alignment 16 of v2ti (type.go:17:typedef: type.go:46:typ0: type.go:302:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70633.c`:                                    {}, // COMPILE FAIL: TODO vector (decl.go:389:initDeclarator: type.go:17:typedef: type.go:63:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70916.c`:                                    {}, // COMPILE FAIL: TODO (expr.go:443:expr0: expr.go:658:conditionalExpression: expr.go:51:expr)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71328.c`:                                    {}, // COMPILE FAIL: TODO SelectionStatementIf (stmt.go:193:blockItem: stmt.go:39:statement: stmt.go:206:selectionStatement)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72749.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:187:blockItem: stmt.go:46:statement: stmt.go:249:iterationStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72802.c`:                                    {}, // COMPILE FAIL: pr72802.c:1:8: incomplete type: array of int (type.go:35:typ: type.go:46:typ0: type.go:318:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-1.c`:                                  {}, // COMPILE FAIL: pr77754-1.c:9:7: variable length arrays are not supported (type.go:35:typ: type.go:46:typ0: type.go:312:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-2.c`:                                  {}, // COMPILE FAIL: pr77754-2.c:5:18: variable length arrays are not supported (decl.go:245:signature: type.go:294:checkValidParamType: type.go:312:checkValidType)
@@ -599,10 +583,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79089.c`:                                    {}, // COMPILE FAIL: pr79089.c: gofmt: exit status 2 (asm_amd64.s:1594:goexit: compile.go:331:compile: compile.go:331:compile)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79413.c`:                                    {}, // COMPILE FAIL: pr79413.c:7:7: variable length arrays are not supported (type.go:35:typ: type.go:46:typ0: type.go:312:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79621.c`:                                    {}, // COMPILE FAIL: TODO "pp_ = ((ccv2) && ((Xb5 != 0)))" int exprBool -> int exprVoid (expr.go:75:expr: expr.go:125:convert: expr.go:282:convertMode)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79780.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:187:blockItem: stmt.go:46:statement: stmt.go:249:iterationStatement)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr80216.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.IterationStatement (stmt.go:65:labeledStatement: stmt.go:46:statement: stmt.go:249:iterationStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81262.c`:                                    {}, // COMPILE FAIL: pr81262.c:8:3: assembler statements not supported (stmt.go:156:compoundStatement: stmt.go:187:blockItem: stmt.go:55:statement)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81595.c`:                                    {}, // COMPILE FAIL: TODO FLAT *cc.SelectionStatement (stmt.go:187:blockItem: stmt.go:43:statement: stmt.go:200:selectionStatement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82052.c`:                                    {}, // COMPILE FAIL: pr82052.c:19:10: incomplete type: array of array of 7 array of 2 uint16_t (type.go:35:typ: type.go:46:typ0: type.go:318:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82337.c`:                                    {}, // COMPILE FAIL: pr82337.c:7:1: incomplete type: array of char (type.go:190:typ0: type.go:46:typ0: type.go:318:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82564.c`:                                    {}, // COMPILE FAIL: pr82564.c:9:5: invalid type size: 0 (type.go:35:typ: type.go:46:typ0: type.go:323:checkValidType)

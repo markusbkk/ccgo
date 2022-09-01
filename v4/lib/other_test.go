@@ -34,20 +34,14 @@ var testExecKnownFails = map[string]struct{}{
 
 	// goto/label
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69989-2.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:                   {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:                   {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:                  {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:                    {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20030909-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20111208-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920501-6.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920728-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/950221-1.c`:   {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr17078-1.c`:  {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr43269.c`:    {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0010-goto1.c`:             {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0022-namespaces1.c`:       {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/goto.c`:                               {}, // BUILD FAIL
@@ -178,16 +172,21 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000405-3.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000518-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000804-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000818-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000827-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000923-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001121-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001205-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001212-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001221-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20001222-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010112-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010118-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010202-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010226-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010404-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010421-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010518-2.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010605-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010903-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20010903-2.c`:                                 {}, // COMPILE FAIL
@@ -195,11 +194,12 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011205-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20011217-2.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020210-1.c`:                                 {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020304-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020309-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020312-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020318-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020409-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20020807-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021008-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021108-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021110.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20021204-1.c`:                                 {}, // COMPILE FAIL
@@ -213,6 +213,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030903-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20030910-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031011-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-2.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-3.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031208-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040101-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040310-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040317-1.c`:                                 {}, // COMPILE FAIL
@@ -220,6 +224,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040323-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040611-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040614-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040709-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050113-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050119-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20050122-2.c`:                                 {}, // COMPILE FAIL
@@ -287,7 +292,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/complex-6.c`:                                  {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/debugvlafunction-1.c`:                         {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/ex.c`:                                         {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/goto-1.c`:                                     {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/icfmatch.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/init-3.c`:                                     {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/labels-1.c`:                                   {}, // COMPILE FAIL
@@ -375,16 +379,13 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43066.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43164.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43191.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43367.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43661.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr43679.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44038.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44043.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44119.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44197.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44687.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44707.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44937.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr44941.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46107.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr46547-1.c`:                                  {}, // COMPILE FAIL
@@ -417,12 +418,9 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr56571.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58164.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr58344.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr59417.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr60502.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr63282.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65241.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69740-1.c`:                                  {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr69999.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70061.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70190.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70199.c`:                                    {}, // COMPILE FAIL
@@ -431,8 +429,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70355.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70633.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70916.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71328.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72749.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr72802.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-1.c`:                                  {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-2.c`:                                  {}, // COMPILE FAIL
@@ -444,10 +440,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79089.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79413.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79621.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr79780.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr80216.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81262.c`:                                    {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr81595.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82052.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82337.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82564.c`:                                    {}, // COMPILE FAIL
@@ -462,6 +455,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr85945.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86122.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86123.c`:                                    {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86637-2.c`:                                  {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87110.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87468.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87647.c`:                                    {}, // COMPILE FAIL
@@ -1132,10 +1126,14 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/AbsInt/CompCert/test/c/siphash24.c`:                                              {}, // COMPILE FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/spectral.c`:                                               {}, // COMPILE FAIL
 	`assets/github.com/AbsInt/CompCert/test/c/vmach.c`:                                                  {}, // COMPILE FAIL
+	`assets/github.com/cxgo/abs.c`:                                                                      {}, // COMPILE FAIL
 	`assets/github.com/cxgo/empty array decl.c`:                                                         {}, // COMPILE FAIL
 	`assets/github.com/cxgo/inet.c`:                                                                     {}, // COMPILE FAIL
+	`assets/github.com/cxgo/main no args.c`:                                                             {}, // COMPILE FAIL
+	`assets/github.com/cxgo/panic.c`:                                                                    {}, // COMPILE FAIL
 	`assets/github.com/cxgo/rename decl struct.c`:                                                       {}, // COMPILE FAIL
 	`assets/github.com/cxgo/struct and var.c`:                                                           {}, // COMPILE FAIL
+	`assets/github.com/cxgo/undef malloc.c`:                                                             {}, // COMPILE FAIL
 	`assets/github.com/cxgo/wstring to wchar ptr.c`:                                                     {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000112-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000113-1.c`:                 {}, // COMPILE FAIL

@@ -926,11 +926,11 @@ func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
 func (l *linker) epilogue() {
 	l.w(`
 
-func __ccgofp(f interface{}) uintptr {
+func %s(f interface{}) uintptr {
 	type iface [2]uintptr
 	return (*iface)(unsafe.Pointer(&f))[1]
 }
-`)
+`, ccgoFP)
 	var a []string
 	for k := range l.externVars {
 		a = append(a, k)

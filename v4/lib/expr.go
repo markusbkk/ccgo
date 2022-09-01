@@ -40,6 +40,10 @@ const (
 	exprVoid         // C void, no Go equivalent
 )
 
+const (
+	ccgoFP = "__ccgo_fp"
+)
+
 func (c *ctx) expr(w writer, n cc.ExpressionNode, to cc.Type, toMode mode) *buf {
 	if toMode == 0 {
 		c.err(errorf("internal error"))
@@ -2254,7 +2258,7 @@ out:
 						// b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v))
 
 						// b.w("(*(*%suintptr)(%sunsafe.%[2]sPointer(&struct{f func%[3]s}{%s})))", tag(preserve), tag(importQualifier), c.signature(x.Type().(*cc.FunctionType), false, false, true), linkName)
-						b.w("%s__ccgofp(%s)", tag(preserve), linkName)
+						b.w("%s%s(%s)", tag(preserve), ccgoFP, linkName)
 					default:
 						b.w("%s", linkName)
 					}
@@ -2303,7 +2307,7 @@ out:
 						// b.w("(*(*%suintptr)(%s))", tag(preserve), unsafeAddr(v)) // Free pass from .pin
 
 						// b.w("(*(*%suintptr)(%sunsafe.%[1]sPointer(&struct{f func%[3]s}{%s})))", tag(preserve), tag(importQualifier), c.signature(x.Type().(*cc.FunctionType), false, false, true), linkName)
-						b.w("%s__ccgofp(%s)", tag(preserve), linkName)
+						b.w("%s%s(%s)", tag(preserve), ccgoFP, linkName)
 					default:
 						p := &buf{n: x}
 						p.w("%s", linkName)
