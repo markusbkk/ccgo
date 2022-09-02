@@ -28,6 +28,11 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign1.c`: {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
+	//
+	// windows/amd64
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr36339.c`:                 {}, // EXEC FAIL: assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr36339.c: unexpected fault address 0x62500060
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr36339.c`: {}, // EXEC FAIL: assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr36339.c: unexpected fault address 0x50e70060
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c`:               {}, // EXEC FAIL: assets/github.com/vnmakarov/mir/c-tests/lacc/immediate-pointer.c: 0x601044, 16
 
 	// ====================================================================
 	// Compiles but does not build.
@@ -216,6 +221,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-2.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-3.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031023-4.c`:                                 {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20031208-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040101-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20040310-1.c`:                                 {}, // COMPILE FAIL
@@ -239,10 +245,11 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20071107-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20071108-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080114-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080124-1.c`:                                 {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080613-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20080628-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20090907-1.c`:                                 {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20101217-1.c`:                                 {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20101217-1.c`:                                 {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20110131-1.c`:                                 {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20110902.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20121107-1.c`:                                 {}, // COMPILE FAIL
@@ -284,6 +291,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981006-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981223-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990517-1.c`:                                   {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990625-1.c`:                                   {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/991213-1.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/991213-3.c`:                                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/asmgoto-1.c`:                                  {}, // COMPILE FAIL
@@ -477,6 +485,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-5.c`:                                     {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/simd-6.c`:                                     {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/sra-1.c`:                                      {}, // COMPILE FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/stack-check-1.c`:                              {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/statement-expression-1.c`:                     {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/struct-non-lval-3.c`:                          {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/trunctfdf.c`:                                  {}, // COMPILE FAIL
@@ -1140,10 +1149,13 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/cxgo/empty array decl.c`:                                                         {}, // COMPILE FAIL
 	`assets/github.com/cxgo/inet.c`:                                                                     {}, // COMPILE FAIL
 	`assets/github.com/cxgo/main no args.c`:                                                             {}, // COMPILE FAIL
+	`assets/github.com/cxgo/math.c`:                                                                     {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/github.com/cxgo/panic.c`:                                                                    {}, // COMPILE FAIL
 	`assets/github.com/cxgo/rename decl struct.c`:                                                       {}, // COMPILE FAIL
+	`assets/github.com/cxgo/stdint const override.c`:                                                    {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/github.com/cxgo/struct and var.c`:                                                           {}, // COMPILE FAIL
 	`assets/github.com/cxgo/undef malloc.c`:                                                             {}, // COMPILE FAIL
+	`assets/github.com/cxgo/varargs.c`:                                                                  {}, // COMPILE FAIL: _mingw.h:583:3: assembler statements not supported (stmt.go:164:compoundStatement: stmt.go:195:blockItem: stmt.go:51:statement)
 	`assets/github.com/cxgo/wstring to wchar ptr.c`:                                                     {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000112-1.c`:                 {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000113-1.c`:                 {}, // COMPILE FAIL
