@@ -168,7 +168,8 @@ type ctx struct {
 	imports             map[string]string // import path: qualifier
 	out                 io.Writer
 	pvoid               cc.Type
-	switchExpr          cc.Type
+	switchExprType      cc.Type
+	switchLabels        []string
 	taggedEnums         nameSet
 	taggedStructs       nameSet
 	taggedUnions        nameSet

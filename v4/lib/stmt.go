@@ -60,10 +60,16 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		w.w("%s%s:", tag(preserve), n.Token.Src()) //TODO use nameSpace
 		c.statement(w, n.Statement)
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
-		if n.CaseOrdinal() != 0 {
-			w.w("fallthrough;")
+		switch {
+		case len(c.switchLabels) != 0:
+			w.w("%s:", c.switchLabels[0])
+			c.switchLabels = c.switchLabels[1:]
+		default:
+			if n.CaseOrdinal() != 0 {
+				w.w("fallthrough;")
+			}
+			w.w("case %s:", c.expr(nil, n.ConstantExpression, c.switchExprType, exprDefault))
 		}
-		w.w("case %s:", c.expr(nil, n.ConstantExpression, c.switchExpr, exprDefault))
 		c.unbracedStatement(w, n.Statement)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 		if n.CaseOrdinal() != 0 {
@@ -71,10 +77,16 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		}
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LabeledStatementDefault: // "default" ':' Statement
-		if n.CaseOrdinal() != 0 {
-			w.w("fallthrough;")
+		switch {
+		case len(c.switchLabels) != 0:
+			w.w("%s:", c.switchLabels[0])
+			c.switchLabels = c.switchLabels[1:]
+		default:
+			if n.CaseOrdinal() != 0 {
+				w.w("fallthrough;")
+			}
+			w.w("default:")
 		}
-		w.w("default:")
 		c.unbracedStatement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -228,10 +240,24 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.unbracedStatement(w, n.Statement2)
 		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		se := c.switchExpr
-		defer func() { c.switchExpr = se }()
-		c.switchExpr = cc.IntegerPromotion(n.ExpressionList.Type())
-		w.w("switch %s", c.expr(w, n.ExpressionList, c.switchExpr, exprDefault))
+		bl := c.breakLabel
+
+		defer func() {
+			c.breakLabel = bl
+		}()
+
+		c.breakLabel = ""
+		for _, v := range n.LabeledStatements() {
+			if v.Case == cc.LabeledStatementLabel {
+				c.selectionStatementFlat(w, n)
+				return
+			}
+		}
+
+		t := c.switchExprType
+		defer func() { c.switchExprType = t }()
+		c.switchExprType = cc.IntegerPromotion(n.ExpressionList.Type())
+		w.w("switch %s", c.expr(w, n.ExpressionList, c.switchExprType, exprDefault))
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -262,8 +288,55 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		c.unbracedStatement(w, n.Statement2)
 		w.w("%s:", b)
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		trc("TODO")
-		c.err(errorf("TODO %v", n.Case))
+		//	switch expr {
+		//	case 1:
+		//		goto label1
+		//	case 2:
+		//		goto label2
+		//	...
+		//	default:
+		//		goto labelN
+		//	}
+		//	goto z
+		//	label1:
+		//		statements in case 1
+		//	label2:
+		//		statements in case 2
+		//	...
+		//	labelN:
+		//		statements in default
+		//	z: // <- break
+		t := cc.IntegerPromotion(n.ExpressionList.Type())
+		w.w("switch %s {", c.expr(w, n.ExpressionList, t, exprDefault))
+		var labels []string
+		for _, v := range n.LabeledStatements() {
+			switch v.Case {
+			case cc.LabeledStatementLabel: // IDENTIFIER ':' Statement
+				// nop
+			case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
+				label := c.label()
+				labels = append(labels, label)
+				w.w("case %s: goto %s;", c.expr(nil, v.ConstantExpression, c.switchExprType, exprDefault), label)
+			case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
+				c.err(errorf("TODO %v", n.Case))
+			case cc.LabeledStatementDefault: // "default" ':' Statement
+				label := c.label()
+				labels = append(labels, label)
+				w.w("default: goto %s;", label)
+			default:
+				c.err(errorf("internal error %T %v", n, n.Case))
+			}
+		}
+		z := c.label()
+		c.breakLabel = z
+		w.w("\n}; goto %s;", z)
+		sl := c.switchLabels
+		c.switchLabels = labels
+
+		defer func() { c.switchLabels = sl }()
+
+		c.unbracedStatement(w, n.Statement)
+		w.w("%s:", z)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -292,6 +365,15 @@ func (c *ctx) unbracedStatement(w writer, n *cc.Statement) {
 }
 
 func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
+	bl, cl := c.breakLabel, c.continueLabel
+
+	defer func() {
+		c.breakLabel = bl
+		c.continueLabel = cl
+	}()
+
+	c.breakLabel = ""
+	c.continueLabel = ""
 	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
 		c.iterationStatementFlat(w, n)
 		return
@@ -426,13 +508,6 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 }
 
 func (c *ctx) iterationStatementFlat(w writer, n *cc.IterationStatement) {
-	bl, cl := c.breakLabel, c.continueLabel
-
-	defer func() {
-		c.breakLabel = bl
-		c.continueLabel = cl
-	}()
-
 	switch n.Case {
 	case cc.IterationStatementWhile: // "while" '(' ExpressionList ')' Statement
 		// a:	if !expr goto b
