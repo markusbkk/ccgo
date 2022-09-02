@@ -151,10 +151,10 @@ type errHandler func(msg string, args ...interface{})
 
 type ctx struct {
 	ast                 *cc.AST
-	breakLabel          string
+	breakCtx            string
 	cfg                 *cc.Config
 	compoundStmtValue   string
-	continueLabel       string
+	continueCtx         string
 	defineTaggedStructs map[string]*cc.StructType
 	defineTaggedUnions  map[string]*cc.UnionType
 	eh                  errHandler
@@ -168,8 +168,7 @@ type ctx struct {
 	imports             map[string]string // import path: qualifier
 	out                 io.Writer
 	pvoid               cc.Type
-	switchExprType      cc.Type
-	switchLabels        []string
+	switchCtx           []string
 	taggedEnums         nameSet
 	taggedStructs       nameSet
 	taggedUnions        nameSet
@@ -198,6 +197,24 @@ func newCtx(task *Task, eh errHandler) *ctx {
 		imports:             map[string]string{},
 		task:                task,
 	}
+}
+
+func (c *ctx) setBreakCtx(s string) func() {
+	save := c.breakCtx
+	c.breakCtx = s
+	return func() { c.breakCtx = save }
+}
+
+func (c *ctx) setContinueCtx(s string) func() {
+	save := c.continueCtx
+	c.continueCtx = s
+	return func() { c.continueCtx = save }
+}
+
+func (c *ctx) setSwitchCtx(s []string) func() {
+	save := c.switchCtx
+	c.switchCtx = s
+	return func() { c.switchCtx = save }
 }
 
 func (c *ctx) baseName(n cc.Node) string {

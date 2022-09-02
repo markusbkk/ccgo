@@ -919,6 +919,47 @@ func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
 			}
 		}
 		x.StatementList = x.StatementList[:w]
+	case *gc.ForStmt:
+		x.Block = l.stmtPrune(x.Block, info, static).(*gc.Block)
+	case *gc.IfStmt:
+		x.Block = l.stmtPrune(x.Block, info, static).(*gc.Block)
+		switch y := x.ElsePart.(type) {
+		case *gc.Block:
+			x.ElsePart = l.stmtPrune(y, info, static)
+		case nil:
+			// nop
+		default:
+			l.err(errorf("TODO %T %v:", y, n.Position()))
+		}
+	case *gc.ExpressionSwitchStmt:
+		for _, v := range x.ExprCaseClauses {
+			w := 0
+			for _, stmt := range v.StatementList {
+				if stmt := l.stmtPrune(stmt, info, static); stmt != nil {
+					v.StatementList[w] = stmt
+					w++
+				}
+			}
+			v.StatementList = v.StatementList[:w]
+		}
+	case *gc.LabeledStmt:
+		x.Statement = l.stmtPrune(x.Statement, info, static)
+	case
+		*gc.Assignment,
+		*gc.BreakStmt,
+		*gc.ContinueStmt,
+		*gc.DeferStmt,
+		*gc.EmptyStmt,
+		*gc.ExpressionStmt,
+		*gc.FallthroughStmt,
+		*gc.GotoStmt,
+		*gc.IncDecStmt,
+		*gc.ReturnStmt,
+		*gc.ShortVarDecl:
+
+		// nop
+	default:
+		l.err(errorf("TODO %T %v:", x, n.Position()))
 	}
 	return n
 }

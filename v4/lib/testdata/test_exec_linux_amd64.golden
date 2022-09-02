@@ -509,6 +509,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920721-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920723-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920729-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920806-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920808-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920809-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920817-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920820-1.c
@@ -1954,6 +1955,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920721-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920721-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920726-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920730-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920731-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920810-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920812-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/920829-1.c
@@ -3272,6 +3274,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920721-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920721-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920726-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920730-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920731-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920810-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920812-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/920829-1.c

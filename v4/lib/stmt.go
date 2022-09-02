@@ -61,14 +61,14 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		c.statement(w, n.Statement)
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 		switch {
-		case len(c.switchLabels) != 0:
-			w.w("%s:", c.switchLabels[0])
-			c.switchLabels = c.switchLabels[1:]
+		case len(c.switchCtx) != 0:
+			w.w("%s:", c.switchCtx[0])
+			c.switchCtx = c.switchCtx[1:]
 		default:
 			if n.CaseOrdinal() != 0 {
 				w.w("fallthrough;")
 			}
-			w.w("case %s:", c.expr(nil, n.ConstantExpression, c.switchExprType, exprDefault))
+			w.w("case %s:", c.expr(nil, n.ConstantExpression, cc.IntegerPromotion(n.Switch().ExpressionList.Type()), exprDefault))
 		}
 		c.unbracedStatement(w, n.Statement)
 	case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
@@ -78,9 +78,9 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 		c.err(errorf("TODO %v", n.Case))
 	case cc.LabeledStatementDefault: // "default" ':' Statement
 		switch {
-		case len(c.switchLabels) != 0:
-			w.w("%s:", c.switchLabels[0])
-			c.switchLabels = c.switchLabels[1:]
+		case len(c.switchCtx) != 0:
+			w.w("%s:", c.switchCtx[0])
+			c.switchCtx = c.switchCtx[1:]
 		default:
 			if n.CaseOrdinal() != 0 {
 				w.w("fallthrough;")
@@ -240,13 +240,6 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 		c.unbracedStatement(w, n.Statement2)
 		w.w("};")
 	case cc.SelectionStatementSwitch: // "switch" '(' ExpressionList ')' Statement
-		bl := c.breakLabel
-
-		defer func() {
-			c.breakLabel = bl
-		}()
-
-		c.breakLabel = ""
 		for _, v := range n.LabeledStatements() {
 			if v.Case == cc.LabeledStatementLabel {
 				c.selectionStatementFlat(w, n)
@@ -254,10 +247,10 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 			}
 		}
 
-		t := c.switchExprType
-		defer func() { c.switchExprType = t }()
-		c.switchExprType = cc.IntegerPromotion(n.ExpressionList.Type())
-		w.w("switch %s", c.expr(w, n.ExpressionList, c.switchExprType, exprDefault))
+		defer c.setSwitchCtx(nil)()
+		defer c.setBreakCtx("")()
+
+		w.w("switch %s", c.expr(w, n.ExpressionList, cc.IntegerPromotion(n.ExpressionList.Type()), exprDefault))
 		c.statement(w, n.Statement)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -297,7 +290,7 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		//	default:
 		//		goto labelN
 		//	}
-		//	goto z
+		//	goto brk
 		//	label1:
 		//		statements in case 1
 		//	label2:
@@ -305,7 +298,7 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		//	...
 		//	labelN:
 		//		statements in default
-		//	z: // <- break
+		//	brk:
 		t := cc.IntegerPromotion(n.ExpressionList.Type())
 		w.w("switch %s {", c.expr(w, n.ExpressionList, t, exprDefault))
 		var labels []string
@@ -316,7 +309,7 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 			case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 				label := c.label()
 				labels = append(labels, label)
-				w.w("case %s: goto %s;", c.expr(nil, v.ConstantExpression, c.switchExprType, exprDefault), label)
+				w.w("case %s: goto %s;", c.expr(nil, v.ConstantExpression, t, exprDefault), label)
 			case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 				c.err(errorf("TODO %v", n.Case))
 			case cc.LabeledStatementDefault: // "default" ':' Statement
@@ -327,16 +320,14 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 				c.err(errorf("internal error %T %v", n, n.Case))
 			}
 		}
-		z := c.label()
-		c.breakLabel = z
-		w.w("\n}; goto %s;", z)
-		sl := c.switchLabels
-		c.switchLabels = labels
+		brk := c.label()
+		w.w("\n}; goto %s;", brk)
 
-		defer func() { c.switchLabels = sl }()
+		defer c.setSwitchCtx(labels)()
+		defer c.setBreakCtx(brk)()
 
 		c.unbracedStatement(w, n.Statement)
-		w.w("%s:", z)
+		w.w("%s:", brk)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -365,15 +356,9 @@ func (c *ctx) unbracedStatement(w writer, n *cc.Statement) {
 }
 
 func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
-	bl, cl := c.breakLabel, c.continueLabel
+	defer c.setBreakCtx("")()
+	defer c.setContinueCtx("")()
 
-	defer func() {
-		c.breakLabel = bl
-		c.continueLabel = cl
-	}()
-
-	c.breakLabel = ""
-	c.continueLabel = ""
 	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
 		c.iterationStatementFlat(w, n)
 		return
@@ -435,7 +420,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		case a.len() == 0 && a2.len() == 0 && a3.len() != 0:
 			w.w("for %s; %s;  {", b, b2)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
 			w.w("for %s; ; %s {", b, b3)
 			w.w("\n%s", a2.bytes())
@@ -447,7 +432,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\n%s", a2.bytes())
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() != 0 && a2.len() == 0 && a3.len() == 0:
 			w.w("%s%s", a.bytes(), b.bytes())
 			w.w("\nfor ;%s; %s{", b2, b3)
@@ -457,7 +442,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("%s%s", a.bytes(), b.bytes())
 			w.w("\nfor %s {", b2)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() != 0 && a2.len() != 0 && a3.len() == 0:
 			w.w("%s%s", a.bytes(), b.bytes())
 			w.w("\nfor ; ; %s {", b3)
@@ -471,7 +456,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\n%s", a2.bytes())
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;}", a3.bytes(), b3.bytes())
+			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
 		c.declaration(w, n.Declaration, false)
@@ -488,7 +473,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		case a.len() == 0 && a2.len() != 0:
 			w.w("for %s  {", b)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;};", a2.bytes(), b2.bytes())
+			w.w("\n%s%s};", a2.bytes(), b2.bytes())
 		case a.len() != 0 && a2.len() == 0:
 			w.w("for ; ; %s {", b2)
 			w.w("\n%s", a.bytes())
@@ -500,7 +485,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\n%s", a.bytes())
 			w.w("\nif !(%s) { break };", b)
 			c.unbracedStatement(w, n.Statement)
-			w.w("\n%s%s;};", a2.bytes(), b2.bytes())
+			w.w("\n%s%s};", a2.bytes(), b2.bytes())
 		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
@@ -508,64 +493,56 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 }
 
 func (c *ctx) iterationStatementFlat(w writer, n *cc.IterationStatement) {
+	brk := c.label()
+	cont := c.label()
+
+	defer c.setBreakCtx(brk)()
+	defer c.setContinueCtx(cont)()
+
 	switch n.Case {
 	case cc.IterationStatementWhile: // "while" '(' ExpressionList ')' Statement
-		// a:	if !expr goto b
+		// cont:
+		//	if !expr goto brk
 		//	stmt
-		//	goto a
-		// b:
-		a := c.label()
-		b := c.label()
-		c.continueLabel = a
-		c.breakLabel = b
-		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList, nil, exprBool), b)
+		//	goto cont
+		// brk:
+		w.w("%s: if !(%s) { goto %s };", cont, c.expr(w, n.ExpressionList, nil, exprBool), brk)
 		c.unbracedStatement(w, n.Statement)
-		w.w("goto %s; %s:", a, b)
+		w.w("goto %s; %s:", cont, brk)
 	case cc.IterationStatementDo: // "do" Statement "while" '(' ExpressionList ')' ';'
-		// a:	stmt
-		//	if expr goto a
-		// b:
-		a := c.label()
-		b := c.label()
-		c.continueLabel = a
-		c.breakLabel = b
-		w.w("%s:", a)
+		// cont:
+		//	stmt
+		//	if expr goto cont
+		// brk:
+		w.w("%s:", cont)
 		c.unbracedStatement(w, n.Statement)
-		w.w("if (%s) { goto %s }; goto %s; %[3]s:", c.expr(w, n.ExpressionList, nil, exprBool), a, b)
+		w.w("if (%s) { goto %s }; goto %s; %[3]s:", c.expr(w, n.ExpressionList, nil, exprBool), cont, brk)
 	case cc.IterationStatementFor: // "for" '(' ExpressionList ';' ExpressionList ';' ExpressionList ')' Statement
 		//	expr1
-		// a:	if !expr2 goto z
+		// a:	if !expr2 goto brk
 		//	stmt
-		// b:
+		// cont:
 		//	expr3
 		//	goto a
-		// z:
+		// brk:
 		a := c.label()
-		b := c.label()
-		z := c.label()
-		c.continueLabel = b
-		c.breakLabel = z
 		c.expr(w, n.ExpressionList, nil, exprVoid)
-		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList2, nil, exprBool), z)
+		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList2, nil, exprBool), brk)
 		c.unbracedStatement(w, n.Statement)
-		w.w("goto %s; %[1]s: %s; goto %s; %s:", b, c.expr(w, n.ExpressionList3, nil, exprVoid), a, z)
+		w.w("goto %s; %[1]s: %s; goto %s; %s:", cont, c.expr(w, n.ExpressionList3, nil, exprVoid), a, brk)
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
 		//	decl
-		// a:	if !expr goto z
+		// a:	if !expr goto brk
 		//	stmt
-		// b:
+		// cont:
 		//	expr2
 		//	goto a
-		// z:
+		// brk:
 		a := c.label()
-		b := c.label()
-		z := c.label()
-		c.continueLabel = b
-		c.breakLabel = z
 		c.declaration(w, n.Declaration, false)
-		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList, nil, exprBool), z)
+		w.w("%s: if !(%s) { goto %s };", a, c.expr(w, n.ExpressionList, nil, exprBool), brk)
 		c.unbracedStatement(w, n.Statement)
-		w.w("goto %s; %[1]s: %s; goto %s; %s:", b, c.expr(w, n.ExpressionList2, nil, exprVoid), a, z)
+		w.w("goto %s; %[1]s: %s; goto %s; %s:", cont, c.expr(w, n.ExpressionList2, nil, exprVoid), a, brk)
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
@@ -580,15 +557,15 @@ func (c *ctx) jumpStatement(w writer, n *cc.JumpStatement) {
 	case cc.JumpStatementGotoExpr: // "goto" '*' ExpressionList ';'
 		c.err(errorf("TODO %v", n.Case))
 	case cc.JumpStatementContinue: // "continue" ';'
-		if c.continueLabel != "" {
-			w.w("goto %s;", c.continueLabel)
+		if c.continueCtx != "" {
+			w.w("goto %s;", c.continueCtx)
 			break
 		}
 
 		w.w("continue;")
 	case cc.JumpStatementBreak: // "break" ';'
-		if c.breakLabel != "" {
-			w.w("goto %s;", c.breakLabel)
+		if c.breakCtx != "" {
+			w.w("goto %s;", c.breakCtx)
 			break
 		}
 
