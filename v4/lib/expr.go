@@ -1491,7 +1491,7 @@ func (c *ctx) mulOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mod
 		return &b, t, mode
 	}
 
-	b.w("%s__builtin_mul_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	b.w("%s__builtin_mul_overflow%s(%stls, %s, %s, %s)", tag(external), c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
 	return &b, c.ast.Int, exprDefault
 }
 
@@ -1524,7 +1524,7 @@ func (c *ctx) addOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mod
 		return &b, t, mode
 	}
 
-	b.w("%s__builtin_add_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	b.w("%s__builtin_add_overflow%s(%stls, %s, %s, %s)", tag(external), c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
 	return &b, c.ast.Int, exprDefault
 }
 
@@ -1557,7 +1557,7 @@ func (c *ctx) subOverflow(w writer, n *cc.PostfixExpression, t cc.Type, mode mod
 		return &b, t, mode
 	}
 
-	b.w("%s__builtin_sub_overflow%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
+	b.w("%s__builtin_sub_overflow%s(%stls, %s, %s, %s)", tag(external), c.helper(n, args[0].Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], args[0].Type(), exprDefault), c.expr(w, args[2], nil, exprDefault))
 	return &b, c.ast.Int, exprDefault
 }
 
@@ -1577,7 +1577,7 @@ func (c *ctx) atomicLoadN(w writer, n *cc.PostfixExpression, t cc.Type, mode mod
 	}
 
 	rt = pt.Elem()
-	b.w("%sAtomicLoadN%s(%stls, %s, %s)", c.task.tlsQualifier, c.helper(n, rt), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], nil, exprDefault))
+	b.w("%sAtomicLoadN%s(%s, %s)", c.task.tlsQualifier, c.helper(n, rt), c.expr(w, args[0], nil, exprDefault), c.expr(w, args[1], nil, exprDefault))
 	return &b, rt, mode
 }
 
@@ -1601,7 +1601,7 @@ func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mo
 
 	switch a1 := args[1]; {
 	case cc.IsScalarType(a1.Type()):
-		b.w("%sAtomicStoreN%s(%stls, %s, %s, %s)", c.task.tlsQualifier, c.helper(n, a1.Type()), tag(ccgo), c.expr(w, args[0], nil, exprDefault), c.expr(w, a1, nil, exprDefault), c.expr(w, args[2], nil, exprDefault))
+		b.w("%sAtomicStoreN%s(%s, %s, %s)", c.task.tlsQualifier, c.helper(n, a1.Type()), c.expr(w, args[0], nil, exprDefault), c.expr(w, a1, nil, exprDefault), c.expr(w, args[2], nil, exprDefault))
 	default:
 		c.err(errorf("%v: invalid second argument to __atomic_store_n: %s", n.ArgumentExpressionList.Position(), a1.Type()))
 	}
