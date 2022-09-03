@@ -49,6 +49,13 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 		return
 	}
 
+	if c.task.verifyStructs && !t.IsIncomplete() {
+		switch t.Kind() {
+		case cc.Struct, cc.Union:
+			c.verify[t] = struct{}{}
+		}
+	}
+
 	if tn := t.Typedef(); tn != nil && useTypenames && tn.LexicalScope().Parent == nil {
 		fmt.Fprintf(b, "%s%s", tag(typename), tn.Name())
 		return

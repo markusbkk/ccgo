@@ -752,7 +752,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-4.c`:                         {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c`:                         {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-types-compatible-p.c`:                 {}, // COMPILE FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c`:                                {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c`:                                    {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/comp-goto-1.c`:                                {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/comp-goto-2.c`:                                {}, // COMPILE FAIL
@@ -1410,7 +1409,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-4.c`:         {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c`:         {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-types-compatible-p.c`: {}, // COMPILE FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c`:                {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c`:                    {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/comp-goto-1.c`:                {}, // COMPILE FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/comp-goto-2.c`:                {}, // COMPILE FAIL
@@ -1860,7 +1858,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/float-compare.c`:                                      {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-char-args.c`:                                 {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-incomplete.c`:                                {}, // COMPILE FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer-call.c`:                              {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/identifier.c`:                                         {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/include.c`:                                            {}, // COMPILE FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/initialize-call.c`:                                    {}, // COMPILE FAIL

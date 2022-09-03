@@ -12,6 +12,12 @@ import (
 	"modernc.org/cc/v4"
 )
 
+type initPatch struct {
+	d   *cc.Declarator
+	off int64
+	b   *buf
+}
+
 func (c *ctx) initializerOuter(w writer, n *cc.Initializer, t cc.Type) (r *buf) {
 	a := c.initalizerFlatten(n, nil)
 	// dumpInitializer(a, "")
@@ -48,7 +54,15 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 			return nil
 		}
 
-		return c.expr(w, a[0].AssignmentExpression, t, exprDefault)
+		r = c.expr(w, a[0].AssignmentExpression, t, exprDefault)
+		if t.Kind() == cc.Ptr && t.(*cc.PointerType).Elem().Kind() == cc.Function && c.initPatch != nil {
+			c.initPatch(off0, r)
+			var b buf
+			b.w("(%suintptr(0))", tag(preserve))
+			return &b
+		}
+
+		return r
 	}
 
 	switch x := t.(type) {

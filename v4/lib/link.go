@@ -889,7 +889,13 @@ func (l *linker) funcDecl(n *gc.FunctionDecl) {
 	l.print(info, n)
 	for _, v := range static {
 		l.w("\n\n")
-		l.print(info, v)
+		switch x := v.(type) {
+		case *gc.FunctionLit:
+			l.w("func init() ")
+			l.print(info, x.FunctionBody)
+		default:
+			l.print(info, v)
+		}
 	}
 }
 
@@ -909,6 +915,19 @@ func (l *linker) stmtPrune(n gc.Node, info *fnInfo, static *[]gc.Node) gc.Node {
 		case staticInternal, staticNone:
 			*static = append(*static, n)
 			return nil
+		case preserve:
+			if nm[len(tag(preserve)):] != "_" {
+				break
+			}
+
+			if len(vs.ExprList) == 0 {
+				break
+			}
+
+			if x, ok := vs.ExprList[0].Expr.(*gc.FunctionLit); ok {
+				*static = append(*static, x)
+				return nil
+			}
 		}
 	case *gc.Block:
 		w := 0

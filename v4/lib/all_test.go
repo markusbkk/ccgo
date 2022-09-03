@@ -394,9 +394,9 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	var out bytes.Buffer
 	switch {
 	case !execute:
-		err = NewTask(goos, goarch, []string{"ccgo", "-c", "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(goos, goarch, []string{"ccgo", "-c", "-verify-structs", "--prefix-field=F", path}, &out, &out, nil).Main()
 	default:
-		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "-verify-structs", "--prefix-field=F", path}, &out, &out, nil).Main()
 	}
 	if err != nil {
 		if *oTraceC {
@@ -647,6 +647,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_THREADSAFE=0",
 		// "-positions",
 		// "-full-paths",
+		"-verify-structs",
 		"-o", main,
 		path.Join(dir, "shell.c"),
 		path.Join(dir, "sqlite3.c"),

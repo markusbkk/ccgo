@@ -166,6 +166,7 @@ type ctx struct {
 	fields              map[fielder]*nameSpace
 	ifn                 string
 	imports             map[string]string // import path: qualifier
+	initPatch           func(int64, *buf)
 	out                 io.Writer
 	pvoid               cc.Type
 	switchCtx           []string
@@ -174,6 +175,7 @@ type ctx struct {
 	taggedUnions        nameSet
 	task                *Task
 	typenames           nameSet
+	verify              map[cc.Type]struct{}
 	void                cc.Type
 
 	nextID int
@@ -196,6 +198,7 @@ func newCtx(task *Task, eh errHandler) *ctx {
 		fields:              map[fielder]*nameSpace{},
 		imports:             map[string]string{},
 		task:                task,
+		verify:              map[cc.Type]struct{}{},
 	}
 }
 
@@ -322,6 +325,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 			delete(c.defineTaggedUnions, k)
 		}
 	}
+	c.verifyStructs()
 	c.w("%s", sep(c.ast.EOF))
 	if c.hasMain && c.task.tlsQualifier != "" {
 		c.w("\n\nfunc %smain() { %s%[1]sStart(%[3]smain) }\n", tag(preserve), c.task.tlsQualifier, tag(external))
@@ -348,6 +352,37 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		}
 	}
 	return nil
+}
+
+func (c *ctx) typeID(t cc.Type) string {
+	var b strings.Builder
+	c.typ0(&b, nil, t, false, false, false)
+	return b.String()
+}
+
+func (c *ctx) verifyStructs() {
+	return //TODO-
+	if len(c.verify) == 0 {
+		return
+	}
+
+	m := map[string]cc.Type{}
+	for k := range c.verify {
+		m[c.typeID(k)] = k
+	}
+	var a []string
+	for k := range m {
+		a = append(a, k)
+	}
+	sort.Strings(a)
+	c.w("\n\nfunc init() {")
+	for i, k := range a {
+		t := m[k]
+		v := fmt.Sprintf("%sv%d", tag(preserve), i)
+		c.w("\n\tvar %s %s", v, c.typ(nil, t))
+		c.w("\nif g, e := %sunsafe.%sSizeof(%s), %[2]suintptr(%[4]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, t.Size())
+	}
+	c.w("\n}")
 }
 
 func (c *ctx) defines(w writer) {

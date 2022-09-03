@@ -649,6 +649,21 @@ func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.
 			w.w("%s = %s;", v, c.expr(w, n.ConditionalExpression, n.Type(), mode))
 			w.w("};")
 			b.w("%s", v)
+		case exprIndex:
+			rt, rmode = n.Type(), exprUintptr
+			vs := fmt.Sprintf("var %s %s;", v, c.typ(n, n.Type()))
+			switch {
+			case c.f != nil:
+				c.f.registerAutoVar(vs)
+			default:
+				w.w("%s", vs)
+			}
+			w.w("if %s {", c.expr(w, n.LogicalOrExpression, nil, exprBool))
+			w.w("%s = %s;", v, c.pin(n, c.expr(w, n.ExpressionList, n.Type(), exprUintptr)))
+			w.w("} else {")
+			w.w("%s = %s;", v, c.pin(n, c.expr(w, n.ConditionalExpression, n.Type(), exprUintptr)))
+			w.w("};")
+			b.w("%s", v)
 		default:
 			rt, rmode = n.Type(), mode
 			vs := fmt.Sprintf("var %s %s;", v, c.typ(n, n.Type()))
@@ -677,6 +692,18 @@ func (c *ctx) castExpression(w writer, n *cc.CastExpression, t cc.Type, mode mod
 	case cc.CastExpressionUnary: // UnaryExpression
 		return c.expr0(w, n.UnaryExpression, t, mode)
 	case cc.CastExpressionCast: // '(' TypeName ')' CastExpression
+		switch x := t.(type) {
+		case *cc.PointerType:
+			switch x.Elem().(type) {
+			case *cc.FunctionType:
+				if mode == exprCall {
+					rt, rmode = n.Type(), exprUintptr
+					b.w("%s", c.expr(w, n.CastExpression, n.Type(), exprDefault))
+					return &b, rt, rmode
+				}
+			}
+		}
+
 		rt, rmode = n.Type(), mode
 		b.w("%s", c.expr(w, n.CastExpression, n.Type(), exprDefault))
 	default:
@@ -1082,6 +1109,7 @@ out:
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
+		// b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), n.Value())
 		switch x := n.UnaryExpression.Type().Undecay(); {
 		case cc.IsScalarType(x):
 			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s(0)", c.typ(n, x))))
@@ -1095,6 +1123,7 @@ out:
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
+		// b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), n.Value())
 		switch x := n.TypeName.Type(); {
 		case cc.IsScalarType(x):
 			b.w("(%s%s%sFromUintptr(%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), unsafe("Sizeof", fmt.Sprintf("%s(0)", c.typ(n, x))))

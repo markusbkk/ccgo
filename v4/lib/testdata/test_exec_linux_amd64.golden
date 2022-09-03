@@ -2193,6 +2193,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-5.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cbrt.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpdi-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c
@@ -3520,6 +3521,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-pre
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-4.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/builtin-prefetch-6.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cbrt.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpdi-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/cmpsf-1.c
@@ -4267,6 +4269,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/for-side-effects.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/for.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/function-char-args.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/function-implicit-declare.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer-call.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/function.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/hello.c

@@ -61,7 +61,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/921202-1.c`:                    {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/921208-2.c`:                    {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/930718-1.c`:                    {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c`:                 {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memchr-1.c`:                    {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr39100.c`:                     {}, // BUILD FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr57130.c`:                     {}, // BUILD FAIL
@@ -85,7 +84,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/921202-1.c`:    {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/921208-2.c`:    {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/930718-1.c`:    {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/call-trap-1.c`: {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memchr-1.c`:    {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr39100.c`:     {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr57130.c`:     {}, // BUILD FAIL
@@ -110,7 +108,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/zerolen-1.c`:   {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-void.c`:                    {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/declarator-abstract.c`:                 {}, // BUILD FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-pointer-call.c`:               {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/function-incomplete.c`:                 {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/return-point.c`:                        {}, // BUILD FAIL
 	`assets/tcc-0.9.27/tests/tests2/81_types.c`:                                          {}, // BUILD FAIL

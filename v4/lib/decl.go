@@ -434,6 +434,34 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
+		if d.StorageDuration() == cc.Static {
+			var initPatches []initPatch
+			c.initPatch = func(off int64, b *buf) { initPatches = append(initPatches, initPatch{d, off, b}) }
+
+			defer func() {
+				c.initPatch = nil
+				if len(initPatches) == 0 {
+					return
+				}
+
+				var b buf
+				b.w("{")
+				b.w("\n\tp := %sunsafe.%sPointer(&%s%s)", tag(importQualifier), tag(preserve), c.declaratorTag(d), d.Name())
+				for _, v := range initPatches {
+					b.w("\n\t*(*uintptr)(%sunsafe.%sAdd(p, %v)) = %s", tag(importQualifier), tag(preserve), v.off, v.b)
+				}
+				b.w("\n};")
+				switch d.Linkage() {
+				case cc.External, cc.Internal:
+					w.w("\n\nfunc init() %s", &b)
+				case cc.None:
+					w.w("\n\nvar %s_ = func() %s", tag(preserve), &b)
+				default:
+					c.err(errorf("TODO %v", d.Linkage()))
+				}
+			}()
+		}
+
 		c.defineEnumStructUnion(w, sep, n, d.Type())
 		switch {
 		case d.Linkage() == cc.Internal:
