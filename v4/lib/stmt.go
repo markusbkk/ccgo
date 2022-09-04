@@ -247,6 +247,29 @@ func (c *ctx) selectionStatement(w writer, n *cc.SelectionStatement) {
 			}
 		}
 
+		ok := false
+		switch s := n.Statement; s.Case {
+		case cc.StatementCompound:
+			if l := n.Statement.CompoundStatement.BlockItemList; l != nil {
+				switch bi := l.BlockItem; bi.Case {
+				case cc.BlockItemStmt:
+					switch s := bi.Statement; s.Case {
+					case cc.StatementLabeled:
+						switch ls := s.LabeledStatement; ls.Case {
+						case cc.LabeledStatementCaseLabel, cc.LabeledStatementDefault:
+							// ok
+							ok = true
+						}
+					}
+				}
+			}
+
+		}
+		if !ok {
+			c.selectionStatementFlat(w, n)
+			return
+		}
+
 		defer c.setSwitchCtx(nil)()
 		defer c.setBreakCtx("")()
 

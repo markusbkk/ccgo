@@ -1345,6 +1345,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr64494.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65014.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65153.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65163.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65241.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65540.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65593.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr65595.c
@@ -1435,6 +1436,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86636.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86637-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86637-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr86637-3.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87468.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr87473.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr89235.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr89280.c
