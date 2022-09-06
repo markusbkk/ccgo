@@ -434,6 +434,10 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			}
 		}
 	case cc.InitDeclaratorInit: // Declarator Asm '=' Initializer
+		t := d.Type()
+		if t.Kind() == cc.Struct && t.(*cc.StructType).HasFlexibleArrayMember() {
+			t = n.Initializer.Type()
+		}
 		if d.StorageDuration() == cc.Static {
 			var initPatches []initPatch
 			c.initPatch = func(off int64, b *buf) { initPatches = append(initPatches, initPatch{d, off, b}) }
@@ -462,34 +466,34 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			}()
 		}
 
-		c.defineEnumStructUnion(w, sep, n, d.Type())
+		c.defineEnumStructUnion(w, sep, n, t)
 		switch {
 		case d.Linkage() == cc.Internal:
-			w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
+			w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, t))
 		case d.IsStatic():
 			switch c.pass {
 			case 1:
 				// nop
 			case 2:
 				if nm := c.f.locals[d]; nm != "" {
-					w.w("%s%svar %s = %s;", sep, c.posComment(n), nm, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%svar %s = %s;", sep, c.posComment(n), nm, c.initializerOuter(w, n.Initializer, t))
 					break
 				}
 
 				fallthrough
 			default:
-				w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, t))
 			}
 		default:
 			switch {
 			case info != nil && info.pinned():
-				w.w("%s%s*(*%s)(%s) = %s;", sep, c.posComment(n), c.typ(d, d.Type()), unsafePointer(bpOff(info.bpOff)), c.initializerOuter(w, n.Initializer, d.Type()))
+				w.w("%s%s*(*%s)(%s) = %s;", sep, c.posComment(n), c.typ(d, t), unsafePointer(bpOff(info.bpOff)), c.initializerOuter(w, n.Initializer, t))
 			default:
 				switch {
 				case d.LexicalScope().Parent == nil:
-					w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, t))
 				default:
-					w.w("%s%s%s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, d.Type()))
+					w.w("%s%s%s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, t))
 				}
 			}
 		}

@@ -152,7 +152,7 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 	// dumpInitializer(a, "")
 	// trc("---- (struct Z)")
 	var b buf
-	b.w("%s{", c.typ(n, t))
+	b.w("%s{", c.initTyp(n, t))
 	if c.isZeroInitializerSlice(a) {
 		b.w("}")
 		return &b

@@ -42,6 +42,12 @@ func (c *ctx) typ2(n cc.Node, t cc.Type, useNames bool) string {
 	return b.String()
 }
 
+func (c *ctx) initTyp(n cc.Node, t cc.Type) string {
+	var b strings.Builder
+	c.typ0(&b, n, t, true, false, false)
+	return b.String()
+}
+
 func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTags, isField bool) {
 	if !c.checkValidType(n, t) {
 		b.WriteString(tag(preserve))
@@ -173,6 +179,10 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					off += gsz
 				default:
 					ft := f.Type()
+					if f.IsFlexibleArrayMember() && ft.Size() < 0 {
+						break
+					}
+
 					abiAlign := ft.Align()
 					goAlign := c.goAlign(ft)
 					off = roundup(off, int64(goAlign))
