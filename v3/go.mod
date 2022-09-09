@@ -8,11 +8,11 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	golang.org/x/tools v0.0.0-20201124115921-2c860bdd6e78
-	modernc.org/cc/v3 v3.38.0
+	modernc.org/cc/v3 v3.38.1
 	modernc.org/ccorpus v1.11.6
 	modernc.org/libc v1.18.0
 	modernc.org/mathutil v1.5.0
-	modernc.org/opt v0.1.1
+	modernc.org/opt v0.1.3
 )
 
 require (
