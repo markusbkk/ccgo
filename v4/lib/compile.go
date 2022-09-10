@@ -361,7 +361,7 @@ func (c *ctx) typeID(t cc.Type) string {
 }
 
 func (c *ctx) verifyStructs() {
-	return //TODO-
+	return //TODO
 	if len(c.verify) == 0 {
 		return
 	}
@@ -379,7 +379,7 @@ func (c *ctx) verifyStructs() {
 	for i, k := range a {
 		t := m[k]
 		v := fmt.Sprintf("%sv%d", tag(preserve), i)
-		c.w("\n\tvar %s %s", v, c.typ(nil, t))
+		c.w("\n\tvar %s %s", v, c.initTyp(nil, t))
 		c.w("\nif g, e := %sunsafe.%sSizeof(%s), %[2]suintptr(%[4]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, t.Size())
 	}
 	c.w("\n}")

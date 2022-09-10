@@ -234,7 +234,7 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 	// trc("---- (union Z)")
 	var b buf
 	if t.NumFields() == 1 {
-		b.w("%s{%s}", c.typ(n, t), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
+		b.w("%s{%s%s: %s}", c.typ(n, t), tag(field), c.fieldName(t, t.FieldByIndex(0)), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
 		return &b
 	}
 

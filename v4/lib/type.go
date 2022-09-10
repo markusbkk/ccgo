@@ -44,7 +44,7 @@ func (c *ctx) typ2(n cc.Node, t cc.Type, useNames bool) string {
 
 func (c *ctx) initTyp(n cc.Node, t cc.Type) string {
 	var b strings.Builder
-	c.typ0(&b, n, t, true, false, false)
+	c.typ0(&b, n, t, false, false, false)
 	return b.String()
 }
 
@@ -157,6 +157,8 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 		default:
 			groups := map[int64]struct{}{}
 			b.WriteString("struct {")
+			b.WriteByte('\n')
+			c.alignPseudoField(b, x.Align())
 			var off int64
 			// trc("%s", x)
 			for i := 0; i < x.NumFields(); i++ {
@@ -222,6 +224,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			c.defineTaggedUnions[nm] = x
 		default:
 			fmt.Fprintf(b, "struct {")
+			c.alignPseudoField(b, x.Align())
 			ff := firstPositiveSizedField(x)
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
@@ -285,6 +288,26 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 		c.err(errorf("TODO %T", x))
 		return
 	}
+}
+
+func (c *ctx) alignPseudoField(b *strings.Builder, align int) {
+	var s string
+	switch align {
+	case 1:
+		return
+	case 2:
+		s = "uint16"
+	case 4:
+		s = "uint32"
+	case 8:
+		s = "uint64"
+	default:
+		c.err(errorf("TODO %d", align))
+		return
+	}
+
+	b.WriteByte('\n')
+	fmt.Fprintf(b, "%s__ccgo_align [0]%s%s", tag(field), tag(preserve), s)
 }
 
 // Exceptions to the usual C and Go alignment agreement.
