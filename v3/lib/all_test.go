@@ -2418,6 +2418,8 @@ func TestGCCExecuteIEEE(t *testing.T) {
 		blacklist["fp-cmp-7.c"] = struct{}{}     //TODO
 	case "openbsd/amd64":
 		blacklist["fp-cmp-7.c"] = struct{}{} //TODO
+	case "freebsd/arm":
+		blacklist["fp-cmp-7.c"] = struct{}{} //TODO
 	}
 	binary := map[string]bool{}
 	var rq, res, ok int
