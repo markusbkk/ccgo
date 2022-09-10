@@ -18,7 +18,6 @@ import (
 	"strings"
 	"syscall"
 	"testing"
-	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -52,7 +51,7 @@ func testSingle(t *testing.T, main, path string, ccgoArgs []string, runargs []st
 	}
 
 	out, err := func() ([]byte, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 		defer cancel()
 
 		execcmd := exec.Command("go", append([]string{"run", main}, runargs...)...)

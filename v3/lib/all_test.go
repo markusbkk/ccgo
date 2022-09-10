@@ -76,6 +76,8 @@ func init() {
 
 // ----------------------------------------------------------------------------
 
+const execTimeout = time.Minute*10
+
 var (
 	fs = ccorpus.FileSystem()
 
@@ -484,7 +486,7 @@ func (t *runTask) run0() (_ []byte, err error, ccTime, ccgoTime time.Duration) {
 	var binaryBytes, binaryBytes2 int
 	var expected []byte
 	if !t.doNotExec {
-		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 		defer cancel()
 		if t.cmd != "" {
 			binary = t.cmd
@@ -556,7 +558,7 @@ func (t *runTask) run0() (_ []byte, err error, ccTime, ccgoTime time.Duration) {
 
 	var got []byte
 	if !t.doNotExec {
-		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 		defer cancel()
 		if t.cmd != "" {
 			binary = t.cmd
@@ -3058,7 +3060,7 @@ out:
 		}
 
 		binOutA, err := func() ([]byte, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 			defer cancel()
 
 			return exec.CommandContext(ctx, binaryName).CombinedOutput()
@@ -3101,7 +3103,7 @@ out:
 		}()
 
 		binOutB, err := func() ([]byte, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 			defer cancel()
 
 			return exec.CommandContext(ctx, "go", "run", "-tags=libc.memgrind", mainName).CombinedOutput()

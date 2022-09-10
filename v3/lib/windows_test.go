@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 )
 
 func testSingle(t *testing.T, main, path string, ccgoArgs []string, runargs []string) (r bool) {
@@ -46,7 +45,7 @@ func testSingle(t *testing.T, main, path string, ccgoArgs []string, runargs []st
 	}
 
 	out, err := func() ([]byte, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 		defer cancel()
 
 		return exec.CommandContext(ctx, "go", append([]string{"run", main}, runargs...)...).CombinedOutput()
