@@ -300,7 +300,7 @@ func (c *ctx) alignPseudoField(b *strings.Builder, align int) {
 	case 4:
 		s = "uint32"
 	case 8:
-		s = "uint64"
+		s = "uint64" //TODO Won't work on [many] 32 archs.
 	default:
 		c.err(errorf("TODO %d", align))
 		return

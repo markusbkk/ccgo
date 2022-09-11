@@ -361,7 +361,6 @@ func (c *ctx) typeID(t cc.Type) string {
 }
 
 func (c *ctx) verifyStructs() {
-	return //TODO
 	if len(c.verify) == 0 {
 		return
 	}
@@ -381,6 +380,35 @@ func (c *ctx) verifyStructs() {
 		v := fmt.Sprintf("%sv%d", tag(preserve), i)
 		c.w("\n\tvar %s %s", v, c.initTyp(nil, t))
 		c.w("\nif g, e := %sunsafe.%sSizeof(%s), %[2]suintptr(%[4]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, t.Size())
+		switch x := t.(type) {
+		case *cc.StructType:
+			for i := 0; i < x.NumFields(); i++ {
+				f := x.FieldByIndex(i)
+				nm := f.Name()
+				off := f.Offset()
+				sz := f.Type().Size()
+				switch {
+				case f.IsBitfield():
+					if f.InOverlapGroup() {
+						continue
+					}
+
+					continue //TODO-
+				default:
+					if f.IsFlexibleArrayMember() {
+						continue
+					}
+
+					if f.Type().Kind() == cc.Union {
+						continue
+					}
+
+					nm = tag(field) + c.fieldName(x, f)
+				}
+				c.w("\nif g, e := %sunsafe.%sOffsetof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, off)
+				c.w("\nif g, e := %sunsafe.%sSizeof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, sz)
+			}
+		}
 	}
 	c.w("\n}")
 }

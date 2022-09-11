@@ -4,17 +4,6 @@
 
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
-//TODO probably wrong layout generated
-//	struct s {
-//	  int f1 : 26;
-//	  int f2 : 8;
-//	};
-//	type s = struct {
-//		__ccgo0    uint32
-//		__ccgo4    uint16
-//		__ccgo_pad [3]byte
-//	}
-
 import (
 	"bytes"
 	"encoding/binary"
