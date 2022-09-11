@@ -714,6 +714,14 @@ func cpos(n cc.Node) (r token.Position) {
 	return r
 }
 
+func cpos0(n cc.Node) string {
+	if n == nil {
+		return ""
+	}
+
+	return filepath.Join("~/src/modernc.org/ccorpus2", token.Position(n.Position()).Filename)
+}
+
 // Same as cc.NodeSource but keeps the separators.
 func nodeSource(s ...cc.Node) string {
 	var a []cc.Token
