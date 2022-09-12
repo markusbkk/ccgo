@@ -437,7 +437,7 @@ func (c *ctx) registerFields(t cc.Type) (ft fielder) {
 	return ft
 }
 
-func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
+func (c *ctx) defineStructType(w writer, sep string, n cc.Node, t *cc.StructType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -451,11 +451,11 @@ func (c *ctx) defineStruct(w writer, sep string, n cc.Node, t *cc.StructType) {
 		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedStruct), nm, c.structLiteral(n, t))
 	}
 	for _, v := range c.structEnums(t) {
-		c.defineEnum(w, "\n", n, v)
+		c.defineEnumType(w, "\n", n, v)
 	}
 }
 
-func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
+func (c *ctx) defineUnionType(w writer, sep string, n cc.Node, t *cc.UnionType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -469,7 +469,7 @@ func (c *ctx) defineUnion(w writer, sep string, n cc.Node, t *cc.UnionType) {
 		w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(taggedUnion), nm, c.unionLiteral(n, t))
 	}
 	for _, v := range c.unionEnums(t) {
-		c.defineEnum(w, "\n", n, v)
+		c.defineEnumType(w, "\n", n, v)
 	}
 }
 
@@ -493,7 +493,7 @@ func (c *ctx) unionEnums(t *cc.UnionType) (r []*cc.EnumType) {
 	return r
 }
 
-func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
+func (c *ctx) defineEnumType(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 	if t.IsIncomplete() {
 		return
 	}
@@ -522,26 +522,26 @@ func (c *ctx) defineEnum(w writer, sepStr string, n cc.Node, t *cc.EnumType) {
 	}
 }
 
-func (c *ctx) defineEnumStructUnion(w writer, sep string, n cc.Node, t cc.Type) {
-	c.defineEnumStructUnion0(w, sep, n, t)
+func (c *ctx) defineType(w writer, sep string, n cc.Node, t cc.Type) {
+	c.defineType0(w, sep, n, t)
 }
 
-func (c *ctx) defineEnumStructUnion0(w writer, sep string, n cc.Node, t cc.Type) {
+func (c *ctx) defineType0(w writer, sep string, n cc.Node, t cc.Type) {
+	if !c.checkValidType(n, t, false) {
+		return
+	}
+
 	switch x := t.(type) {
 	case *cc.EnumType:
-		c.defineEnum(w, sep, n, x)
+		c.defineEnumType(w, sep, n, x)
 	case *cc.StructType:
-		c.defineStruct(w, sep, n, x)
+		c.defineStructType(w, sep, n, x)
 	case *cc.UnionType:
-		c.defineUnion(w, sep, n, x)
+		c.defineUnionType(w, sep, n, x)
 	case *cc.PointerType:
-		if t := x.Elem(); c.checkValidType(n, t, false) {
-			c.defineEnumStructUnion0(w, sep, n, x.Elem())
-		}
+		c.defineType0(w, sep, n, x.Elem())
 	case *cc.ArrayType:
-		if t := x.Elem(); c.checkValidType(n, t, false) {
-			c.defineEnumStructUnion0(w, sep, n, x.Elem())
-		}
+		c.defineType0(w, sep, n, x.Elem())
 	}
 }
 

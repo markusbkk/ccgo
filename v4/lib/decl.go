@@ -318,11 +318,11 @@ func (c *ctx) declaration(w writer, n *cc.Declaration, external bool) {
 			sep := sep(n)
 			switch x := n.DeclarationSpecifiers.Type().(type) {
 			case *cc.EnumType:
-				c.defineEnum(w, sep, n, x)
+				c.defineEnumType(w, sep, n, x)
 			case *cc.StructType:
-				c.defineStruct(w, sep, n, x)
+				c.defineStructType(w, sep, n, x)
 			case *cc.UnionType:
-				c.defineUnion(w, sep, n, x)
+				c.defineUnionType(w, sep, n, x)
 			}
 		default:
 			w.w("%s", sep(n))
@@ -400,7 +400,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 		case d.IsTypename():
 			if external && c.typenames.add(nm) && !d.Type().IsIncomplete() {
 				w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
-				c.defineEnumStructUnion(w, sep, n, d.Type())
+				c.defineType(w, sep, n, d.Type())
 			}
 			if !external {
 				return
@@ -410,7 +410,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 				return
 			}
 
-			c.defineEnumStructUnion(w, sep, n, d.Type())
+			c.defineType(w, sep, n, d.Type())
 			switch {
 			case d.IsStatic():
 				switch c.pass {
@@ -466,7 +466,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 			}()
 		}
 
-		c.defineEnumStructUnion(w, sep, n, t)
+		c.defineType(w, sep, n, t)
 		switch {
 		case d.Linkage() == cc.Internal:
 			w.w("%s%svar %s = %s;", sep, c.posComment(n), linkName, c.initializerOuter(w, n.Initializer, t))

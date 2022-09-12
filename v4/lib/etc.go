@@ -468,6 +468,8 @@ func (p *parallel) err(err error) {
 		return
 	}
 
+	err = firstError(err, true)
+	p.fail()
 	p.Lock()
 	p.errors.add(err)
 	p.Unlock()

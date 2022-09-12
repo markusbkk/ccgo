@@ -422,7 +422,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 		}
 
 		trc("`%s`: {}, // COMPILE FAIL: %v", fullPath, firstError(err, true))
-		p.fail()
+		p.err(err)
 		return errorf("%s: %s: FAIL: %v", fullPath, out.Bytes(), firstError(err, *oErr1))
 	}
 
@@ -441,7 +441,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 		}
 
 		trc("`%s`: {}, // BUILD FAIL: %v", fullPath, firstError(err, true))
-		p.fail()
+		p.err(err)
 		return firstError(err, *oErr1)
 	}
 
@@ -464,7 +464,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 			}
 
 			trc("`%s`: {}, // EXEC FAIL: %v", fullPath, firstError(err, true))
-			p.fail()
+			p.err(err)
 			return firstError(err, *oErr1)
 		}
 	}
@@ -502,7 +502,7 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	}
 
 	trc("`%s`: {}, // EXEC FAIL", fullPath)
-	p.fail()
+	p.err(err)
 	return firstError(err, *oErr1)
 }
 

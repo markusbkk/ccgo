@@ -310,7 +310,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		}
 		sort.Strings(a)
 		for k, t := range c.defineTaggedStructs {
-			c.defineStruct(c, "\n\n", nil, t)
+			c.defineStructType(c, "\n\n", nil, t)
 			delete(c.defineTaggedStructs, k)
 		}
 	}
@@ -321,7 +321,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		}
 		sort.Strings(a)
 		for k, t := range c.defineTaggedUnions {
-			c.defineUnion(c, "\n\n", nil, t)
+			c.defineUnionType(c, "\n\n", nil, t)
 			delete(c.defineTaggedUnions, k)
 		}
 	}
