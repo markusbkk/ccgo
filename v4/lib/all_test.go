@@ -8,6 +8,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -37,11 +38,13 @@ import (
 )
 
 var (
+	oBlackBox   = flag.String("blackbox", "", "Record CSmith file to this file")
+	oCSmith     = flag.Duration("csmith", 15*time.Minute, "")
 	oDebug      = flag.Bool("debug", false, "")
 	oErr1       = flag.Bool("err1", false, "first error line only")
 	oKeep       = flag.Bool("keep", false, "keep temp directories")
 	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime  = flag.Duration("shelltimeout", 200*time.Second, "shell() time limit")
+	oShellTime  = flag.Duration("shelltimeout", 300*time.Second, "shell() time limit")
 	oStackTrace = flag.Bool("trcstack", false, "")
 	oTrace      = flag.Bool("trc", false, "print tested paths.")
 	oTraceC     = flag.Bool("trcc", false, "trace TestExec transiple errors")
@@ -55,6 +58,17 @@ var (
 	hostCC string
 	re     *regexp.Regexp
 	testWD string
+
+	csmithDefaultArgs = strings.Join([]string{
+		"--bitfields",                     // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
+		"--max-nested-struct-level", "10", // --max-nested-struct-level <num>: limit maximum nested level of structs to <num>(default 0). Only works in the exhaustive mode.
+		"--no-const-pointers",    // --const-pointers | --no-const-pointers: enable | disable const pointers (enabled by default).
+		"--no-consts",            // --consts | --no-consts: enable | disable const qualifier (enabled by default).
+		"--no-packed-struct",     // --packed-struct | --no-packed-struct: enable | disable packed structs by adding #pragma pack(1) before struct definition (disabled by default).
+		"--no-volatile-pointers", // --volatile-pointers | --no-volatile-pointers: enable | disable volatile pointers (enabled by default).
+		"--no-volatiles",         // --volatiles | --no-volatiles: enable | disable volatiles (enabled by default).
+		"--paranoid",             // --paranoid | --no-paranoid: enable | disable pointer-related assertions (disabled by default).
+	}, " ")
 )
 
 type diskFS string
@@ -602,6 +616,214 @@ func getCorpusFile(path string) ([]byte, error) {
 	}
 
 	return ioutil.ReadAll(f)
+}
+
+func TestCSmith(t *testing.T) {
+	t.Skip("TODO")
+	if testing.Short() {
+		t.Skip("skipped: -short")
+	}
+
+	csmith, err := exec.LookPath("csmith")
+	if err != nil {
+		t.Skip(err)
+		return
+	}
+	binaryName := filepath.FromSlash("./a.out")
+	mainName := filepath.FromSlash("main.go")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.Chdir(wd)
+
+	temp, err := ioutil.TempDir("", "ccgo-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.RemoveAll(temp)
+
+	if err := os.Chdir(temp); err != nil {
+		t.Fatal(err)
+	}
+
+	if os.Getenv("GO111MODULE") != "off" {
+		if out, err := shell(true, "go", "mod", "init", "example.com/ccgo/v3/lib/csmith"); err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+
+		if out, err := shell(true, "go", "get", "modernc.org/libc"); err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+	}
+
+	fixedBugs := []string{
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3720922579",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 15739796933983044010",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 169375684",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1833258637",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1885311141",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2205128324",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2205128324",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2273393378",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 241244373",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2517344771",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2648215054",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2876930815",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3043990076",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3100949894",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3126091077",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3130410542",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3329111231",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3363122597",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3365074920",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3578720023",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3645367888",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3919255949",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4058772172",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4101947480",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4130344133",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4146870674",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 517639208",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 56498550",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 890611563",
+		"--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 963985971",
+		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 1236173074",
+		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 1906742816",
+		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 3629008936",
+		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 612971101",
+	}
+	ch := time.After(*oCSmith)
+	t0 := time.Now()
+	var files, ok int
+	var size int64
+out:
+	for i := 0; ; i++ {
+		extra := ""
+		var args string
+		switch {
+		case i < len(fixedBugs):
+			if re != nil && !re.MatchString(fixedBugs[i]) {
+				continue
+			}
+
+			args += fixedBugs[i]
+			a := strings.Split(fixedBugs[i], " ")
+			extra = strings.Join(a[len(a)-2:], " ")
+			t.Log(args)
+		default:
+			select {
+			case <-ch:
+				break out
+			default:
+			}
+
+			args += csmithDefaultArgs
+		}
+		csOut, err := exec.Command(csmith, strings.Split(args, " ")...).Output()
+		if err != nil {
+			t.Fatalf("%v\n%s", err, csOut)
+		}
+
+		if fn := *oBlackBox; fn != "" {
+			if err := ioutil.WriteFile(fn, csOut, 0660); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		if err := ioutil.WriteFile("main.c", csOut, 0660); err != nil {
+			t.Fatal(err)
+		}
+
+		csp := fmt.Sprintf("-I%s", filepath.FromSlash("/usr/include/csmith"))
+		if s := os.Getenv("CSMITH_PATH"); s != "" {
+			csp = fmt.Sprintf("-I%s", s)
+		}
+
+		ccOut, err := exec.Command(hostCC, "-o", binaryName, "main.c", csp).CombinedOutput()
+		if err != nil {
+			t.Logf("%s\n%s\ncc: %v", extra, ccOut, err)
+			continue
+		}
+
+		binOutA, err := func() ([]byte, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), *oShellTime)
+			defer cancel()
+
+			return exec.CommandContext(ctx, binaryName).CombinedOutput()
+		}()
+		if err != nil {
+			continue
+		}
+
+		size += int64(len(csOut))
+
+		if err := os.Remove(binaryName); err != nil {
+			t.Fatal(err)
+		}
+
+		files++
+		var stdout, stderr bytes.Buffer
+		j := NewTask(
+			goos,
+			goarch,
+			[]string{
+				"ccgo",
+
+				"-o", mainName,
+				"-extended-errors",
+				"-verify-structs",
+				"main.c",
+				csp,
+			},
+			&stdout,
+			&stderr,
+			nil)
+
+		func() {
+
+			defer func() {
+				if err := recover(); err != nil {
+					t.Errorf("%s\n%s\nccgo: %s\n%s\n%s", extra, csOut, stdout.Bytes(), stderr.Bytes(), debug.Stack())
+					t.Fatal(err)
+				}
+			}()
+
+			if err := j.Main(); err != nil || stdout.Len() != 0 {
+				t.Errorf("%s\n%s\nccgo: %s\n%s", extra, csOut, stdout.Bytes(), stderr.Bytes())
+				t.Fatal(err)
+			}
+		}()
+
+		binOutB, err := func() ([]byte, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), *oShellTime)
+			defer cancel()
+
+			return exec.CommandContext(ctx, "go", "run", "-tags=libc.memgrind", mainName).CombinedOutput()
+		}()
+		if err != nil {
+			t.Errorf("%s\n%s\n%s\nccgo: %v", extra, csOut, binOutB, err)
+			break
+		}
+
+		if g, e := binOutB, binOutA; !bytes.Equal(g, e) {
+			t.Errorf("%s\n%s\nccgo: %v\ngot: %s\nexp: %s", extra, csOut, err, g, e)
+			break
+		}
+
+		ok++
+		if *oTrace {
+			fmt.Fprintln(os.Stderr, time.Since(t0), files, ok)
+		}
+
+		if err := os.Remove(mainName); err != nil {
+			t.Fatal(err)
+		}
+	}
+	d := time.Since(t0)
+	t.Logf("files %v, bytes %v, ok %v in %v", h(files), h(size), h(ok), d)
 }
 
 func TestSQLite(t *testing.T) {

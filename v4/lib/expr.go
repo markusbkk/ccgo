@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"modernc.org/cc/v4"
+	"modernc.org/mathutil"
 )
 
 type mode int
@@ -723,7 +724,7 @@ func (c *ctx) multiplicativeExpression(w writer, n *cc.MultiplicativeExpression,
 }
 
 func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
-	rt, rmode = n.Type(), mode
+	rt, rmode = n.Type(), exprDefault
 	var b buf
 	switch n.Case {
 	case cc.AdditiveExpressionMul: // MultiplicativeExpression
@@ -1189,12 +1190,12 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 	case exprSelect, exprLvalue, exprDefault, exprIndex:
 		switch x := pt.Undecay().(type) {
 		case *cc.ArrayType:
-			if d := c.declaratorOf(p); d != nil && d.IsParam() {
-				b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+			if d := c.declaratorOf(p); d != nil && !d.IsParam() {
+				b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
 				break
 			}
 
-			b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
+			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
 		case *cc.PointerType:
 			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
 		default:
@@ -1205,12 +1206,12 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 		rt, rmode = t.(*cc.PointerType), exprUintptr
 		switch x := pt.Undecay().(type) {
 		case *cc.ArrayType:
-			if d := c.declaratorOf(p); d != nil && d.IsParam() {
-				b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
+			if d := c.declaratorOf(p); d != nil && !d.IsParam() {
+				b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
 				break
 			}
 
-			b.w("%s[%s]", c.expr(w, p, nil, exprIndex), c.expr(w, index, nil, exprDefault))
+			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
 		case *cc.PointerType:
 			b.w("(*(*%s)(%sunsafe.%sPointer(%s + %[3]suintptr(%[5]s)%s)))", c.typ(p, elem), tag(importQualifier), tag(preserve), c.expr(w, p, nil, exprDefault), c.expr(w, index, nil, exprDefault), mul)
 		default:
@@ -1893,16 +1894,34 @@ func (c *ctx) declaratorOf(n cc.ExpressionNode) *cc.Declarator {
 
 func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
-	pt, ok := n.PostfixExpression.Type().(*cc.PointerType)
-	if !ok {
-		c.err(errorf("TODO %T", n.PostfixExpression.Type()))
-		return
-	}
+	var ft *cc.FunctionType
+	var d *cc.Declarator
+	switch d = c.declaratorOf(n.PostfixExpression); {
+	case d != nil:
+		switch x := d.Type().(type) {
+		case *cc.PointerType:
+			var ok bool
+			if ft, ok = x.Elem().(*cc.FunctionType); !ok {
+				c.err(errorf("TODO %T", x.Elem()))
+				return
+			}
+		case *cc.FunctionType:
+			ft = x
+		default:
+			c.err(errorf("TODO %T", d.Type()))
+			return
+		}
+	default:
+		pt, ok := n.PostfixExpression.Type().(*cc.PointerType)
+		if !ok {
+			c.err(errorf("TODO %T", n.PostfixExpression.Type()))
+			return
+		}
 
-	ft, ok := pt.Elem().(*cc.FunctionType)
-	if !ok {
-		c.err(errorf("TODO %T", pt.Elem()))
-		return
+		if ft, ok = pt.Elem().(*cc.FunctionType); !ok {
+			c.err(errorf("TODO %T", pt.Elem()))
+			return
+		}
 	}
 
 	var args []cc.ExpressionNode
@@ -1917,6 +1936,15 @@ func (c *ctx) postfixExpressionCall(w writer, n *cc.PostfixExpression) (r *buf, 
 	if len(args) > ft.MaxArgs() && ft.MaxArgs() >= 0 {
 		c.err(errorf("%v: too many arguments to function '%s', type '%v' in '%v'", c.pos(n.PostfixExpression), cc.NodeSource(n.PostfixExpression), ft, cc.NodeSource(n)))
 		return &b, nil, 0
+	}
+
+	// trc("%v: len(args) %v, ft.MaxArgs %v, ft.IsVariadic() %v, d != nil %v, d.IsSynthetic() %v, d.IsFuncDef() %v", n.Position(), len(args), ft.MaxArgs(), ft.IsVariadic(), d != nil, d.IsSynthetic(), d.IsFuncDef())
+	if len(args) > ft.MaxArgs() && !ft.IsVariadic() && d != nil && !d.IsSynthetic() && d.IsFuncDef() {
+		max := mathutil.Max(ft.MaxArgs(), 0)
+		for _, v := range args[max:] {
+			w.w("%s_ = %s;", tag(preserve), c.expr(w, v, nil, exprDefault))
+		}
+		args = args[:max]
 	}
 
 	params := ft.Parameters()
@@ -2118,6 +2146,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			}
 		}
 		ct := c.usualArithmeticConversions(x, y)
+		ut := n.UnaryExpression.Type()
 		switch mode {
 		case exprVoid:
 			switch d := c.declaratorOf(n.UnaryExpression); {
@@ -2125,7 +2154,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				b.w("%s = ", c.expr(w, n.UnaryExpression, nil, exprDefault))
 				var b2 buf
 				b2.w("(%s %s (%s%s))", c.expr(w, n.UnaryExpression, ct, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul)
-				b.w("%s", c.convert(n, w, &b2, ct, t, mode, mode))
+				b.w("%s", c.convert(n, w, &b2, ct, ut, mode, mode))
 			default:
 				p := fmt.Sprintf("%sp%d", tag(ccgo), c.id())
 				ut := n.UnaryExpression.Type()
@@ -2143,7 +2172,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				w.w("%s = ", c.expr(w, n.UnaryExpression, nil, exprDefault))
 				var b2 buf
 				b2.w("(%s %s (%s%s))", c.expr(w, n.UnaryExpression, ct, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul)
-				w.w("%s;", c.convert(n, w, &b2, ct, t, mode, mode))
+				w.w("%s;", c.convert(n, w, &b2, ct, ut, mode, mode))
 				b.w("%s", c.expr(w, n.UnaryExpression, nil, exprDefault))
 			default:
 				c.err(errorf("TODO"))
@@ -2296,7 +2325,7 @@ out:
 						c.err(errorf("TODO %T", y))
 					}
 				case exprIndex:
-					switch x.Type().Kind() {
+					switch x.Type().Undecay().Kind() {
 					case cc.Array:
 						b.w("%s", linkName)
 					default:

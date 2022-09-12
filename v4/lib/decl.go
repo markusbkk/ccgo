@@ -199,7 +199,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 		return
 	}
 
-	c.checkValidType(d, ft)
+	c.checkValidType(d, ft, true)
 	f0, pass := c.f, c.pass
 	c.f = c.newFnCtx(ft, cs)
 	defer func() { c.f = f0; c.pass = pass }()

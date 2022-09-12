@@ -49,7 +49,7 @@ func (c *ctx) initTyp(n cc.Node, t cc.Type) string {
 }
 
 func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTags, isField bool) {
-	if !c.checkValidType(n, t) {
+	if t.Kind() != cc.Array && !c.checkValidType(n, t, true) {
 		b.WriteString(tag(preserve))
 		b.WriteString("int32")
 		return
@@ -331,36 +331,46 @@ func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {
 		return true
 	}
 
-	return c.checkValidType(n, t)
+	return c.checkValidType(n, t, true)
 }
 
-func (c *ctx) checkValidType(n cc.Node, t cc.Type) (ok bool) {
+func (c *ctx) checkValidType(n cc.Node, t cc.Type, report bool) (ok bool) {
 	//trc("", pos(n), t, t.Attributes() != nil)
 	ok = true
 	switch attr := t.Attributes(); {
 	case t.Align() > 8 || (t.Size() > 0 && int64(t.Align()) > t.Size()):
-		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
+		if report {
+			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
+		}
 		ok = false
 	case attr != nil && (attr.Aligned() > 8 || (t.Size() > 0 && attr.Aligned() > t.Size())):
-		c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
+		if report {
+			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
+		}
 		ok = false
 	}
 
 	switch x := t.(type) {
 	case *cc.ArrayType:
 		if x.IsVLA() {
-			c.err(errorf("%v: variable length arrays are not supported", pos(n)))
+			if report {
+				c.err(errorf("%v: variable length arrays are not supported", pos(n)))
+			}
 			return false
 		}
 	}
 
 	if t.IsIncomplete() {
-		c.err(errorf("%v: incomplete type: %s", pos(n), t))
+		if report {
+			c.err(errorf("%v: incomplete type: %s", pos(n), t))
+		}
 		return false
 	}
 
 	if t.Size() <= 0 {
-		c.err(errorf("%v: invalid type size: %d", pos(n), t.Size()))
+		if report {
+			c.err(errorf("%v: invalid type size: %d", pos(n), t.Size()))
+		}
 		return false
 	}
 
@@ -524,6 +534,14 @@ func (c *ctx) defineEnumStructUnion0(w writer, sep string, n cc.Node, t cc.Type)
 		c.defineStruct(w, sep, n, x)
 	case *cc.UnionType:
 		c.defineUnion(w, sep, n, x)
+	case *cc.PointerType:
+		if t := x.Elem(); c.checkValidType(n, t, false) {
+			c.defineEnumStructUnion0(w, sep, n, x.Elem())
+		}
+	case *cc.ArrayType:
+		if t := x.Elem(); c.checkValidType(n, t, false) {
+			c.defineEnumStructUnion0(w, sep, n, x.Elem())
+		}
 	}
 }
 

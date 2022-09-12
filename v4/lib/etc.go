@@ -541,6 +541,10 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 		x, y := symKind(a), symKind(b)
 		return x < y || x == y && a < b
 	})
+	// trc("==== (A)")
+	// for _, v := range linkNames {
+	// 	trc("%q", v)
+	// }
 	for _, linkName := range linkNames {
 		switch k := symKind(linkName); k {
 		case external:
@@ -582,6 +586,11 @@ func (n *nameSpace) registerNameSet(l *linker, set nameSet, tld bool) {
 			}
 		}
 	}
+	// trc("---")
+	// for _, v := range linkNames {
+	// 	trc("%q -> %q", v, n.dict[v])
+	// }
+	// trc("==== (Z)")
 }
 
 func (n *nameSpace) registerName(l *linker, linkName string) (goName string) {
