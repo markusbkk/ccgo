@@ -469,7 +469,6 @@ func (p *parallel) err(err error) {
 	}
 
 	err = firstError(err, true)
-	p.fail()
 	p.Lock()
 	p.errors.add(err)
 	p.Unlock()
@@ -977,7 +976,7 @@ func isOctalString(s string) bool {
 
 func firstError(err error, short bool) error {
 	if !short || err == nil {
-		return nil
+		return err
 	}
 
 	if a := strings.Split(err.Error(), "\n"); len(a) != 0 {

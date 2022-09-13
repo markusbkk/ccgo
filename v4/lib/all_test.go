@@ -122,12 +122,12 @@ func TestMain(m *testing.M) {
 }
 
 func (p *parallel) close(t *testing.T) {
-	p.wg.Wait()
-	p.Lock()
-	for _, v := range p.errors {
-		t.Error(v)
+	if err := p.wait(); err != nil {
+		a := strings.Split(err.Error(), "\n")
+		for _, v := range a {
+			t.Error(v)
+		}
 	}
-	p.Unlock()
 	t.Logf("TOTAL: files %5s, skip %5s, ok %5s, fails %5s: %s", h(p.files), h(p.skips), h(p.oks), h(p.fails), p.resultTag)
 }
 
@@ -375,6 +375,12 @@ func testExec(t *testing.T, cfsDir string, exec bool, g *golden) {
 }
 
 func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *golden, id int, args []string) (err error) {
+	defer func() {
+		if err != nil {
+			p.fail()
+		}
+	}()
+
 	fullPath := filepath.ToSlash(filepath.Join(root, path))
 	var cCompilerFailed, cExecFailed bool
 	ofn := fmt.Sprint(id)
