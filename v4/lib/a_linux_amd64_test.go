@@ -75,6 +75,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/tcc-0.9.27/tests/tests2/98_al_ax_extend.c`:                                   {}, // BUILD FAIL: exit status 2
 
 	// ====================================================================
+	// Should not compile (transpile).
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71109.c`: {}, // COMPILE FAIL
+
+	// ====================================================================
 	// Does not compile (transpile).
 
 	// assembler
@@ -577,7 +581,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70263-1.c`:                                  {}, // COMPILE FAIL: TODO exprVoid (expr.go:452:expr0: expr.go:1280:postfixExpression: expr.go:1232:postfixExpressionIndex)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70355.c`:                                    {}, // COMPILE FAIL: pr70355.c:4:27: unsupported alignment 16 of v2ti (type.go:17:typedef: type.go:52:typ0: type.go:342:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr70916.c`:                                    {}, // COMPILE FAIL: TODO (expr.go:436:expr0: expr.go:666:conditionalExpression: expr.go:44:expr)
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71109.c`:                                    {}, // COMPILE FAIL: pr71109.c:15:7: too few arguments to function 'foo', type 'function(int, struct S, struct T)' in 'foo (bar, a)' (expr.go:453:expr0: expr.go:1351:postfixExpression: expr.go:1932:postfixExpressionCall)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-1.c`:                                  {}, // COMPILE FAIL: pr77754-1.c:9:7: variable length arrays are not supported (type.go:35:typ: type.go:52:typ0: type.go:352:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-2.c`:                                  {}, // COMPILE FAIL: pr77754-2.c:5:18: variable length arrays are not supported (decl.go:258:signature: type.go:334:checkValidParamType: type.go:352:checkValidType)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr77754-3.c`:                                  {}, // COMPILE FAIL: pr77754-3.c:5:25: variable length arrays are not supported (decl.go:258:signature: type.go:334:checkValidParamType: type.go:352:checkValidType)
