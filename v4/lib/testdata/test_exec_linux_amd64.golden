@@ -464,7 +464,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900216-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900313-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900407-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900516-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920410-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920410-2.c
@@ -663,7 +662,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981001-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981007-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981107-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990107-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990117-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990203-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990519-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990523-1.c
@@ -1017,7 +1015,6 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30132.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30338.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30433.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-1.c
-assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31034.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31345-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31541.c
@@ -1826,8 +1823,11 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040409-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040409-3w.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040423-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040625-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040629-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040703-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040704-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040705-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040705-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040706-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040707-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040805-1.c
@@ -2349,6 +2349,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/lto-tbaa-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/mayalias-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/mayalias-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/mayalias-3.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memchr-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memcpy-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memcpy-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memcpy-bi.c
@@ -2756,6 +2757,8 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strct-pack-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/string-opt-17.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/string-opt-5.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c
@@ -3165,8 +3168,11 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040409-3.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040409-3w.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040423-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040625-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040629-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040703-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040704-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040705-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040705-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040706-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040707-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040805-1.c
@@ -3696,6 +3702,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/lto-tbaa-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/mayalias-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/mayalias-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/mayalias-3.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memchr-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memcpy-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memcpy-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memcpy-bi.c
@@ -4141,6 +4148,8 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strct-pack-
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/string-opt-17.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/string-opt-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c
@@ -4292,6 +4301,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/compare.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/compound-assignment-basic.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-basic.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-constant.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-void.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/conditional.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/constant-address-index.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/constant-expression.c

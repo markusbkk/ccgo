@@ -171,6 +171,70 @@ func cfsWalk(dir string, f func(pth string, fi os.FileInfo) error) error {
 	return nil
 }
 
+func TestGoAlign(t *testing.T) {
+	for _, osarch := range []string{
+		"darwin/amd64",
+		"darwin/arm64",
+		"freebsd/386",
+		"freebsd/amd64",
+		"freebsd/arm",
+		"linux/386",
+		"linux/amd64",
+		"linux/arm",
+		"linux/arm64",
+		"linux/ppc64le",
+		"linux/riscv64",
+		"linux/s390x",
+		"netbsd/amd64",
+		"netbsd/arm",
+		"openbsd/amd64",
+		"openbsd/arm64",
+		"windows/386",
+		"windows/amd64",
+		"windows/arm64",
+	} {
+		a := strings.Split(osarch, "/")
+		os := a[0]
+		arch := a[1]
+		cabi, err := cc.NewABI(os, arch)
+		if err != nil {
+			t.Errorf("%s: %v", osarch, err)
+			continue
+		}
+
+		var ks []cc.Kind
+		for ck := range cabi.Types {
+			ks = append(ks, ck)
+		}
+		sort.Slice(ks, func(i, j int) bool { return ks[i] < ks[j] })
+
+		abi, err := gc.NewABI(os, arch)
+		if err != nil {
+			t.Errorf("%s: %v", osarch, err)
+			continue
+		}
+
+		for _, ck := range ks {
+			gk := gcKind(ck, cabi)
+			if gk < 0 {
+				continue
+			}
+
+			ct := cabi.Types[ck]
+			gt := abi.Types[gk]
+			if g, e := gt.Size, ct.Size; g != e {
+				t.Errorf("%s: Go %v size %d, C %v size %d", osarch, gk, g, ck, e)
+			}
+			if g, e := gt.Align, ct.Align; g != e {
+				t.Logf("%s: warning: Go %v align %d, C %v align %d", osarch, gk, g, ck, e)
+			}
+			if g, e := gt.FieldAlign, ct.FieldAlign; g != e {
+				t.Logf("%s: warning: Go %v field align %d, C %v field align %d", osarch, gk, g, ck, e)
+			}
+		}
+	}
+}
+
 func TestSep(t *testing.T) {
 	for i, v := range []struct {
 		src         string

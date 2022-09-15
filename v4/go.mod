@@ -8,10 +8,10 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
 	golang.org/x/tools v0.1.10
-	modernc.org/cc/v4 v4.0.0-20220913125121-e94d30796fd3
+	modernc.org/cc/v4 v4.0.0-20220915183504-4465a6cf489c
 	modernc.org/ccorpus2 v1.1.0
 	modernc.org/fileutil v1.1.1
-	modernc.org/gc/v2 v2.0.2
+	modernc.org/gc/v2 v2.0.0-20220915182915-3416455270a1
 	modernc.org/mathutil v1.5.0
 	modernc.org/opt v0.1.3
 )

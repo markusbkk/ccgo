@@ -41,6 +41,7 @@ type Task struct {
 	compiledfFiles map[string]string // *.c -> *.c.go
 	defs           string
 	fs             fs.FS
+	goABI          *gc.ABI
 	goarch         string
 	goos           string
 	inputFiles     []string
@@ -122,6 +123,10 @@ func (t *Task) Main() (err error) {
 		return errorf("invalid arguments")
 	case 1:
 		return errorf("no input files")
+	}
+
+	if t.goABI, err = gc.NewABI(t.goos, t.goarch); err != nil {
+		return errorf("%v", err)
 	}
 
 	set := opt.NewSet()

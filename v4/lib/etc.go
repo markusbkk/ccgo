@@ -1038,3 +1038,68 @@ func dumpScope(s *cc.Scope) string {
 	}
 	return strings.Join(a, "\n")
 }
+
+func gcKind(k cc.Kind, cabi *cc.ABI) gc.Kind {
+	switch k {
+	case cc.Bool:
+		return gc.Bool
+	case cc.Char:
+		if cabi.SignedChar {
+			return gc.Int8
+		}
+
+		return gc.Uint8
+	case cc.ComplexDouble:
+		return gc.Complex128
+	case cc.ComplexFloat:
+		return gc.Complex64
+	case cc.ComplexLongDouble:
+		if cabi.Types[k].Size == 8 {
+			return gc.Complex128
+		}
+	case cc.Double:
+		return gc.Float64
+	case cc.Float:
+		return gc.Float32
+	case cc.LongDouble:
+		if cabi.Types[k].Size == 8 {
+			return gc.Float64
+		}
+	case cc.SChar, cc.Int, cc.Long, cc.LongLong, cc.Short:
+		switch cabi.Types[k].Size {
+		case 1:
+			return gc.Int8
+		case 2:
+			return gc.Int16
+		case 4:
+			return gc.Int32
+		case 8:
+			return gc.Int64
+		}
+	case cc.UChar, cc.UInt, cc.ULong, cc.ULongLong, cc.UShort:
+		switch cabi.Types[k].Size {
+		case 1:
+			return gc.Uint8
+		case 2:
+			return gc.Uint16
+		case 4:
+			return gc.Uint32
+		case 8:
+			return gc.Uint64
+		}
+	case cc.Ptr:
+		return gc.Pointer
+	case cc.Function:
+		return gc.Function
+	case
+		cc.ComplexChar, cc.ComplexInt, cc.ComplexLong, cc.ComplexLongLong, cc.ComplexShort,
+		cc.ComplexUInt, cc.ComplexUShort, cc.Enum, cc.Int128, cc.UInt128, cc.Void,
+		cc.Float128, cc.Float32, cc.Float32x, cc.Float64, cc.Float64x, cc.Decimal128,
+		cc.Decimal32, cc.Decimal64, cc.Array, cc.Struct, cc.Union:
+
+		// ok
+	default:
+		panic(todo("", k))
+	}
+	return -1
+}

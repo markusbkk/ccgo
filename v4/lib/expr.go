@@ -654,6 +654,13 @@ func (c *ctx) conditionalExpression(w writer, n *cc.ConditionalExpression, t cc.
 			w.w("%s = %s;", v, c.pin(n, c.expr(w, n.ConditionalExpression, n.Type(), exprUintptr)))
 			w.w("};")
 			b.w("%s", v)
+		case exprVoid:
+			rt, rmode = n.Type(), mode
+			w.w("if %s {", c.expr(w, n.LogicalOrExpression, nil, exprBool))
+			w.w("%s;", c.expr(w, n.ExpressionList, n.Type(), exprVoid))
+			w.w("} else {")
+			w.w("%s;", c.expr(w, n.ConditionalExpression, n.Type(), exprVoid))
+			w.w("};")
 		default:
 			rt, rmode = n.Type(), mode
 			vs := fmt.Sprintf("var %s %s;", v, c.typ(n, n.Type()))
@@ -894,7 +901,7 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 	}
 
 	switch mode {
-	case exprDefault, exprVoid:
+	case exprDefault:
 		v := fmt.Sprintf("%sv%d", tag(ccgoAutomatic), c.id())
 		vs := fmt.Sprintf("var %s %s;", v, c.typ(n, f.Type()))
 		switch {
@@ -907,6 +914,13 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 		w.w("\n%v = %sAssignBitFieldPtr%d%s(%s+%d, (%s)%s1, %d, %d, %#0x);", v, c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), bf, op, f.ValueBits(), f.OffsetBits(), f.Mask())
 		b.w("%s", v)
 		return &b, n.Type(), exprDefault
+	case exprVoid:
+		sop := "Inc"
+		if op == "-" {
+			sop = "Dec"
+		}
+		w.w("\n%sPost%sBitFieldPtr%d%s(%s+%d, 1, %d, %d, %#0x);", c.task.tlsQualifier, sop, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), f.ValueBits(), f.OffsetBits(), f.Mask())
+		return &b, n.Type(), exprVoid
 	default:
 		trc("%v: BITFIELD %v", n.Position(), mode)
 		c.err(errorf("TODO %v", mode))
@@ -1099,34 +1113,22 @@ out:
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
-		// b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), n.Value())
 		switch x := n.UnaryExpression.Type().Undecay(); {
 		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
 			c.err(errorf("TODO %v", n.Case))
 		default:
-			sz := n.UnaryExpression.Type().Size()
-			if sz < 0 {
-				c.err(errorf("TODO %v", n.Case))
-				sz = 1
-			}
-			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), sz)
+			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), n.Value())
 		}
 	case cc.UnaryExpressionSizeofType: // "sizeof" '(' TypeName ')'
 		if t.Kind() == cc.Void {
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
-		// b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), n.Value())
 		switch x := n.TypeName.Type(); {
 		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
 			c.err(errorf("TODO %v", n.Case))
 		default:
-			sz := n.TypeName.Type().Size()
-			if sz < 0 {
-				c.err(errorf("TODO %v", n.Case))
-				sz = 1
-			}
-			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), sz)
+			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), n.Value())
 		}
 	case cc.UnaryExpressionLabelAddr: // "&&" IDENTIFIER
 		c.err(errorf("TODO %v", n.Case))

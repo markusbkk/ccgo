@@ -382,18 +382,25 @@ func (c *ctx) verifyStructs() {
 		c.w("\nif g, e := %sunsafe.%sSizeof(%s), %[2]suintptr(%[4]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, t.Size())
 		switch x := t.(type) {
 		case *cc.StructType:
+			groups := map[int64]struct{}{}
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
-				nm := f.Name()
-				off := f.Offset()
-				sz := f.Type().Size()
 				switch {
 				case f.IsBitfield():
 					if f.InOverlapGroup() {
 						continue
 					}
 
-					continue //TODO-
+					off := f.Offset()
+					if _, ok := groups[off]; ok {
+						break
+					}
+
+					groups[off] = struct{}{}
+					sz := int64(f.GroupSize())
+					nm := fmt.Sprintf("%s__ccgo%d", tag(field), off)
+					c.w("\nif g, e := %sunsafe.%sSizeof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, sz)
+					c.w("\nif g, e := %sunsafe.%sOffsetof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, off)
 				default:
 					if f.IsFlexibleArrayMember() {
 						continue
@@ -403,10 +410,14 @@ func (c *ctx) verifyStructs() {
 						continue
 					}
 
-					nm = tag(field) + c.fieldName(x, f)
+					off := f.Offset()
+					sz := f.Type().Size()
+					al := f.Type().FieldAlign()
+					nm := tag(field) + c.fieldName(x, f)
+					c.w("\nif g, e := %sunsafe.%sSizeof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, sz)
+					c.w("\nif g, e := %sunsafe.%sOffsetof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, off)
+					c.w("\nif g, e := %sunsafe.%sOffsetof(%s.%s) %% %[5]d, %[2]suintptr(0); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, al)
 				}
-				c.w("\nif g, e := %sunsafe.%sOffsetof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, off)
-				c.w("\nif g, e := %sunsafe.%sSizeof(%s.%s), %[2]suintptr(%[5]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, nm, sz)
 			}
 		}
 	}

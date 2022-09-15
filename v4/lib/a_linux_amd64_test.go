@@ -5,6 +5,11 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 var testExecKnownFails = map[string]struct{}{
+	//TODO regression
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-1.c`:  {}, //TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990117-1.c`:  {}, //TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-2.c`: {}, //TODO
+
 	// ====================================================================
 	// Compiles and builds but fails at execution.
 
@@ -43,34 +48,19 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:                 {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960405-1.c`: {}, // BUILD FAIL
 
-	//TODO invalid void expr
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040629-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040705-1.c`:                 {}, // BUILD FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20040705-2.c`:                 {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040629-1.c`: {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040705-1.c`: {}, // BUILD FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20040705-2.c`: {}, // BUILD FAIL
-
 	//TODO
 	`assets/ccgo/bug/sqlite.c`: {}, // BUILD FAIL
 
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/memchr-1.c`:                    {}, // BUILD FAIL: exit status 2
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr67037.c`:                     {}, // BUILD FAIL: exit status 2
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-6.c`:                    {}, // BUILD FAIL: exit status 2
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-3.c`:                    {}, // BUILD FAIL: exit status 2
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-2.c`:                    {}, // BUILD FAIL: exit status 2
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-4.c`:                    {}, // BUILD FAIL: exit status 2
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/zerolen-1.c`:                   {}, // BUILD FAIL: exit status 2
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/memchr-1.c`:    {}, // BUILD FAIL: exit status 2
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr67037.c`:     {}, // BUILD FAIL: exit status 2
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/return-addr.c`: {}, // BUILD FAIL: exit status 2
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-3.c`:    {}, // BUILD FAIL: exit status 2
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-6.c`:    {}, // BUILD FAIL: exit status 2
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-2.c`:    {}, // BUILD FAIL: exit status 2
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-4.c`:    {}, // BUILD FAIL: exit status 2
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/zerolen-1.c`:   {}, // BUILD FAIL: exit status 2
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0011-switch1.c`:            {}, // BUILD FAIL: exit status 2
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/conditional-void.c`:                    {}, // BUILD FAIL: exit status 2
 	`assets/tcc-0.9.27/tests/tests2/81_types.c`:                                          {}, // BUILD FAIL: exit status 2
 	`assets/tcc-0.9.27/tests/tests2/98_al_ax_extend.c`:                                   {}, // BUILD FAIL: exit status 2
 

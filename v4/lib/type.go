@@ -160,7 +160,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			b.WriteByte('\n')
 			c.alignPseudoField(b, x.Align())
 			var off int64
-			// trc("%s", x)
+			// trc("===== %s", x)
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
 				// trc("%v: %q, off %v, bitoff %v, ab %v, vbits %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits())
@@ -175,7 +175,12 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					if _, ok := groups[foff]; !ok {
 						groups[foff] = struct{}{}
 						gsz = int64(f.GroupSize())
+						off0 := off
 						off = roundup(off, gsz)
+						if off > off0 {
+							b.WriteByte('\n')
+							fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, off-off0)
+						}
 						fmt.Fprintf(b, "\n%s__ccgo%d uint%d", tag(field), foff, gsz*8)
 					}
 					off += gsz
@@ -185,13 +190,13 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 						break
 					}
 
-					abiAlign := ft.Align()
-					goAlign := c.goAlign(ft)
+					cAlign := ft.Align()
+					goAlign := c.goFieldAlign(ft)
 					off = roundup(off, int64(goAlign))
-					if abiAlign > goAlign && off%int64(abiAlign) != 0 {
+					if cAlign > goAlign && off%int64(cAlign) != 0 {
 						b.WriteByte('\n')
-						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, abiAlign-goAlign)
-						off += int64(abiAlign - goAlign)
+						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, cAlign-goAlign)
+						off += int64(cAlign - goAlign)
 					}
 
 					if ft.Size() == 0 && i == x.NumFields()-1 {
@@ -310,19 +315,13 @@ func (c *ctx) alignPseudoField(b *strings.Builder, align int) {
 	fmt.Fprintf(b, "%s__ccgo_align [0]%s%s", tag(field), tag(preserve), s)
 }
 
-// Exceptions to the usual C and Go alignment agreement.
-func (c *ctx) goAlign(t cc.Type) (r int) {
-	r = t.Align()
-	switch c.task.goos {
-	case "linux":
-		switch c.task.goarch {
-		case "arm", "386":
-			if t.Size() == 8 {
-				return 4
-			}
-		}
+func (c *ctx) goFieldAlign(t cc.Type) (r int) {
+	gk := gcKind(t.Kind(), c.ast.ABI)
+	if gk < 0 {
+		return t.Align()
 	}
-	return r
+
+	return c.task.goABI.Types[gk].FieldAlign
 }
 
 func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {

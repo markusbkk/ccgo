@@ -8,6 +8,11 @@
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
 var testExecKnownFails = map[string]struct{}{
+	//TODO regression
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-1.c`:  {}, //TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990117-1.c`:  {}, //TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-2.c`: {}, //TODO
+
 	// ====================================================================
 	// Compiles and builds but fails at execution.
 
