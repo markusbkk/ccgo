@@ -443,7 +443,7 @@ func (c *ctx) defineStructType(w writer, sep string, n cc.Node, t *cc.StructType
 
 	nmt := t.Tag()
 	if nm := nmt.SrcStr(); nm != "" && t.LexicalScope().Parent == nil {
-		if !c.taggedStructs.add(nm) {
+		if c.pass != 0 || !c.taggedStructs.add(nm) {
 			return
 		}
 
