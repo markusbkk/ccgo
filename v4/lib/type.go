@@ -163,7 +163,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			// trc("===== %s", x)
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
-				// trc("%v: %q, off %v, bitoff %v, ab %v, vbits %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits())
+				// trc("%v: %q, .off %v, .bitoff %v, .ab %v, .vbits %v, fam %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits(), f.IsFlexibleArrayMember())
 				switch {
 				case f.IsBitfield():
 					if f.InOverlapGroup() {
@@ -186,7 +186,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					off += gsz
 				default:
 					ft := f.Type()
-					if f.IsFlexibleArrayMember() && ft.Size() < 0 {
+					if f.IsFlexibleArrayMember() && ft.Size() <= 0 {
 						break
 					}
 
@@ -215,7 +215,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					off += ft.Size()
 				}
 			}
-			if p := x.Padding(); p != 0 {
+			if p := x.Size() - off; p != 0 {
 				b.WriteByte('\n')
 				fmt.Fprintf(b, "%s__ccgo_pad [%d]byte", tag(field), p)
 			}
