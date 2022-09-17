@@ -316,6 +316,9 @@ func (c *ctx) alignPseudoField(b *strings.Builder, align int) {
 }
 
 func (c *ctx) goFieldAlign(t cc.Type) (r int) {
+	for t.Kind() == cc.Array {
+		t = t.(*cc.ArrayType).Elem()
+	}
 	gk := gcKind(t.Kind(), c.ast.ABI)
 	if gk < 0 {
 		return t.Align()
