@@ -4,8 +4,6 @@
 
 package ccgo // import "modernc.org/ccgo/v4/lib"
 
-//TODO CSmith
-
 import (
 	"bytes"
 	"context"
@@ -478,9 +476,9 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	var out bytes.Buffer
 	switch {
 	case !execute:
-		err = NewTask(goos, goarch, []string{"ccgo", "-c", "-verify-structs", "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(goos, goarch, []string{"ccgo", "-c", "-verify-types", "--prefix-field=F", path}, &out, &out, nil).Main()
 	default:
-		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "-verify-structs", "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "-verify-types", "--prefix-field=F", path}, &out, &out, nil).Main()
 	}
 	if err != nil {
 		if *oTraceC {
@@ -699,6 +697,7 @@ func TestCSmith(t *testing.T) {
 		t.Skip(err)
 		return
 	}
+
 	binaryName := filepath.FromSlash("./a.out")
 	mainName := filepath.FromSlash("main.go")
 	wd, err := os.Getwd()
@@ -720,7 +719,7 @@ func TestCSmith(t *testing.T) {
 	}
 
 	if os.Getenv("GO111MODULE") != "off" {
-		if out, err := shell(true, "go", "mod", "init", "example.com/ccgo/v3/lib/csmith"); err != nil {
+		if out, err := shell(true, "go", "mod", "init", "example.com/ccgo/v4/lib/csmith"); err != nil {
 			t.Fatalf("%v\n%s", err, out)
 		}
 
@@ -844,7 +843,7 @@ out:
 
 				"-o", mainName,
 				"-extended-errors",
-				"-verify-structs",
+				"-verify-types",
 				"main.c",
 				csp,
 			},
@@ -939,7 +938,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_THREADSAFE=0",
 		// "-positions",
 		// "-full-paths",
-		"-verify-structs",
+		"-verify-types",
 		"-o", main,
 		path.Join(dir, "shell.c"),
 		path.Join(dir, "sqlite3.c"),

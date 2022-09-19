@@ -265,6 +265,8 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 				b.w("%s%sBool%s(%s)", c.task.tlsQualifier, tag(preserve), c.helper(n, to), s)
 				return &b
 			}
+		case exprVoid:
+			return s
 		}
 	case exprVoid:
 		switch toMode {
@@ -272,7 +274,7 @@ func (c *ctx) convertMode(n cc.ExpressionNode, w writer, s *buf, from, to cc.Typ
 			return s
 		}
 	}
-	// trc("%v: from %v, %v to %v %v, src '%s', buf '%s'", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), s.bytes())
+	//trc("%v: from %v, %v to %v %v, src '%s', buf '%s'", c.pos(n), from, fromMode, to, toMode, cc.NodeSource(n), s.bytes())
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
 }
@@ -995,7 +997,7 @@ out:
 			sz := ue.(*cc.PointerType).Elem().Size()
 			switch mode {
 			case exprVoid:
-				c.err(errorf("TODO"))
+				b.w("%s -= %d", c.expr(w, n.UnaryExpression, nil, exprDefault), sz)
 			case exprDefault:
 				switch d := c.declaratorOf(n.UnaryExpression); {
 				case d != nil:
@@ -1420,7 +1422,7 @@ out:
 			sz := pe.(*cc.PointerType).Elem().Size()
 			switch mode {
 			case exprVoid:
-				b.w("%s--", c.expr(w, n.PostfixExpression, nil, exprDefault))
+				b.w("%s -= %d", c.expr(w, n.PostfixExpression, nil, exprDefault), sz)
 			case exprDefault:
 				v := c.f.newAutovar(n, n.PostfixExpression.Type())
 				switch d := c.declaratorOf(n.PostfixExpression); {
@@ -2124,13 +2126,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		}
 
 		x, y := n.UnaryExpression.Type(), n.AssignmentExpression.Type()
-		var mul, div string
+		var k, v string
 		switch n.Case {
 		case cc.AssignmentExpressionAdd: // UnaryExpression "+=" AssignmentExpression
 			switch {
 			case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
 				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
-					mul = fmt.Sprintf("*%d", sz)
+					k = fmt.Sprintf("*%d", sz)
 				}
 			case cc.IsIntegerType(x) && y.Kind() == cc.Ptr:
 				c.err(errorf("TODO")) // -
@@ -2139,45 +2141,31 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			switch {
 			case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
 				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
-					mul = fmt.Sprintf("*%d", sz)
+					k = fmt.Sprintf("*%d", sz)
 				}
 			case x.Kind() == cc.Ptr && y.Kind() == cc.Ptr:
 				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
-					div = fmt.Sprintf("/%d", sz)
+					k = fmt.Sprintf("/%d", sz)
 				}
 			}
 		}
 		ct := c.usualArithmeticConversions(x, y)
 		ut := n.UnaryExpression.Type()
 		switch mode {
-		case exprVoid:
+		case exprDefault, exprVoid:
 			switch d := c.declaratorOf(n.UnaryExpression); {
 			case d != nil:
-				b.w("%s = ", c.expr(w, n.UnaryExpression, nil, exprDefault))
-				var b2 buf
-				b2.w("(%s %s (%s%s))", c.expr(w, n.UnaryExpression, ct, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul)
-				b.w("%s", c.convert(n, w, &b2, ct, ut, mode, mode))
+				v = fmt.Sprintf("%s", c.expr(w, n.UnaryExpression, nil, exprDefault))
 			default:
 				p := fmt.Sprintf("%sp%d", tag(ccgo), c.id())
-				ut := n.UnaryExpression.Type()
 				ps := fmt.Sprintf("var %s %s;", p, c.typ(n, ut.Pointer()))
 				c.f.registerAutoVar(ps)
 				w.w("\n%s = %s;", p, c.expr(w, n.UnaryExpression, ut.Pointer(), exprUintptr))
-				var b2 buf
-				p2 := newBufFromtring(fmt.Sprintf("(*(*%s)(%s))", c.typ(n, ut), unsafePointer(p)))
-				b2.w("((%s %s (%s%s))%s)", c.convert(n, w, p2, n.UnaryExpression.Type(), ct, exprDefault, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul, div)
-				b.w("*(*%s)(%s) = %s", c.typ(n, ut), unsafePointer(p), c.convert(n, w, &b2, ct, t, mode, mode))
+				v = fmt.Sprintf("(*(*%s)(%s))", c.typ(n, ut), unsafePointer(p))
 			}
-		case exprDefault:
-			switch d := c.declaratorOf(n.UnaryExpression); {
-			case d != nil:
-				w.w("%s = ", c.expr(w, n.UnaryExpression, nil, exprDefault))
-				var b2 buf
-				b2.w("(%s %s (%s%s))", c.expr(w, n.UnaryExpression, ct, exprDefault), op, c.expr(w, n.AssignmentExpression, ct, exprDefault), mul)
-				w.w("%s;", c.convert(n, w, &b2, ct, ut, mode, mode))
-				b.w("%s", c.expr(w, n.UnaryExpression, nil, exprDefault))
-			default:
-				c.err(errorf("TODO"))
+			w.w("\n%s = %s((%s(%s)) %s ((%s)%s));", v, c.typ(n, ut), c.typ(n, ct), v, op, c.expr(w, n.AssignmentExpression, ct, exprDefault), k)
+			if mode == exprDefault {
+				b.w("%s", v)
 			}
 		default:
 			c.err(errorf("TODO %v", mode))

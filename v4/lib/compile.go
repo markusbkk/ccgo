@@ -325,7 +325,7 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 			delete(c.defineTaggedUnions, k)
 		}
 	}
-	c.verifyStructs()
+	c.verifyTypes()
 	c.w("%s", sep(c.ast.EOF))
 	if c.hasMain && c.task.tlsQualifier != "" {
 		c.w("\n\nfunc %smain() { %s%[1]sStart(%[3]smain) }\n", tag(preserve), c.task.tlsQualifier, tag(external))
@@ -360,7 +360,7 @@ func (c *ctx) typeID(t cc.Type) string {
 	return b.String()
 }
 
-func (c *ctx) verifyStructs() {
+func (c *ctx) verifyTypes() {
 	if len(c.verify) == 0 {
 		return
 	}

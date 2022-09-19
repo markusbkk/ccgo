@@ -83,7 +83,7 @@ type Task struct {
 	packageNameSet  bool
 	positions       bool // -positions
 	pthread         bool // -pthread
-	verifyStructs   bool // -verify-structs
+	verifyTypes     bool // -verify-types
 
 	strictISOMode bool // -ansi or stc=c90
 }
@@ -172,7 +172,7 @@ func (t *Task) Main() (err error) {
 	set.Opt("nostdlib", func(opt string) error { t.nostdlib = true; return nil })
 	set.Opt("positions", func(opt string) error { t.positions = true; return nil })
 	set.Opt("pthread", func(opt string) error { t.pthread = true; t.cfgArgs = append(t.cfgArgs, opt); return nil })
-	set.Opt("verify-structs", func(opt string) error { t.verifyStructs = true; return nil })
+	set.Opt("verify-types", func(opt string) error { t.verifyTypes = true; return nil })
 
 	// Ignored
 	set.Arg("MF", true, func(opt, val string) error { return nil })

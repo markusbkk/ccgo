@@ -55,9 +55,9 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 		return
 	}
 
-	if c.task.verifyStructs && !t.IsIncomplete() {
+	if c.task.verifyTypes && !t.IsIncomplete() {
 		switch t.Kind() {
-		case cc.Struct, cc.Union:
+		case cc.Struct, cc.Union, cc.Array:
 			c.verify[t] = struct{}{}
 		}
 	}
