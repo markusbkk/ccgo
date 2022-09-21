@@ -221,6 +221,7 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 			}
 		}
 		f := flds[0]
+		flds = flds[1:]
 		// trc("f %q %s off %#0x", f.Name(), f.Type(), f.Offset())
 		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+f.Offset(), false))
 	}
