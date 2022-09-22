@@ -1190,6 +1190,9 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 		}
 	}
 
+	if mode == exprVoid {
+		mode = exprDefault
+	}
 	switch mode {
 	case exprSelect, exprLvalue, exprDefault, exprIndex:
 		switch x := pt.Undecay().(type) {
@@ -1231,7 +1234,7 @@ func (c *ctx) postfixExpressionIndex(w writer, p, index cc.ExpressionNode, pt *c
 			}
 		}
 
-		b.w("(%s + %suintptr(%s%s))", c.expr(w, p, nil, exprDefault), tag(preserve), c.expr(w, index, nil, exprDefault), mul)
+		b.w("(%s + %suintptr(%[2]suintptr(%s)%s))", c.expr(w, p, nil, exprDefault), tag(preserve), c.expr(w, index, nil, exprDefault), mul)
 	default:
 		// trc("%v: %s[%s] %v", c.pos(p), cc.NodeSource(p), cc.NodeSource(index), mode)
 		c.err(errorf("TODO %v", mode))
@@ -1626,8 +1629,8 @@ func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mo
 func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
 	var b buf
 	switch mode {
-	case exprDefault:
-		rt, rmode = f.Type(), mode
+	case exprDefault, exprVoid:
+		rt, rmode = f.Type(), exprDefault
 		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
 		if cc.IsSignedInteger(f.Type()) {
 			w := f.Type().Size() * 8
@@ -1709,6 +1712,9 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		return c.bitField(w, n, c.pin(n, c.expr(w, n.PostfixExpression, n.PostfixExpression.Type().Pointer(), exprUintptr)), f, mode)
 	}
 
+	if mode == exprVoid {
+		mode = exprDefault
+	}
 	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f.Index() != 0 { // Use firstPositiveSizedField instead of zero
 		switch mode {
 		case exprLvalue, exprDefault, exprSelect:
@@ -1758,6 +1764,9 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		return &b, rt, rmode
 	}
 
+	if mode == exprVoid {
+		mode = exprDefault
+	}
 	switch mode {
 	case exprLvalue, exprDefault, exprSelect, exprIndex:
 		rt, rmode = n.Type(), mode
@@ -2242,7 +2251,8 @@ out:
 				case exprUintptr:
 					rt = x.Type().Pointer()
 					b.w("%s", bpOff(info.bpOff))
-				case exprDefault:
+				case exprDefault, exprVoid:
+					rmode = exprDefault
 					switch _, ok := n.Type().Undecay().(*cc.ArrayType); {
 					case ok && !x.IsParam():
 						b.w("%s", bpOff(info.bpOff))

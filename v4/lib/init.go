@@ -141,7 +141,7 @@ func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.A
 	for _, v := range s {
 		off := v[0].Offset() - off0
 		off -= off % esz
-		b.w("%d: %s, ", off/esz, c.initializer(w, n, v, et, off0+off, true))
+		b.w("\n%d: %s, ", off/esz, c.initializer(w, n, v, et, off0+off, true))
 	}
 	b.w("}")
 	return &b
@@ -161,11 +161,6 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 	var flds []*cc.Field
 	for i := 0; ; i++ {
 		if f := t.FieldByIndex(i); f != nil {
-			if f.IsBitfield() {
-				c.err(errorf("TODO bitfield"))
-				return nil
-			}
-
 			if f.Type().Size() <= 0 {
 				switch x := f.Type().(type) {
 				case *cc.StructType:
@@ -192,7 +187,7 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 			}
 
 			flds = append(flds, f)
-			// trc("appended: flds[%d] %q %s off %#0x sz %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset(), f.Type().Size())
+			// trc("appended: flds[%d] %q %s off %#0x ogo %#0x sz %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset(), f.OuterGroupOffset(), f.Type().Size())
 			continue
 		}
 
@@ -201,14 +196,21 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 	s := sortInitializers(a, func(off int64) int64 {
 		off -= off0
 		i := sort.Search(len(flds), func(i int) bool {
-			return flds[i].Offset() >= off
+			return flds[i].OuterGroupOffset() >= off
 		})
-		if i < len(flds) && flds[i].Offset() == off {
+		if i < len(flds) && flds[i].OuterGroupOffset() == off {
 			return off
 		}
 
-		return flds[i-1].Offset()
+		return flds[i-1].OuterGroupOffset()
 	})
+	// trc("==== initializers (A)")
+	// for i, v := range s {
+	// 	for j, w := range v {
+	// 		trc("%d.%d: %q off %v, ogo %v, %s", i, j, w.Field().Name(), w.Field().Offset(), w.Field().OuterGroupOffset(), cc.NodeSource(w.AssignmentExpression))
+	// 	}
+	// }
+	// trc("==== initializers (Z)")
 	for _, v := range s {
 		first := v[0]
 		off := first.Offset() - off0
@@ -221,8 +223,37 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 			}
 		}
 		f := flds[0]
-		flds = flds[1:]
+		if f.IsBitfield() {
+			// trc("==== %v: TODO bitfield", cpos(n))
+			// trc("%q %s off %#0x ogo %#0x sz %#0x", f.Name(), f.Type(), f.Offset(), f.OuterGroupOffset(), f.Type().Size())
+			// for i, v := range v {
+			// 	trc("%d: %q %s", i, v.Field().Name(), cc.NodeSource(v.AssignmentExpression))
+			// }
+			// trc("----")
+			for len(flds) != 0 && flds[0].OuterGroupOffset() == f.OuterGroupOffset() {
+				flds = flds[1:]
+			}
+			b.w("%s__ccgo%d: ", tag(field), f.OuterGroupOffset())
+			sort.Slice(v, func(i, j int) bool {
+				a, b := v[i].Field(), v[j].Field()
+				return a.Offset()*8+int64(a.OffsetBits()) < b.Offset()*8+int64(b.OffsetBits())
+			})
+			ogo := f.OuterGroupOffset()
+			gsz := 8 * (int64(f.GroupSize()) + f.Offset() - ogo)
+			for i, in := range v {
+				if i != 0 {
+					b.w("|")
+				}
+				f = in.Field()
+				sh := f.OffsetBits() + 8*int(f.Offset()-ogo)
+				b.w("(((%suint%d(%s))&%#0x)<<%d)", tag(preserve), gsz, c.expr(w, in.AssignmentExpression, nil, exprDefault), uint(1)<<f.ValueBits()-1, sh)
+			}
+			b.w(", ")
+			continue
+		}
+
 		// trc("f %q %s off %#0x", f.Name(), f.Type(), f.Offset())
+		flds = flds[1:]
 		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+f.Offset(), false))
 	}
 	b.w("}")
@@ -245,14 +276,6 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 	}
 
 	p := a[0].Parent()
-	if assert {
-		for _, v := range a[1:] {
-			if v.Parent() != p {
-				c.err(errorf("TODO"))
-				return &b
-			}
-		}
-	}
 	if p == nil {
 		c.err(errorf("TODO"))
 		return &b
@@ -264,6 +287,8 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 		pt = t
 	}
 	fs := pt.Size()
+	// trc("ts %v %s", ts, t)
+	// trc("fs %v %s", fs, pt)
 	switch x := pt.(type) {
 	case *cc.ArrayType:
 		switch {
@@ -344,11 +369,15 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 				t = fmt.Sprintf("[%s].", p.Type())
 			}
 		}
+		var fs string
+		if f := v.Field(); f != nil {
+			fs = fmt.Sprintf(" (field %q)", f.Name())
+		}
 		switch v.Case {
 		case cc.InitializerExpr:
-			fmt.Printf("%s %v: off %#05x '%s' %s%s <- %s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type())
+			fmt.Printf("%s %v: off %#05x '%s' %s%s <- %s%s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type(), fs)
 		case cc.InitializerInitList:
-			s := pref + "· "
+			s := pref + "· " + fs
 			for l := v.InitializerList; l != nil; l = l.InitializerList {
 				dumpInitializer([]*cc.Initializer{l.Initializer}, s)
 			}

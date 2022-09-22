@@ -395,6 +395,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		}
 	}
 
+	var cont string
 	switch n.Case {
 	case cc.IterationStatementWhile: // "while" '(' ExpressionList ')' Statement
 		var a buf
@@ -432,10 +433,16 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 	case cc.IterationStatementFor: // "for" '(' ExpressionList ';' ExpressionList ';' ExpressionList ')' Statement
 		var a, a2, a3 buf
 		var b2 []byte
+		b := c.expr(&a, n.ExpressionList, nil, exprVoid)
 		if n.ExpressionList2 != nil {
 			b2 = c.expr(&a2, n.ExpressionList2, nil, exprBool).bytes()
 		}
-		switch b, b3 := c.expr(&a, n.ExpressionList, nil, exprVoid), c.expr(&a3, n.ExpressionList3, nil, exprVoid); {
+		b3 := c.expr(&a3, n.ExpressionList3, nil, exprVoid)
+		if a3.len() != 0 {
+			cont = c.label()
+			defer c.setContinueCtx(cont)()
+		}
+		switch {
 		case a.len() == 0 && a2.len() == 0 && a3.len() == 0:
 			w.w("for %s; %s; %s {", b, b2, b3)
 			c.unbracedStatement(w, n.Statement)
@@ -443,6 +450,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		case a.len() == 0 && a2.len() == 0 && a3.len() != 0:
 			w.w("for %s; %s;  {", b, b2)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() == 0 && a2.len() != 0 && a3.len() == 0:
 			w.w("for %s; ; %s {", b, b3)
@@ -455,6 +463,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\n%s", a2.bytes())
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() != 0 && a2.len() == 0 && a3.len() == 0:
 			w.w("%s%s", a.bytes(), b.bytes())
@@ -465,6 +474,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("%s%s", a.bytes(), b.bytes())
 			w.w("\nfor %s {", b2)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		case a.len() != 0 && a2.len() != 0 && a3.len() == 0:
 			w.w("%s%s", a.bytes(), b.bytes())
@@ -479,6 +489,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\n%s", a2.bytes())
 			w.w("\nif !(%s) { break };", b2)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a3.bytes(), b3.bytes())
 		}
 	case cc.IterationStatementForDecl: // "for" '(' Declaration ExpressionList ';' ExpressionList ')' Statement
@@ -488,7 +499,12 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		if n.ExpressionList != nil {
 			b = c.expr(&a, n.ExpressionList, nil, exprBool).bytes()
 		}
-		switch b2 := c.expr(&a2, n.ExpressionList2, nil, exprVoid); {
+		b2 := c.expr(&a2, n.ExpressionList2, nil, exprVoid)
+		if a2.len() != 0 {
+			cont = c.label()
+			defer c.setContinueCtx(cont)()
+		}
+		switch {
 		case a.len() == 0 && a2.len() == 0:
 			w.w("for ; %s; %s {", b, b2)
 			c.unbracedStatement(w, n.Statement)
@@ -496,6 +512,7 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 		case a.len() == 0 && a2.len() != 0:
 			w.w("for %s  {", b)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a2.bytes(), b2.bytes())
 		case a.len() != 0 && a2.len() == 0:
 			w.w("for ; ; %s {", b2)
@@ -503,11 +520,12 @@ func (c *ctx) iterationStatement(w writer, n *cc.IterationStatement) {
 			w.w("\nif !(%s) { break };", b)
 			c.unbracedStatement(w, n.Statement)
 			w.w("};")
-		default: // case a.len() != 0 && a.len() != 0:
+		default: // case a.len() != 0 && a2.len() != 0:
 			w.w("for {")
 			w.w("\n%s", a.bytes())
 			w.w("\nif !(%s) { break };", b)
 			c.unbracedStatement(w, n.Statement)
+			w.w("\ngoto %s; %[1]s:", cont)
 			w.w("\n%s%s};", a2.bytes(), b2.bytes())
 		}
 	default:
