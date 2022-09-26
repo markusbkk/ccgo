@@ -6,12 +6,12 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/pmezard/go-difflib v1.0.0
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	golang.org/x/tools v0.1.12
-	modernc.org/cc/v4 v4.0.0-20220922191712-eda4dca5ef83
+	modernc.org/cc/v4 v4.1.0
 	modernc.org/ccorpus2 v1.1.0
 	modernc.org/fileutil v1.1.1
-	modernc.org/gc/v2 v2.0.0-20220915182915-3416455270a1
+	modernc.org/gc/v2 v2.1.2-0.20220923113132-f3b5abcf8083
 	modernc.org/mathutil v1.5.0
 	modernc.org/opt v0.1.3
 )

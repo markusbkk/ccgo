@@ -10,7 +10,7 @@ require (
 	golang.org/x/tools v0.0.0-20201124115921-2c860bdd6e78
 	modernc.org/cc/v3 v3.39.0
 	modernc.org/ccorpus v1.11.6
-	modernc.org/libc v1.19.0
+	modernc.org/libc v1.20.0
 	modernc.org/mathutil v1.5.0
 	modernc.org/opt v0.1.3
 )
