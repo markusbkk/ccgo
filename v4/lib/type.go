@@ -260,11 +260,6 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 				return
 			}
 
-			if ff.IsBitfield() {
-				c.err(errorf("TODO bitfield"))
-				return
-			}
-
 			sz1 := ff.Type().Size()
 			b.WriteByte('\n')
 			switch nm := ff.Name(); {

@@ -42,6 +42,7 @@ assets/ccgo/bug/bitfield.c
 assets/ccgo/bug/condfn.c
 assets/ccgo/bug/cpl_convert.c
 assets/ccgo/bug/csmith.c
+assets/ccgo/bug/csmith2.c
 assets/ccgo/bug/dereffp.c
 assets/ccgo/bug/do.c
 assets/ccgo/bug/enums.c
@@ -68,6 +69,7 @@ assets/ccgo/bug/sizeof.c
 assets/ccgo/bug/sizeof2.c
 assets/ccgo/bug/sqlite2.c
 assets/ccgo/bug/tk.c
+assets/ccgo/bug/union2.c
 assets/ccgo/bug/webp.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000105-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000105-2.c
@@ -1911,6 +1913,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20070623-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20070724-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071011-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071018-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071029-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071030-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071108-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20071202-1.c
@@ -3290,6 +3293,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20070623-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20070724-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071011-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071018-1.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071029-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071030-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071108-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20071202-1.c

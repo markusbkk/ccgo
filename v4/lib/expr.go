@@ -1473,7 +1473,7 @@ out:
 			a = append(a, c.initalizerFlatten(l.Initializer, nil)...)
 		}
 		t := n.TypeName.Type()
-		return c.initializer(w, n, a, t, 0, false), t, exprDefault
+		return c.initializer(w, n, a, t, 0, t.Kind() == cc.Array), t, exprDefault
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}

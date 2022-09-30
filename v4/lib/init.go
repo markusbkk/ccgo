@@ -125,7 +125,7 @@ func (c *ctx) isZero(v cc.Value) bool {
 }
 
 func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.ArrayType, off0 int64) (r *buf) {
-	// trc("==== (array A) %s off0 %#0x", t, off0)
+	// trc("==== (array A, size %v) %s off0 %#0x", t.Size(), t, off0)
 	// dumpInitializer(a, "")
 	// trc("---- (array Z)")
 	var b buf
@@ -148,7 +148,7 @@ func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.A
 }
 
 func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.StructType, off0 int64) (r *buf) {
-	// trc("==== %v: (struct A) %s off0 %#0x", n.Position(), t, off0)
+	// trc("==== %v: (struct A, size %v) %s off0 %#0x", n.Position(), t.Size(), t, off0)
 	// dumpInitializer(a, "")
 	// trc("---- (struct Z)")
 	var b buf
@@ -175,7 +175,6 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 					}
 				case *cc.ArrayType:
 					if x.Len() > 0 {
-						trc("", x.Len())
 						c.err(errorf("TODO %T", x))
 						return nil
 					}
@@ -261,86 +260,118 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 }
 
 func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64, arrayElem bool) (r *buf) {
-	// trc("==== %v: (union A) %s off0 %#0x", n.Position(), t, off0)
+	// trc("==== %v: (union A, size %v) %s off0 %#0x, arrayElem %v", n.Position(), t.Size(), t, off0, arrayElem)
 	// dumpInitializer(a, "")
 	// trc("---- (union Z)")
 	var b buf
-	if t.NumFields() == 1 {
-		b.w("%s{%s%s: %s}", c.typ(n, t), tag(field), c.fieldName(t, t.FieldByIndex(0)), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
-		return &b
-	}
-
 	if c.isZeroInitializerSlice(a) {
 		b.w("%s{}", c.typ(n, t))
 		return &b
 	}
 
-	p := a[0].Parent()
-	if p == nil {
-		c.err(errorf("TODO"))
+	if t.NumFields() == 1 {
+		b.w("%s{%s%s: %s}", c.typ(n, t), tag(field), c.fieldName(t, t.FieldByIndex(0)), c.initializer(w, n, a, t.FieldByIndex(0).Type(), off0, false))
 		return &b
 	}
 
-	ts := t.Size()
-	pt := p.Type()
-	if _, ok := pt.(*cc.ArrayType); ok && arrayElem {
-		pt = t
+	b.w("*(*%s)(%sunsafe.%sPointer(&struct{ ", c.typ(n, t), tag(importQualifier), tag(preserve))
+	switch len(a) {
+	case 1:
+		b.w("%s", c.initializerUnionOne(w, n, a, t, off0))
+	default:
+		b.w("%s", c.initializerUnionMany(w, n, a, t, off0))
 	}
-	fs := pt.Size()
-	// trc("ts %v %s", ts, t)
-	// trc("fs %v %s", fs, pt)
-	switch x := pt.(type) {
+	b.w("))")
+	return &b
+}
+
+func (c *ctx) initializerUnionOne(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
+	var b buf
+	in := a[0]
+	pre := in.Offset() - off0
+	if pre != 0 {
+		b.w("%s_ [%d]byte;", tag(preserve), pre)
+	}
+	b.w("%sf ", tag(preserve))
+	f := in.Field()
+	switch {
+	case f != nil && f.IsBitfield():
+		b.w("%suint%d", tag(preserve), f.AccessBytes()*8)
+	default:
+		b.w("%s ", c.typ(n, in.Type()))
+	}
+	if post := t.Size() - (pre + in.Type().Size()); post != 0 {
+		b.w("; %s_ [%d]byte", tag(preserve), post)
+	}
+	b.w("}{%sf: ", tag(preserve))
+	switch f := in.Field(); {
+	case f != nil && f.IsBitfield():
+		b.w("(((%suint%d(%s))&%#0x)<<%d)", tag(preserve), f.AccessBytes()*8, c.expr(w, in.AssignmentExpression, nil, exprDefault), uint(1)<<f.ValueBits()-1, f.OffsetBits())
+	default:
+		switch x := in.Type().(type) {
+		case *cc.PredefinedType, *cc.PointerType:
+			b.w("%s", c.expr(w, in.AssignmentExpression, in.Type(), exprDefault))
+		default:
+			c.err(errorf("TODO %T", x))
+		}
+	}
+	b.w("}")
+	return &b
+}
+
+func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
+	var b buf
+	lca := c.initlializerLCA(a)
+	trc("lca %v", lca.Type())
+	pre := lca.Offset() - off0
+	if pre != 0 {
+		b.w("%s_ [%d]byte;", tag(preserve), pre)
+	}
+	b.w("%sf ", tag(preserve))
+	b.w("%s ", c.typ(n, lca.Type()))
+	if post := t.Size() - (pre + lca.Type().Size()); post != 0 {
+		b.w("; %s_ [%d]byte", tag(preserve), post)
+	}
+	b.w("}{%sf: ", tag(preserve))
+	switch x := lca.Type().(type) {
 	case *cc.ArrayType:
-		switch {
-		case fs < ts:
-			b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s; _ [%d]byte}{f: %s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, x), ts-fs, c.initializerArray(w, n, a, x, off0))
-		case fs == ts:
-			b.w("*(*%s)(%sunsafe.%sPointer(&%s))", c.typ(n, t), tag(importQualifier), tag(preserve), c.initializerArray(w, n, a, x, off0))
-		default:
-			c.err(errorf("TODO %s %d, ft %s %d", t, t.Size(), x, x.Size()))
-		}
+		b.w("%s", c.initializerArray(w, n, a, x, off0))
 	case *cc.StructType:
-		switch {
-		case fs < ts:
-			b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s; _ [%d]byte}{f: %s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, x), ts-fs, c.initializerStruct(w, n, a, x, off0))
-		case fs == ts:
-			b.w("*(*%s)(%sunsafe.%sPointer(&%s))", c.typ(n, t), tag(importQualifier), tag(preserve), c.initializerStruct(w, n, a, x, off0))
-		default:
-			c.err(errorf("TODO %s %d, ft %s %d", t, t.Size(), x, x.Size()))
-		}
+		b.w("%s", c.initializerStruct(w, n, a, x, off0))
 	case *cc.UnionType:
-		if t.IsCompatible(x) {
-			if len(a) != 1 {
-				c.err(errorf("TODO %T", x))
-				break
-			}
-
-			v0 := a[0]
-			switch y := v0.Type().(type) {
-			case
-				*cc.EnumType,
-				*cc.PointerType,
-				*cc.PredefinedType:
-
-				switch fs := y.Size(); {
-				case fs < ts:
-					b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s; _ [%d]byte}{f: %s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, y), ts-fs, c.expr(w, v0.AssignmentExpression, y, exprDefault))
-				case fs == ts:
-					b.w("*(*%s)(%sunsafe.%sPointer(&struct{ f %s}{%s}))", c.typ(n, t), tag(importQualifier), tag(preserve), c.typ(n, y), c.expr(w, v0.AssignmentExpression, y, exprDefault))
-				default:
-					c.err(errorf("TODO %s %d, ft %s %d", t, t.Size(), y, y.Size()))
-				}
-			default:
-				c.err(errorf("TODO %T", y))
-			}
-			break
-		}
-
+		// ~/src/modernc.org/ccorpus2/assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c []
+		// b.w("%s", c.initializerUnion(w, n, a, x, off0, false))
 		c.err(errorf("TODO %T", x))
 	default:
-		c.err(errorf("TODO %T %v", x, arrayElem))
+		c.err(errorf("TODO %T", x))
 	}
+	b.w("}")
 	return &b
+}
+
+// https://en.wikipedia.org/wiki/Lowest_common_ancestor
+func (c ctx) initlializerLCA(a []*cc.Initializer) *cc.Initializer {
+	if len(a) < 2 {
+		panic(todo("internal error"))
+	}
+
+	nodes := map[*cc.Initializer]struct{}{}
+	var path []*cc.Initializer
+	for p := a[0].Parent(); p != nil; p = p.Parent() {
+		path = append(path, p)
+		nodes[p] = struct{}{}
+	}
+	for _, v := range a[1:] {
+		for p := v.Parent(); p != nil; p = p.Parent() {
+			if _, ok := nodes[p]; ok {
+				for path[0] != p {
+					path = path[1:]
+				}
+				break
+			}
+		}
+	}
+	return path[0]
 }
 
 func sortInitializers(a []*cc.Initializer, group func(int64) int64) (r [][]*cc.Initializer) {
@@ -361,12 +392,18 @@ func sortInitializers(a []*cc.Initializer, group func(int64) int64) (r [][]*cc.I
 func dumpInitializer(a []*cc.Initializer, pref string) {
 	for _, v := range a {
 		var t string
-		if p := v.Parent(); p != nil {
+		for p := v.Parent(); p != nil; p = p.Parent() {
 			switch d := p.Type().Typedef(); {
 			case d != nil:
-				t = fmt.Sprintf("[%s].", d.Name())
+				t = fmt.Sprintf("[%s].", d.Name()) + t
 			default:
-				t = fmt.Sprintf("[%s].", p.Type())
+				switch x, ok := p.Type().(interface{ Tag() cc.Token }); {
+				case ok:
+					tag := x.Tag()
+					t = fmt.Sprintf("[%s].", tag.SrcStr()) + t
+				default:
+					t = fmt.Sprintf("[%s].", p.Type()) + t
+				}
 			}
 		}
 		var fs string
