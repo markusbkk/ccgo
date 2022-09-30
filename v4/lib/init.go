@@ -322,7 +322,6 @@ func (c *ctx) initializerUnionOne(w writer, n cc.Node, a []*cc.Initializer, t *c
 func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
 	var b buf
 	lca := c.initlializerLCA(a)
-	trc("lca %v", lca.Type())
 	pre := lca.Offset() - off0
 	if pre != 0 {
 		b.w("%s_ [%d]byte;", tag(preserve), pre)
@@ -339,8 +338,12 @@ func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *
 	case *cc.StructType:
 		b.w("%s", c.initializerStruct(w, n, a, x, off0))
 	case *cc.UnionType:
-		// ~/src/modernc.org/ccorpus2/assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c []
-		// b.w("%s", c.initializerUnion(w, n, a, x, off0, false))
+		if lca.Type() == t {
+			// ~/src/modernc.org/ccorpus2/assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c []
+			c.err(errorf("TODO %T", x))
+			break
+		}
+
 		c.err(errorf("TODO %T", x))
 	default:
 		c.err(errorf("TODO %T", x))
@@ -365,6 +368,7 @@ func (c ctx) initlializerLCA(a []*cc.Initializer) *cc.Initializer {
 		for p := v.Parent(); p != nil; p = p.Parent() {
 			if _, ok := nodes[p]; ok {
 				for path[0] != p {
+					delete(nodes, p)
 					path = path[1:]
 				}
 				break
@@ -408,7 +412,11 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 		}
 		var fs string
 		if f := v.Field(); f != nil {
-			fs = fmt.Sprintf(" (field %q)", f.Name())
+			var ps string
+			for p := f.Parent(); p != nil; p = p.Parent() {
+				ps = ps + fmt.Sprintf("{%q %v}", p.Name(), p.Type())
+			}
+			fs = fmt.Sprintf(" %s(field %q)", ps, f.Name())
 		}
 		switch v.Case {
 		case cc.InitializerExpr:
