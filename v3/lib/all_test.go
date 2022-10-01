@@ -76,7 +76,7 @@ func init() {
 
 // ----------------------------------------------------------------------------
 
-const execTimeout = time.Minute*10
+const execTimeout = time.Minute*30
 
 var (
 	fs = ccorpus.FileSystem()
