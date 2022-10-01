@@ -164,12 +164,12 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			for i := 0; i < x.NumFields(); i++ {
 				f := x.FieldByIndex(i)
 				// trc("%v: %q, .off %v, .bitoff %v, .ab %v, .vbits %v, fam %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits(), f.IsFlexibleArrayMember())
+				if f.InOverlapGroup() {
+					continue
+				}
+
 				switch {
 				case f.IsBitfield():
-					if f.InOverlapGroup() {
-						break
-					}
-
 					var gsz int64
 					foff := f.Offset()
 					if _, ok := groups[foff]; !ok {

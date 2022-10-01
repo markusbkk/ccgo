@@ -36,19 +36,20 @@ import (
 )
 
 var (
-	oBlackBox   = flag.String("blackbox", "", "Record CSmith file to this file")
-	oCSmith     = flag.Duration("csmith", 15*time.Minute, "")
-	oDebug      = flag.Bool("debug", false, "")
-	oErr1       = flag.Bool("err1", false, "first error line only")
-	oKeep       = flag.Bool("keep", false, "keep temp directories")
-	oPanic      = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime  = flag.Duration("shelltimeout", 1800*time.Second, "shell() time limit")
-	oStackTrace = flag.Bool("trcstack", false, "")
-	oTrace      = flag.Bool("trc", false, "print tested paths.")
-	oTraceC     = flag.Bool("trcc", false, "trace TestExec transiple errors")
-	oTraceF     = flag.Bool("trcf", false, "print test file content")
-	oTraceO     = flag.Bool("trco", false, "print test output")
-	oXTags      = flag.String("xtags", "", "passed to go build of TestSQLite")
+	oBlackBox     = flag.String("blackbox", "", "Record CSmith file to this file")
+	oCSmith       = flag.Duration("csmith", 1*time.Hour, "")
+	oCSmithClimit = flag.Duration("csmithc", 1*time.Minute, "")
+	oDebug        = flag.Bool("debug", false, "")
+	oErr1         = flag.Bool("err1", false, "first error line only")
+	oKeep         = flag.Bool("keep", false, "keep temp directories")
+	oPanic        = flag.Bool("panic", false, "panic on miscompilation")
+	oShellTime    = flag.Duration("shelltimeout", 1800*time.Second, "shell() time limit")
+	oStackTrace   = flag.Bool("trcstack", false, "")
+	oTrace        = flag.Bool("trc", false, "print tested paths.")
+	oTraceC       = flag.Bool("trcc", false, "trace TestExec transiple errors")
+	oTraceF       = flag.Bool("trcf", false, "print test file content")
+	oTraceO       = flag.Bool("trco", false, "print test output")
+	oXTags        = flag.String("xtags", "", "passed to go build of TestSQLite")
 
 	cfs    fs.FS
 	goarch = runtime.GOARCH
@@ -688,7 +689,6 @@ func getCorpusFile(path string) ([]byte, error) {
 }
 
 func TestCSmith(t *testing.T) {
-	t.Skip("TODO")
 	if testing.Short() {
 		t.Skip("skipped: -short")
 	}
@@ -730,16 +730,10 @@ func TestCSmith(t *testing.T) {
 	}
 
 	fixedBugs := []string{
-		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3285852464",
-		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3609090094",
-		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3720922579",
-		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 572192313",
-
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 15739796933983044010",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 169375684",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1833258637",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1885311141",
-		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2205128324",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2205128324",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2273393378",
 		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 241244373",
@@ -768,6 +762,10 @@ func TestCSmith(t *testing.T) {
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 1906742816",
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 3629008936",
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 612971101",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3285852464",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3609090094",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3720922579",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 572192313",
 	}
 	ch := time.After(*oCSmith)
 	t0 := time.Now()
@@ -824,7 +822,7 @@ out:
 
 		ctime0 := time.Now()
 		binOutA, err := func() ([]byte, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), *oShellTime)
+			ctx, cancel := context.WithTimeout(context.Background(), *oCSmithClimit)
 			defer cancel()
 
 			return exec.CommandContext(ctx, binaryName).CombinedOutput()
@@ -874,7 +872,7 @@ out:
 		}()
 
 		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]:  C binary real %s\n", time.Now().Format("15:04:05"), time.Since(t0), ctime)
+			fmt.Fprintf(os.Stderr, "[%s %s]: C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
 		}
 		goLimit := 10 * ctime
 		if goLimit < time.Minute {
@@ -899,7 +897,7 @@ out:
 
 		ok++
 		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]: Go binary real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), time.Since(t0), time.Since(goTime0), files, ok)
+			fmt.Fprintf(os.Stderr, "[%s %s]:   Go run real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), time.Since(goTime0), files, ok)
 		}
 
 		if err := os.Remove(mainName); err != nil {
@@ -908,6 +906,13 @@ out:
 	}
 	d := time.Since(t0)
 	t.Logf("files %v, bytes %v, ok %v in %v", h(files), h(size), h(ok), d)
+}
+
+func durationStr(d time.Duration) string {
+	secs := d / time.Second
+	mins := secs / 60
+	hours := mins / 60
+	return fmt.Sprintf("%02d:%02d:%02d", hours, mins%60, secs%60)
 }
 
 func TestSQLite(t *testing.T) {

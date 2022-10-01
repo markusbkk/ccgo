@@ -322,29 +322,30 @@ func (c *ctx) initializerUnionOne(w writer, n cc.Node, a []*cc.Initializer, t *c
 func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
 	var b buf
 	lca := c.initlializerLCA(a)
-	pre := lca.Offset() - off0
+	ft := lca.Type()
+	fOff := lca.Offset()
+	if ft == t {
+		f := lca.InitializerList.UnionField()
+		ft = f.Type()
+		fOff = f.Offset()
+	}
+	pre := fOff - off0
 	if pre != 0 {
 		b.w("%s_ [%d]byte;", tag(preserve), pre)
 	}
 	b.w("%sf ", tag(preserve))
-	b.w("%s ", c.typ(n, lca.Type()))
-	if post := t.Size() - (pre + lca.Type().Size()); post != 0 {
+	b.w("%s ", c.typ(n, ft))
+	if post := t.Size() - (pre + ft.Size()); post != 0 {
 		b.w("; %s_ [%d]byte", tag(preserve), post)
 	}
 	b.w("}{%sf: ", tag(preserve))
-	switch x := lca.Type().(type) {
+	switch x := ft.(type) {
 	case *cc.ArrayType:
 		b.w("%s", c.initializerArray(w, n, a, x, off0))
 	case *cc.StructType:
 		b.w("%s", c.initializerStruct(w, n, a, x, off0))
 	case *cc.UnionType:
-		if lca.Type() == t {
-			// ~/src/modernc.org/ccorpus2/assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c []
-			c.err(errorf("TODO %T", x))
-			break
-		}
-
-		c.err(errorf("TODO %T", x))
+		b.w("%s", c.initializerUnion(w, n, a, x, off0, false))
 	default:
 		c.err(errorf("TODO %T", x))
 	}
@@ -416,7 +417,7 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 			for p := f.Parent(); p != nil; p = p.Parent() {
 				ps = ps + fmt.Sprintf("{%q %v}", p.Name(), p.Type())
 			}
-			fs = fmt.Sprintf(" %s(field %q)", ps, f.Name())
+			fs = fmt.Sprintf(" %s(field %q, InOverlapGroup %v)", ps, f.Name(), f.InOverlapGroup())
 		}
 		switch v.Case {
 		case cc.InitializerExpr:
