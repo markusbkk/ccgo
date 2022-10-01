@@ -689,6 +689,7 @@ func getCorpusFile(path string) ([]byte, error) {
 }
 
 func TestCSmith(t *testing.T) {
+	t.Skip("TODO")
 	if testing.Short() {
 		t.Skip("skipped: -short")
 	}
