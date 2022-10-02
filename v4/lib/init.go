@@ -125,7 +125,7 @@ func (c *ctx) isZero(v cc.Value) bool {
 }
 
 func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.ArrayType, off0 int64) (r *buf) {
-	// trc("==== (array A, size %v) %s off0 %#0x", t.Size(), t, off0)
+	// trc("==== (array A, size %v) %s off0 %#0x (%v:)", t.Size(), t, off0, pos(n))
 	// dumpInitializer(a, "")
 	// trc("---- (array Z)")
 	var b buf
@@ -279,7 +279,7 @@ func (c *ctx) initializerUnion(w writer, n cc.Node, a []*cc.Initializer, t *cc.U
 	case 1:
 		b.w("%s", c.initializerUnionOne(w, n, a, t, off0))
 	default:
-		b.w("%s", c.initializerUnionMany(w, n, a, t, off0))
+		b.w("%s", c.initializerUnionMany(w, n, a, t, off0, arrayElem))
 	}
 	b.w("))")
 	return &b
@@ -319,15 +319,40 @@ func (c *ctx) initializerUnionOne(w writer, n cc.Node, a []*cc.Initializer, t *c
 	return &b
 }
 
-func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64) (r *buf) {
+func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *cc.UnionType, off0 int64, arrayElem bool) (r *buf) {
 	var b buf
-	lca := c.initlializerLCA(a)
+	path, x := c.initlializerLCA(a)
+	lca := path[x]
 	ft := lca.Type()
 	fOff := lca.Offset()
-	if ft == t {
+out:
+	switch {
+	case ft == t:
 		f := lca.InitializerList.UnionField()
 		ft = f.Type()
-		fOff = f.Offset()
+		fOff = off0 + f.Offset()
+	case arrayElem:
+		// trc("arrayElem, x %v", x)
+		for _, v := range path {
+			if v.InitializerList != nil && v.InitializerList.UnionField() != nil {
+				if f := v.InitializerList.UnionField(); f == t.FieldByIndex(f.Index()) {
+					ft = f.Type()
+					fOff = off0 + f.Offset()
+					break out
+				}
+			}
+		}
+
+		// for i, v := range path {
+		// 	var s string
+		// 	if v.InitializerList != nil && v.InitializerList.UnionField() != nil {
+		// 		f := v.InitializerList.UnionField()
+		// 		s = fmt.Sprintf("%q %v", f.Name(), f.Type())
+		// 	}
+		// 	trc("%d/%d: %v: %s", i, len(path), v.Position(), s)
+		// }
+		c.err(errorf("TODO"))
+		return &b
 	}
 	pre := fOff - off0
 	if pre != 0 {
@@ -354,7 +379,7 @@ func (c *ctx) initializerUnionMany(w writer, n cc.Node, a []*cc.Initializer, t *
 }
 
 // https://en.wikipedia.org/wiki/Lowest_common_ancestor
-func (c ctx) initlializerLCA(a []*cc.Initializer) *cc.Initializer {
+func (c ctx) initlializerLCA(a []*cc.Initializer) (r []*cc.Initializer, ri int) {
 	if len(a) < 2 {
 		panic(todo("internal error"))
 	}
@@ -363,6 +388,7 @@ func (c ctx) initlializerLCA(a []*cc.Initializer) *cc.Initializer {
 	var path []*cc.Initializer
 	for p := a[0].Parent(); p != nil; p = p.Parent() {
 		path = append(path, p)
+		r = append(r, p)
 		nodes[p] = struct{}{}
 	}
 	for _, v := range a[1:] {
@@ -371,12 +397,13 @@ func (c ctx) initlializerLCA(a []*cc.Initializer) *cc.Initializer {
 				for path[0] != p {
 					delete(nodes, p)
 					path = path[1:]
+					ri++
 				}
 				break
 			}
 		}
 	}
-	return path[0]
+	return r, ri
 }
 
 func sortInitializers(a []*cc.Initializer, group func(int64) int64) (r [][]*cc.Initializer) {

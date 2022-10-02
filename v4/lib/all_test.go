@@ -689,7 +689,6 @@ func getCorpusFile(path string) ([]byte, error) {
 }
 
 func TestCSmith(t *testing.T) {
-	t.Skip("TODO")
 	if testing.Short() {
 		t.Skip("skipped: -short")
 	}
@@ -763,9 +762,11 @@ func TestCSmith(t *testing.T) {
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 1906742816",
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 3629008936",
 		//TODO "--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 612971101",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1302111308",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3285852464",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3609090094",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3720922579",
+		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4263172072",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 572192313",
 	}
 	ch := time.After(*oCSmith)
@@ -815,13 +816,13 @@ out:
 			csp = fmt.Sprintf("-I%s", s)
 		}
 
+		ctime0 := time.Now()
 		ccOut, err := exec.Command(hostCC, "-o", binaryName, "main.c", csp).CombinedOutput()
 		if err != nil {
 			t.Logf("%s\n%s\ncc: %v", extra, ccOut, err)
 			continue
 		}
 
-		ctime0 := time.Now()
 		binOutA, err := func() ([]byte, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), *oCSmithClimit)
 			defer cancel()
@@ -876,8 +877,8 @@ out:
 			fmt.Fprintf(os.Stderr, "[%s %s]: C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
 		}
 		goLimit := 10 * ctime
-		if goLimit < time.Minute {
-			goLimit = time.Minute
+		if goLimit < 5*time.Minute {
+			goLimit = 5 * time.Minute
 		}
 		goTime0 := time.Now()
 		binOutB, err := func() ([]byte, error) {
@@ -898,7 +899,7 @@ out:
 
 		ok++
 		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]:   Go run real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), time.Since(goTime0), files, ok)
+			fmt.Fprintf(os.Stderr, "[%s %s]: Go run   real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), time.Since(goTime0), files, ok)
 		}
 
 		if err := os.Remove(mainName); err != nil {
