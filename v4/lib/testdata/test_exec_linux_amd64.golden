@@ -4374,6 +4374,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-immediate-bitwise.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-initialize-zero.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-mask.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-pack-next.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-reset-align.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-unsigned-promote.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield.c

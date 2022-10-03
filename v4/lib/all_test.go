@@ -60,7 +60,7 @@ var (
 
 	csmithDefaultArgs = strings.Join([]string{
 		//TODO "--bitfields",                     // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
-		"--no-bitfields",                  // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
+		"--no-bitfields",                     // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
 		"--max-nested-struct-level", "10", // --max-nested-struct-level <num>: limit maximum nested level of structs to <num>(default 0). Only works in the exhaustive mode.
 		"--no-const-pointers",    // --const-pointers | --no-const-pointers: enable | disable const pointers (enabled by default).
 		"--no-consts",            // --consts | --no-consts: enable | disable const qualifier (enabled by default).

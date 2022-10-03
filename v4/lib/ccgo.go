@@ -231,6 +231,7 @@ func (t *Task) Main() (err error) {
 		return err
 	}
 
+	cfg.EmbeddedFieldsAreBitFields = true
 	t.I = t.I[:len(t.I):len(t.I)]
 	cfg.IncludePaths = append([]string{""}, t.I...)
 	cfg.IncludePaths = append(cfg.IncludePaths, cfg.HostIncludePaths...)

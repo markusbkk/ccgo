@@ -1637,8 +1637,15 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 			b.w("<<%d>>%[1]d", w-f.ValueBits())
 		}
 		b.w(")")
+	case exprUintptr:
+		if !f.IsPseudoBitfield() {
+			c.err(errorf("TODO %v", mode))
+			break
+		}
+
+		rt, rmode = f.Type().Pointer(), mode
+		b.w("(uintptr)(%sunsafe.%sPointer(%s +%d))", tag(importQualifier), tag(preserve), p, f.Offset())
 	default:
-		trc("%v: BITFIELD %v", n.Position(), mode)
 		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode

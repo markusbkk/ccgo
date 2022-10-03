@@ -444,7 +444,10 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 			for p := f.Parent(); p != nil; p = p.Parent() {
 				ps = ps + fmt.Sprintf("{%q %v}", p.Name(), p.Type())
 			}
-			fs = fmt.Sprintf(" %s(field %q, InOverlapGroup %v)", ps, f.Name(), f.InOverlapGroup())
+			fs = fmt.Sprintf(
+				" %s(field %q, IsBitfield %v, Offset %v, OffsetBits %v, OuterGroupOffset %v, InOverlapGroup %v, Mask %#0x, ValueBits %v",
+				ps, f.Name(), f.IsBitfield(), f.Offset(), f.OffsetBits(), f.OuterGroupOffset(), f.InOverlapGroup(), f.Mask(), f.ValueBits(),
+			)
 		}
 		switch v.Case {
 		case cc.InitializerExpr:
