@@ -379,6 +379,12 @@ func (c *ctx) verifyTypes() {
 		t := m[k]
 		v := fmt.Sprintf("%sv%d", tag(preserve), i)
 		c.w("\n\tvar %s %s", v, c.initTyp(nil, t))
+		if x, ok := t.(*cc.StructType); ok {
+			t := x.Tag()
+			if s := t.SrcStr(); s != "" {
+				c.w("\n// struct %q", s)
+			}
+		}
 		c.w("\nif g, e := %sunsafe.%sSizeof(%s), %[2]suintptr(%[4]d); g != e { panic(%[2]sg) }", tag(importQualifier), tag(preserve), v, t.Size())
 		switch x := t.(type) {
 		case *cc.StructType:

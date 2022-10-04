@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-.PHONY:	build_all_targets clean edit editor tmp x csmith test
+.PHONY:	build_all_targets clean edit editor tmp x csmith fftest shorttest
 
 build_all_targets:
 	GOOS=darwin GOARCH=amd64 go build -v ./...
@@ -67,10 +67,16 @@ x:
 	git status
 
 csmith:
-	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -csmithc 5s -trc 2>&1 | tee log
+	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -csmithc 10s -trc 2>&1 | tee log
 
-test:
+fftest:
 	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc 2>&1 | tee log
+	grep TOTAL log
+	git status testdata
+	git diff testdata/
+
+shorttest:
+	go test -v -timeout 24h -short -tags=ccgo.assert -trc 2>&1 | tee log
 	grep TOTAL log
 	git status testdata
 	git diff testdata/

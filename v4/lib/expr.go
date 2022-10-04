@@ -745,13 +745,13 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 			b.w("(%s + %s)", x, y)
 		case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
 			s := ""
-			if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
+			if sz := x.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 				s = fmt.Sprintf("*%d", sz)
 			}
 			b.w("(%s + ((%s)%s))", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault), s)
 		case cc.IsIntegerType(x) && y.Kind() == cc.Ptr:
 			s := ""
-			if sz := y.(*cc.PointerType).Elem().Size(); sz != 1 {
+			if sz := y.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 				s = fmt.Sprintf("*%d", sz)
 			}
 			b.w("(((%s)%s)+%s)", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), s, c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault))
@@ -765,13 +765,13 @@ func (c *ctx) additiveExpression(w writer, n *cc.AdditiveExpression, t cc.Type, 
 			b.w("(%s - %s)", x, y)
 		case x.Kind() == cc.Ptr && y.Kind() == cc.Ptr:
 			b.w("((%s - %s)", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault))
-			if v := x.(*cc.PointerType).Elem().Size(); v > 1 {
+			if v := x.(*cc.PointerType).Elem().Undecay().Size(); v > 1 {
 				b.w("/%d", v)
 			}
 			b.w(")")
 		case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
 			s := ""
-			if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
+			if sz := x.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 				s = fmt.Sprintf("*%d", sz)
 			}
 			b.w("(%s - ((%s)%s))", c.expr(w, n.AdditiveExpression, n.Type(), exprDefault), c.expr(w, n.MultiplicativeExpression, n.Type(), exprDefault), s)
@@ -915,7 +915,7 @@ func (c *ctx) preIncDecBitField(op string, w writer, n cc.ExpressionNode, mode m
 		bf, _, _ := c.bitField(w, n, p, f, exprDefault)
 		w.w("\n%v = %sAssignBitFieldPtr%d%s(%s+%d, (%s)%s1, %d, %d, %#0x);", v, c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), bf, op, f.ValueBits(), f.OffsetBits(), f.Mask())
 		b.w("%s", v)
-		return &b, n.Type(), exprDefault
+		return &b, f.Type(), exprDefault
 	case exprVoid:
 		sop := "Inc"
 		if op == "-" {
@@ -943,8 +943,8 @@ out:
 
 		rt, rmode = n.Type(), mode
 		switch ue := n.UnaryExpression.Type(); {
-		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Size() != 1:
-			sz := ue.(*cc.PointerType).Elem().Size()
+		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Undecay().Size() != 1:
+			sz := ue.(*cc.PointerType).Elem().Undecay().Size()
 			switch mode {
 			case exprVoid:
 				b.w("%s += %d", c.expr(w, n.UnaryExpression, nil, exprDefault), sz)
@@ -993,8 +993,8 @@ out:
 
 		rt, rmode = n.Type(), mode
 		switch ue := n.UnaryExpression.Type(); {
-		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Size() != 1:
-			sz := ue.(*cc.PointerType).Elem().Size()
+		case ue.Kind() == cc.Ptr && ue.(*cc.PointerType).Elem().Undecay().Size() != 1:
+			sz := ue.(*cc.PointerType).Elem().Undecay().Size()
 			switch mode {
 			case exprVoid:
 				b.w("%s -= %d", c.expr(w, n.UnaryExpression, nil, exprDefault), sz)
@@ -1269,7 +1269,7 @@ func (c *ctx) postIncDecBitField(op string, w writer, n cc.ExpressionNode, mode 
 	switch mode {
 	case exprDefault, exprVoid:
 		b.w("%sPost%sBitFieldPtr%d%s(%s+%d, 1, %d, %d, %#0x)", c.task.tlsQualifier, op, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), f.ValueBits(), f.OffsetBits(), f.Mask())
-		return &b, n.Type(), exprDefault
+		return &b, f.Type(), exprDefault
 	default:
 		trc("%v: BITFIELD %v", n.Position(), mode)
 		c.err(errorf("TODO %v", mode))
@@ -1368,8 +1368,8 @@ out:
 
 		rt, rmode = n.Type(), mode
 		switch pe := n.PostfixExpression.Type(); {
-		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Size() != 1:
-			sz := pe.(*cc.PointerType).Elem().Size()
+		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Undecay().Size() != 1:
+			sz := pe.(*cc.PointerType).Elem().Undecay().Size()
 			switch mode {
 			case exprVoid:
 				b.w("%s += %d", c.expr(w, n.PostfixExpression, nil, exprDefault), sz)
@@ -1421,8 +1421,8 @@ out:
 
 		rt, rmode = n.Type(), mode
 		switch pe := n.PostfixExpression.Type(); {
-		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Size() != 1:
-			sz := pe.(*cc.PointerType).Elem().Size()
+		case pe.Kind() == cc.Ptr && pe.(*cc.PointerType).Elem().Undecay().Size() != 1:
+			sz := pe.(*cc.PointerType).Elem().Undecay().Size()
 			switch mode {
 			case exprVoid:
 				b.w("%s -= %d", c.expr(w, n.PostfixExpression, nil, exprDefault), sz)
@@ -1627,10 +1627,15 @@ func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mo
 }
 
 func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	//TODO do not use pointer for '.'
+	rt = f.Type()
+	if f.ValueBits() < c.ast.Int.Size()*8 {
+		rt = c.ast.Int
+	}
 	var b buf
 	switch mode {
 	case exprDefault, exprVoid:
-		rt, rmode = f.Type(), exprDefault
+		rmode = exprDefault
 		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
 		if cc.IsSignedInteger(f.Type()) {
 			w := f.Type().Size() * 8
@@ -1643,7 +1648,7 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 			break
 		}
 
-		rt, rmode = f.Type().Pointer(), mode
+		rt, rmode = rt.Pointer(), mode
 		b.w("(uintptr)(%sunsafe.%sPointer(%s +%d))", tag(importQualifier), tag(preserve), p, f.Offset())
 	default:
 		c.err(errorf("TODO %v", mode))
@@ -2041,13 +2046,14 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 					break
 				}
 
+				//TODO do not pin/use pointer
 				p := c.pin(n, c.expr(w, x.PostfixExpression, x.PostfixExpression.Type().Pointer(), exprUintptr))
 				switch mode {
 				case exprDefault:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
-					return &b, n.Type(), exprDefault
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, f.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
+					return &b, f.Type(), exprDefault
 				case exprVoid:
-					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
+					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), p, f.Offset(), c.expr(w, n.AssignmentExpression, f.Type(), exprDefault), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprVoid
 				default:
 					trc("%v: BITFIELD", n.Position())
@@ -2062,10 +2068,10 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 
 				switch mode {
 				case exprDefault:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
-					return &b, n.Type(), exprDefault
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s, %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, f.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
+					return &b, f.Type(), exprDefault
 				case exprVoid:
-					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.OffsetBits(), f.Mask())
+					b.w("%sSetBitFieldPtr%d%s(%s+%d, %s, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, f.Type()), c.expr(w, x.PostfixExpression, nil, exprDefault), f.Offset(), c.expr(w, n.AssignmentExpression, f.Type(), exprDefault), f.OffsetBits(), f.Mask())
 					return &b, n.Type(), exprVoid
 				default:
 					trc("%v: BITFIELD", n.Position())
@@ -2147,7 +2153,7 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		case cc.AssignmentExpressionAdd: // UnaryExpression "+=" AssignmentExpression
 			switch {
 			case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
-				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
+				if sz := x.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 					k = fmt.Sprintf("*%d", sz)
 				}
 			case cc.IsIntegerType(x) && y.Kind() == cc.Ptr:
@@ -2156,11 +2162,11 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		case cc.AssignmentExpressionSub: // UnaryExpression "-=" AssignmentExpression
 			switch {
 			case x.Kind() == cc.Ptr && cc.IsIntegerType(y):
-				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
+				if sz := x.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 					k = fmt.Sprintf("*%d", sz)
 				}
 			case x.Kind() == cc.Ptr && y.Kind() == cc.Ptr:
-				if sz := x.(*cc.PointerType).Elem().Size(); sz != 1 {
+				if sz := x.(*cc.PointerType).Elem().Undecay().Size(); sz != 1 {
 					k = fmt.Sprintf("/%d", sz)
 				}
 			}
@@ -2367,7 +2373,7 @@ out:
 			switch {
 			case x.ResolvedIn().Parent == nil:
 				rt, rmode = n.Type(), exprDefault
-				b.w("%s%s", tag(enumConst), x.Token.Src())
+				b.w("(%s%s%sFrom%s(%s%s))", c.task.tlsQualifier, tag(preserve), c.helper(n, n.Type()), c.helper(n, n.Type()), tag(enumConst), x.Token.Src())
 			default:
 				rt, rmode = n.Type(), exprDefault
 				b.w("%v", n.Value())
