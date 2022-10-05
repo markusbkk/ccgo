@@ -465,9 +465,12 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	cbinRC := -1
 	var cOut []byte
 	if execute && !cCompilerFailed {
-		if cOut, err = shell(false, "./"+bin, args...); err != nil {
+		switch cOut, err = shell(false, "./"+bin, args...); {
+		case err != nil:
 			cbinRC = exitCode(err)
 			cExecFailed = true
+		default:
+			cbinRC = 0
 		}
 	}
 
@@ -519,8 +522,9 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	if err != nil {
 		// trc("gobin %v %v", path, err)
 		gobinRC := exitCode(err)
+		//trc("", cbinRC, gobinRC)
 		switch {
-		case gobinRC == cbinRC:
+		case gobinRC == cbinRC && gobinRC > 0:
 			// makarov et al
 			cExecFailed = false
 		default:
@@ -542,6 +546,8 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 
 	cOut = bytes.TrimSpace(cOut)
 	goOut = bytes.TrimSpace(goOut)
+	// trc("%q", cOut)
+	// trc("%q", goOut)
 	if bytes.Contains(cOut, []byte("\r\n")) {
 		cOut = bytes.ReplaceAll(cOut, []byte("\r\n"), []byte{'\n'})
 	}

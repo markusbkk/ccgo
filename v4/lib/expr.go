@@ -2322,6 +2322,7 @@ out:
 						if !c.task.strictISOMode {
 							if _, ok := forcedBuiltins[nm]; ok {
 								nm = "__builtin_" + nm
+								linkName = c.declaratorTag(x) + nm
 							}
 						}
 						b.w("%s", linkName)

@@ -444,18 +444,18 @@ func (c *ctx) defines(w writer) {
 	sort.Slice(a, func(i, j int) bool { return a[i].Name.SrcStr() < a[j].Name.SrcStr() })
 	for _, m := range a {
 		r := m.ReplacementList()[0].SrcStr()
-		w.w("const %s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
+		w.w("%s%sconst %s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
 		switch x := m.Value().(type) {
 		case cc.Int64Value:
-			w.w("const %s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
+			w.w("%s%sconst %s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
 		case cc.UInt64Value:
-			w.w("const %s%s%s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
+			w.w("%s%sconst %s%s = %v;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x)
 		case cc.Float64Value:
 			if s := fmt.Sprint(x); s == r {
-				w.w("const %s%s%s%s = %s;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), s)
+				w.w("%s%sconst %s%s = %s;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), s)
 			}
 		case cc.StringValue:
-			w.w("const %s%s%s%s = %q;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x[:len(x)-1])
+			w.w("%s%sconst %s%s = %q;", sep(m.Name), c.posComment(m), tag(macro), m.Name.Src(), x[:len(x)-1])
 		}
 	}
 }
