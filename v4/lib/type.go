@@ -10,6 +10,7 @@ import (
 
 	"modernc.org/cc/v4"
 	"modernc.org/gc/v2"
+	"modernc.org/mathutil"
 )
 
 func (c *ctx) typedef(n cc.Node, t cc.Type) string {
@@ -158,10 +159,17 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			groups := map[int64]struct{}{}
 			b.WriteString("struct {")
 			b.WriteByte('\n')
-			c.alignPseudoField(b, x.Align())
+			nf := x.NumFields()
+			var al int
+			for i := 0; i < nf; i++ {
+				al = mathutil.Max(al, c.goFieldAlign(x.FieldByIndex(i).Type()))
+			}
+			if al > x.Align() {
+				c.alignPseudoField(b, x.Align())
+			}
 			var off int64
 			// trc("===== %s", x)
-			for i := 0; i < x.NumFields(); i++ {
+			for i := 0; i < nf; i++ {
 				f := x.FieldByIndex(i)
 				// trc("%v: %q, .off %v, .bitoff %v, .ab %v, .vbits %v, fam %v", i, f.Name(), f.Offset(), f.OffsetBits(), f.AccessBytes(), f.ValueBits(), f.IsFlexibleArrayMember())
 				if f.InOverlapGroup() {

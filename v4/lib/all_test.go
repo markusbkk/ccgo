@@ -867,6 +867,7 @@ out:
 				"-o", mainName,
 				"-extended-errors",
 				"-verify-types",
+				"--prefix-field", "F",
 				"main.c",
 				csp,
 			},
