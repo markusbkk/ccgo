@@ -50,7 +50,7 @@ func (c *ctx) initTyp(n cc.Node, t cc.Type) string {
 }
 
 func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTags, isField bool) {
-	if t.Kind() != cc.Array && !c.checkValidType(n, t, true) {
+	if t.Kind() != cc.Array && !c.isValidType1(n, t, true) {
 		b.WriteString(tag(preserve))
 		b.WriteString("int32")
 		return
@@ -330,32 +330,60 @@ func (c *ctx) goFieldAlign(t cc.Type) (r int) {
 	return c.task.goABI.Types[gk].FieldAlign
 }
 
-func (c *ctx) checkValidParamType(n cc.Node, t cc.Type) (ok bool) {
+func (c *ctx) isValidParamType(n cc.Node, t cc.Type) (ok bool) {
 	t = t.Undecay()
 	if x, ok := t.(*cc.ArrayType); ok && x.IsIncomplete() && !x.IsVLA() {
 		return true
 	}
 
-	return c.checkValidType(n, t, true)
+	return c.isValidType1(n, t, true)
 }
 
-func (c *ctx) checkValidType(n cc.Node, t cc.Type, report bool) (ok bool) {
+func (c *ctx) isValidType(n cc.Node, t cc.Type, report bool) bool {
+	switch x := t.Undecay().(type) {
+	case *cc.ArrayType:
+		if !c.isValidType(n, x.Elem(), report) {
+			return false
+		}
+	case *cc.StructType:
+		for i := 0; i < x.NumFields(); i++ {
+			if !c.isValidType(n, x.FieldByIndex(i).Type(), report) {
+				return false
+			}
+		}
+	case *cc.UnionType:
+		for i := 0; i < x.NumFields(); i++ {
+			if !c.isValidType(n, x.FieldByIndex(i).Type(), report) {
+				return false
+			}
+		}
+	}
+	return c.isValidType1(n, t, report)
+}
+
+func (c *ctx) isValidType1(n cc.Node, t cc.Type, report bool) bool {
 	//trc("", pos(n), t, t.Attributes() != nil)
-	ok = true
+	if t == nil || t == cc.Invalid {
+		if report {
+			c.err(errorf("%v: invalid type", pos(n)))
+		}
+		return false
+	}
+
 	switch attr := t.Attributes(); {
 	case t.Align() > 8 || (t.Size() > 0 && int64(t.Align()) > t.Size()):
 		if report {
 			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
 		}
-		ok = false
+		return false
 	case attr != nil && (attr.Aligned() > 8 || (t.Size() > 0 && attr.Aligned() > t.Size())):
 		if report {
 			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
 		}
-		ok = false
+		return false
 	}
 
-	switch x := t.(type) {
+	switch x := t.Undecay().(type) {
 	case *cc.ArrayType:
 		if x.IsVLA() {
 			if report {
@@ -372,14 +400,14 @@ func (c *ctx) checkValidType(n cc.Node, t cc.Type, report bool) (ok bool) {
 		return false
 	}
 
-	if t.Size() <= 0 {
+	if t.Size() < 0 {
 		if report {
 			c.err(errorf("%v: invalid type size: %d", pos(n), t.Size()))
 		}
 		return false
 	}
 
-	return ok
+	return true
 }
 
 func (c *ctx) unionLiteral(n cc.Node, t *cc.UnionType) string {
@@ -532,7 +560,7 @@ func (c *ctx) defineType(w writer, sep string, n cc.Node, t cc.Type) {
 }
 
 func (c *ctx) defineType0(w writer, sep string, n cc.Node, t cc.Type) {
-	if !c.checkValidType(n, t, false) {
+	if !c.isValidType1(n, t, false) {
 		return
 	}
 

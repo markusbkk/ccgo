@@ -199,7 +199,7 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 		return
 	}
 
-	c.checkValidType(d, ft, true)
+	c.isValidType1(d, ft, true)
 	f0, pass := c.f, c.pass
 	c.f = c.newFnCtx(ft, cs)
 	defer func() { c.f = f0; c.pass = pass }()
@@ -255,7 +255,7 @@ func (c *ctx) signature(f *cc.FunctionType, paramNames, isMain, useNames bool) s
 	}
 	if f.MaxArgs() != 0 {
 		for i, v := range f.Parameters() {
-			if !c.checkValidParamType(v, v.Type()) {
+			if !c.isValidParamType(v, v.Type()) {
 				return ""
 			}
 

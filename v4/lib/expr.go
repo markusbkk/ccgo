@@ -1115,10 +1115,7 @@ out:
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
-		switch x := n.UnaryExpression.Type().Undecay(); {
-		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
-			c.err(errorf("TODO %v", n.Case))
-		default:
+		if c.isValidType(n.UnaryExpression, n.UnaryExpression.Type(), true) {
 			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), n.Value())
 		}
 	case cc.UnaryExpressionSizeofType: // "sizeof" '(' TypeName ')'
@@ -1126,10 +1123,7 @@ out:
 			t = n.Type()
 		}
 		rt, rmode = t, exprDefault
-		switch x := n.TypeName.Type(); {
-		case x.Kind() == cc.Array && x.(*cc.ArrayType).IsVLA():
-			c.err(errorf("TODO %v", n.Case))
-		default:
+		if c.isValidType(n.TypeName, n.TypeName.Type(), true) {
 			b.w("(%s%s%sFromInt64(%d))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), n.Value())
 		}
 	case cc.UnaryExpressionLabelAddr: // "&&" IDENTIFIER
@@ -1636,12 +1630,12 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 	switch mode {
 	case exprDefault, exprVoid:
 		rmode = exprDefault
-		b.w("((%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d))", c.typ(n, rt), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
+		b.w("((%s(%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d)", c.typ(n, rt), c.typ(n, f.Type()), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
 		if cc.IsSignedInteger(f.Type()) {
 			w := f.Type().Size() * 8
 			b.w("<<%d>>%[1]d", w-f.ValueBits())
 		}
-		b.w(")")
+		b.w(")))")
 	case exprUintptr:
 		if !f.IsPseudoBitfield() {
 			c.err(errorf("TODO %v", mode))

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-.PHONY:	build_all_targets clean edit editor tmp x csmith fftest shorttest
+.PHONY:	build_all_targets clean edit editor tmp x csmith fftest shorttest sqltest
 
 build_all_targets:
 	GOOS=darwin GOARCH=amd64 go build -v ./...
@@ -80,3 +80,6 @@ shorttest:
 	grep TOTAL log
 	git status testdata
 	git diff testdata/
+
+sqltest:
+	go test -v -timeout 24h -run SQL -keep 2>&1 | tee log
