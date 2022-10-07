@@ -29,7 +29,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/ieee/copysign2.c`: {}, // EXEC FAIL
 
 	// C output incorrect
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/float-arithmetic.c`:                       {}, // EXEC FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/float-arithmetic.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 	//
 	// windows/amd64
