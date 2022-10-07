@@ -546,8 +546,10 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 
 	cOut = bytes.TrimSpace(cOut)
 	goOut = bytes.TrimSpace(goOut)
-	// trc("%q", cOut)
-	// trc("%q", goOut)
+	if *oTraceO {
+		fmt.Printf("C out\n==== (A)\n%s\n==== (Z)\n", cOut)
+		fmt.Printf("Go out\n==== (A)\n%s\n==== (Z)\n", goOut)
+	}
 	if bytes.Contains(cOut, []byte("\r\n")) {
 		cOut = bytes.ReplaceAll(cOut, []byte("\r\n"), []byte{'\n'})
 	}
