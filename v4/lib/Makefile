@@ -70,13 +70,13 @@ csmith:
 	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -csmithc 10s -trc 2>&1 | tee log
 
 fftest:
-	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc 2>&1 | tee log
+	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
 	grep TOTAL log
 	git status testdata
 	git diff testdata/
 
 shorttest:
-	go test -v -timeout 24h -short -tags=ccgo.assert -trc 2>&1 | tee log
+	go test -v -timeout 24h -short -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
 	grep TOTAL log
 	git status testdata
 	git diff testdata/

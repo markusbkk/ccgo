@@ -115,21 +115,19 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 
-	//TODO
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:                     {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/enum-2.c`:                       {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`:                    {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:                      {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr58984.c`:                      {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-ini-2.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:     {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/enum-2.c`:       {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`:    {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:      {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr58984.c`:      {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-ini-2.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c`:                  {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield.c`:                             {}, // EXEC FAIL
+	// //TODO results reduced to bit-field  type
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:                  {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:  {}, // EXEC FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`:                 {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`: {}, // EXEC FAIL
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:                   {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:   {}, // EXEC FAIL
+
+	// //TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000914-1.c`:                 {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000914-1.c`: {}, // EXEC FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c`:                {}, // EXEC FAIL
+	`assets/tcc-0.9.27/tests/tests2/92_enum_bitfield.c`:                                 {}, // EXEC FAIL
 
 	// ====================================================================
 	// Compiles but does not build.
@@ -150,7 +148,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/950221-1.c`: {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0010-goto1.c`:           {}, // BUILD FAIL
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/goto.c`:                             {}, // BUILD FAIL
-	`assets/tcc-0.9.27/tests/tests2/54_goto.c`:                                        {}, // BUILD FAIL
 
 	// Long double constant overflows floa64.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:                 {}, // BUILD FAIL

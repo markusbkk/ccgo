@@ -415,8 +415,9 @@ func errorf(s string, args ...interface{}) error {
 }
 
 type parallel struct {
-	errors    errors
-	limit     chan struct{}
+	errors errors
+	limit  chan struct{}
+	// paths     map[string]struct{}
 	resultTag string
 	sync.Mutex
 	wg sync.WaitGroup
@@ -424,6 +425,7 @@ type parallel struct {
 	fails int32
 	files int32
 	ids   int32
+	// inflight int32
 	oks   int32
 	skips int32
 }
@@ -448,8 +450,10 @@ func (p *parallel) exec(run func() error) {
 	p.limit <- struct{}{}
 	p.wg.Add(1)
 
+	// atomic.AddInt32(&p.inflight, 1)
 	go func() {
 		defer func() {
+			// atomic.AddInt32(&p.inflight, -1)
 			p.wg.Done()
 			<-p.limit
 		}()

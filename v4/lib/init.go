@@ -206,6 +206,11 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 	// trc("==== initializers (A)")
 	// for i, v := range s {
 	// 	for j, w := range v {
+	// 		if w.Field() == nil {
+	// 			trc("%d.%d: %q off %v, %s", i, j, "", w.Offset(), cc.NodeSource(w.AssignmentExpression))
+	// 			continue
+	// 		}
+
 	// 		trc("%d.%d: %q off %v, ogo %v, %s", i, j, w.Field().Name(), w.Field().Offset(), w.Field().OuterGroupOffset(), cc.NodeSource(w.AssignmentExpression))
 	// 	}
 	// }

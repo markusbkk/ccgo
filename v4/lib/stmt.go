@@ -96,18 +96,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool, value string) {
 	defer func() { c.compoundStmtValue = value }()
 
-	if _, ok := c.f.flatScopes[n.LexicalScope()]; ok {
-		if fnBlock {
-			trc("TODO")
-			c.err(errorf("%v: internal error", n.Position()))
-			return
-		}
-
-		trc("TODO")
-		c.err(errorf("%v: TODO %v", n.Position(), fnBlock))
-		return
-	}
-
+	_, flat := c.f.flatScopes[n.LexicalScope()]
 	switch {
 	case fnBlock:
 		if c.pass != 2 {
@@ -135,7 +124,9 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 		}
 		w.w("%s", c.f.declareLocals())
 	default:
-		w.w(" { %s%s", sep(n.Token), c.posComment(n))
+		if !flat {
+			w.w(" { %s%s", sep(n.Token), c.posComment(n))
+		}
 	}
 	var bi *cc.BlockItem
 	for l := n.BlockItemList; l != nil; l = l.BlockItemList {
@@ -183,10 +174,13 @@ func (c *ctx) compoundStatement(w writer, n *cc.CompoundStatement, fnBlock bool,
 			s = ""
 		}
 		w.w("return %s%s;%s", tag(ccgo), retvalName, s)
+		w.w("};")
 	default:
 		w.w("%s", sep(n.Token2))
+		if !flat {
+			w.w("};")
+		}
 	}
-	w.w("};")
 }
 
 func (c *ctx) isReturn(n *cc.BlockItem) bool {

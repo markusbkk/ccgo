@@ -1621,7 +1621,6 @@ func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mo
 }
 
 func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
-	//TODO do not use pointer for '.'
 	rt = f.Type()
 	if f.ValueBits() < c.ast.Int.Size()*8 {
 		rt = c.ast.Int
@@ -1637,11 +1636,6 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 		}
 		b.w(")))")
 	case exprUintptr:
-		if !f.IsPseudoBitfield() {
-			c.err(errorf("TODO %v", mode))
-			break
-		}
-
 		rt, rmode = rt.Pointer(), mode
 		b.w("(uintptr)(%sunsafe.%sPointer(%s +%d))", tag(importQualifier), tag(preserve), p, f.Offset())
 	default:
@@ -2101,6 +2095,9 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		rt, rmode = n.Type(), mode
 		op := n.Token.SrcStr()
 		op = op[:len(op)-1]
+		x, y := n.UnaryExpression.Type(), n.AssignmentExpression.Type()
+		ct := c.usualArithmeticConversions(x, y)
+		ut := n.UnaryExpression.Type()
 		switch x := n.UnaryExpression.(type) {
 		case *cc.PostfixExpression:
 			switch x.Case {
@@ -2114,8 +2111,12 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				bf, _, _ := c.bitField(w, n, p, f, exprDefault)
 				switch mode {
 				case exprDefault, exprVoid:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, (%s)%s(%s), %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
-					return &b, n.Type(), exprDefault
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s(%s(%s)%s%[7]s(%[10]s)), %d, %d, %#0x)",
+						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(),
+						c.typ(n, ut), c.typ(n, ct), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault),
+						f.ValueBits(), f.OffsetBits(), f.Mask(),
+					)
+					return c.fixBitFieldValue(&b, f, ct, mode), n.Type(), exprDefault
 				default:
 					trc("%v: BITFIELD %v", n.Position(), mode)
 					c.err(errorf("TODO %v", mode))
@@ -2131,8 +2132,12 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				bf, _, _ := c.bitField(w, n, p, f, exprDefault)
 				switch mode {
 				case exprDefault, exprVoid:
-					b.w("%sAssignBitFieldPtr%d%s(%s+%d, (%s)%s(%s), %d, %d, %#0x)", c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault), f.ValueBits(), f.OffsetBits(), f.Mask())
-					return &b, n.Type(), exprDefault
+					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s(%s(%s)%s%[7]s(%[10]s)), %d, %d, %#0x)",
+						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(),
+						c.typ(n, ut), c.typ(n, ct), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault),
+						f.ValueBits(), f.OffsetBits(), f.Mask(),
+					)
+					return c.fixBitFieldValue(&b, f, ct, mode), n.Type(), exprDefault
 				default:
 					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
@@ -2141,7 +2146,6 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			}
 		}
 
-		x, y := n.UnaryExpression.Type(), n.AssignmentExpression.Type()
 		var k, v string
 		switch n.Case {
 		case cc.AssignmentExpressionAdd: // UnaryExpression "+=" AssignmentExpression
@@ -2165,8 +2169,6 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				}
 			}
 		}
-		ct := c.usualArithmeticConversions(x, y)
-		ut := n.UnaryExpression.Type()
 		switch mode {
 		case exprDefault, exprVoid:
 			switch d := c.declaratorOf(n.UnaryExpression); {
@@ -2190,6 +2192,29 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	return &b, rt, rmode
+}
+
+func (c *ctx) fixBitFieldValue(expr *buf, f *cc.Field, t cc.Type, mode mode) (r *buf) {
+	return expr //TODO
+	if mode == exprVoid {
+		return expr
+	}
+
+	var b buf
+	bits := f.ValueBits()
+	if bits >= t.Size()*8 {
+		return expr
+	}
+
+	m := ^uint64(0) >> (64 - bits)
+	switch {
+	case cc.IsSignedInteger(t):
+		w := t.Size() * 8
+		b.w("(((%s)&%#0x)<<%d>>%[3]d)", expr, m, w-bits)
+	default:
+		b.w("((%s)&%#0x)", expr, m)
+	}
+	return &b
 }
 
 func (c *ctx) expressionList(w writer, n *cc.ExpressionList, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
