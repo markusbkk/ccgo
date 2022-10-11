@@ -185,6 +185,10 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 				continue
 			}
 
+			if f.IsBitfield() && f.ValueBits() == 0 {
+				continue
+			}
+
 			flds = append(flds, f)
 			// trc("appended: flds[%d] %q %s off %#0x ogo %#0x sz %#0x", len(flds)-1, f.Name(), f.Type(), f.Offset(), f.OuterGroupOffset(), f.Type().Size())
 			continue

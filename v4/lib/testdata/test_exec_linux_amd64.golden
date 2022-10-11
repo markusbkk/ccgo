@@ -1653,6 +1653,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000818-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000819-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000910-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000910-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000914-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20001009-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20001011-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20001013-1.c
@@ -2248,6 +2249,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bf-sign-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bf64-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-6.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-7.c
@@ -2454,6 +2456,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr31169.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr31448-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr31448.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr31605.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr32500.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr33142.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr33382.c
@@ -2474,6 +2477,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34415.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34456.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34768-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34768-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34971.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34982.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr35163.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr35231.c
@@ -3026,6 +3030,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000818-1.
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000819-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000910-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000910-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000914-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20001009-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20001011-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20001013-1.c
@@ -3626,6 +3631,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bf-sign-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bf64-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-4.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-6.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-7.c
@@ -3836,6 +3842,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr31169.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr31448-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr31448.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr31605.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr32500.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr33142.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr33382.c
@@ -3856,6 +3863,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34415.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34456.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34768-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34768-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34971.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34982.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr35163.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr35231.c
@@ -4367,6 +4375,7 @@ assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-mask.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-pack-next.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-packing.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-reset-align.c
+assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-unsigned-promote.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield.c
@@ -4636,5 +4645,6 @@ assets/tcc-0.9.27/tests/tests2/83_utf8_in_identifiers.c
 assets/tcc-0.9.27/tests/tests2/84_hex-float.c
 assets/tcc-0.9.27/tests/tests2/86_memory-model.c
 assets/tcc-0.9.27/tests/tests2/91_ptr_longlong_arith32.c
+assets/tcc-0.9.27/tests/tests2/92_enum_bitfield.c
 assets/tcc-0.9.27/tests/tests2/93_integer_promotion.c
 assets/tcc-0.9.27/tests/tests2/97_utf8_string_literal.c

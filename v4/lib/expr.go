@@ -362,21 +362,78 @@ func (c *ctx) convertFromPointer(n cc.ExpressionNode, s *buf, from *cc.PointerTy
 	return s //TODO
 }
 
-func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {
+func (c *ctx) reduceBitFieldValue(expr *buf, f *cc.Field, t cc.Type, mode mode) (r *buf) {
+	if mode != exprDefault || f == nil {
+		return expr
+	}
+
+	var b buf
+	bits := f.ValueBits()
+	if bits >= t.Size()*8 {
+		return expr
+	}
+
+	m := ^uint64(0) >> (64 - bits)
+	switch {
+	case cc.IsSignedInteger(t):
+		w := t.Size() * 8
+		b.w("(((%s)&%#0x)<<%d>>%[3]d)", expr, m, w-bits)
+	default:
+		b.w("((%s)&%#0x)", expr, m)
+	}
+	return &b
+}
+
+func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mod mode) (r *buf, rt cc.Type, rmode mode) {
 	// trc("%v: %T (%q), %v, %v (%v: %v: %v:)", n.Position(), n, cc.NodeSource(n), t, mode, origin(4), origin(3), origin(2))
 	// defer func() {
 	// 	trc("%v: %T (%q), %v, %v (RET)", n.Position(), n, cc.NodeSource(n), t, mode)
 	// }()
+
+	defer func(mod mode) {
+		if r == nil || rt == nil || !cc.IsIntegerType(rt) {
+			return
+		}
+
+		if x, ok := n.(*cc.PrimaryExpression); ok {
+			switch x.Case {
+			case cc.PrimaryExpressionIdent: // IDENTIFIER
+				if x.Value() != nil {
+					return
+				}
+			case
+				cc.PrimaryExpressionInt,     // INTCONST
+				cc.PrimaryExpressionFloat,   // FLOATCONST
+				cc.PrimaryExpressionChar,    // CHARCONST
+				cc.PrimaryExpressionLChar,   // LONGCHARCONST
+				cc.PrimaryExpressionString,  // STRINGLITERAL
+				cc.PrimaryExpressionLString: // LONGSTRINGLITERAL
+				return
+			case
+				cc.PrimaryExpressionExpr,    // '(' ExpressionList ')'
+				cc.PrimaryExpressionStmt,    // '(' CompoundStatement ')'
+				cc.PrimaryExpressionGeneric: // GenericSelection
+				// ok
+			default:
+				c.err(errorf("internal error %T %v", x, x.Case))
+				return
+			}
+		}
+		if bf := rt.BitField(); bf != nil && bf.ValueBits() > 32 {
+			r = c.reduceBitFieldValue(r, bf, rt, mod)
+		}
+	}(mod)
+
 	blank := false
 out:
 	switch {
-	case mode == exprBool:
-		mode = exprDefault
-	case mode == exprDefault && n.Type().Undecay().Kind() == cc.Array:
+	case mod == exprBool:
+		mod = exprDefault
+	case mod == exprDefault && n.Type().Undecay().Kind() == cc.Array:
 		if d := c.declaratorOf(n); d == nil || !d.IsParam() {
-			mode = exprUintptr
+			mod = exprUintptr
 		}
-	case mode == exprVoid:
+	case mod == exprVoid:
 		if _, ok := n.(*cc.ExpressionList); ok {
 			break out
 		}
@@ -426,41 +483,41 @@ out:
 	}
 	switch x := n.(type) {
 	case *cc.AdditiveExpression:
-		return c.additiveExpression(w, x, t, mode)
+		return c.additiveExpression(w, x, t, mod)
 	case *cc.AndExpression:
-		return c.andExpression(w, x, t, mode)
+		return c.andExpression(w, x, t, mod)
 	case *cc.AssignmentExpression:
-		return c.assignmentExpression(w, x, t, mode)
+		return c.assignmentExpression(w, x, t, mod)
 	case *cc.CastExpression:
-		return c.castExpression(w, x, t, mode)
+		return c.castExpression(w, x, t, mod)
 	case *cc.ConstantExpression:
-		return c.expr0(w, x.ConditionalExpression, t, mode)
+		return c.expr0(w, x.ConditionalExpression, t, mod)
 	case *cc.ConditionalExpression:
-		return c.conditionalExpression(w, x, t, mode)
+		return c.conditionalExpression(w, x, t, mod)
 	case *cc.EqualityExpression:
-		return c.equalityExpression(w, x, t, mode)
+		return c.equalityExpression(w, x, t, mod)
 	case *cc.ExclusiveOrExpression:
-		return c.exclusiveOrExpression(w, x, t, mode)
+		return c.exclusiveOrExpression(w, x, t, mod)
 	case *cc.ExpressionList:
-		return c.expressionList(w, x, t, mode)
+		return c.expressionList(w, x, t, mod)
 	case *cc.InclusiveOrExpression:
-		return c.inclusiveOrExpression(w, x, t, mode)
+		return c.inclusiveOrExpression(w, x, t, mod)
 	case *cc.LogicalAndExpression:
-		return c.logicalAndExpression(w, x, t, mode)
+		return c.logicalAndExpression(w, x, t, mod)
 	case *cc.LogicalOrExpression:
-		return c.logicalOrExpression(w, x, t, mode)
+		return c.logicalOrExpression(w, x, t, mod)
 	case *cc.MultiplicativeExpression:
-		return c.multiplicativeExpression(w, x, t, mode)
+		return c.multiplicativeExpression(w, x, t, mod)
 	case *cc.PostfixExpression:
-		return c.postfixExpression(w, x, t, mode)
+		return c.postfixExpression(w, x, t, mod)
 	case *cc.PrimaryExpression:
-		return c.primaryExpression(w, x, t, mode)
+		return c.primaryExpression(w, x, t, mod)
 	case *cc.RelationalExpression:
-		return c.relationExpression(w, x, t, mode)
+		return c.relationExpression(w, x, t, mod)
 	case *cc.ShiftExpression:
-		return c.shiftExpression(w, x, t, mode)
+		return c.shiftExpression(w, x, t, mod)
 	case *cc.UnaryExpression:
-		return c.unaryExpression(w, x, t, mode)
+		return c.unaryExpression(w, x, t, mod)
 	default:
 		c.err(errorf("TODO %T", x))
 		return nil, nil, 0
@@ -1621,6 +1678,7 @@ func (c *ctx) atomicStoreN(w writer, n *cc.PostfixExpression, t cc.Type, mode mo
 }
 
 func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *buf, rt cc.Type, rmode mode) {
+	//TODO do not pin expr.fld
 	rt = f.Type()
 	if f.ValueBits() < c.ast.Int.Size()*8 {
 		rt = c.ast.Int
@@ -1630,7 +1688,7 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 	case exprDefault, exprVoid:
 		rmode = exprDefault
 		b.w("((%s(%s((*(*uint%d)(%sunsafe.%sPointer(%s +%d))&%#0x)>>%d)", c.typ(n, rt), c.typ(n, f.Type()), f.AccessBytes()*8, tag(importQualifier), tag(preserve), p, f.Offset(), f.Mask(), f.OffsetBits())
-		if cc.IsSignedInteger(f.Type()) {
+		if cc.IsSignedInteger(f.Type()) && !c.isPositiveEnum(f.Type()) {
 			w := f.Type().Size() * 8
 			b.w("<<%d>>%[1]d", w-f.ValueBits())
 		}
@@ -1642,6 +1700,16 @@ func (c *ctx) bitField(w writer, n cc.Node, p *buf, f *cc.Field, mode mode) (r *
 		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode
+}
+
+// t is enum type and all its enum consts are >= 0.
+func (c *ctx) isPositiveEnum(t cc.Type) bool {
+	switch x := t.(type) {
+	case *cc.EnumType:
+		return x.Min() >= 0
+	}
+
+	return false
 }
 
 // PostfixExpression "->" IDENTIFIER
@@ -2112,11 +2180,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				switch mode {
 				case exprDefault, exprVoid:
 					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s(%s(%s)%s%[7]s(%[10]s)), %d, %d, %#0x)",
-						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(),
-						c.typ(n, ut), c.typ(n, ct), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault),
+						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, ut), p, f.Offset(),
+						c.typ(n, ut), c.typ(n, ct), bf,
+						op,
+						c.expr(w, n.AssignmentExpression, ut, exprDefault),
 						f.ValueBits(), f.OffsetBits(), f.Mask(),
 					)
-					return c.fixBitFieldValue(&b, f, ct, mode), n.Type(), exprDefault
+					return c.reduceBitFieldValue(&b, f, f.Type(), rmode), rt, exprDefault
 				default:
 					trc("%v: BITFIELD %v", n.Position(), mode)
 					c.err(errorf("TODO %v", mode))
@@ -2133,11 +2203,13 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 				switch mode {
 				case exprDefault, exprVoid:
 					b.w("%sAssignBitFieldPtr%d%s(%s+%d, %s(%s(%s)%s%[7]s(%[10]s)), %d, %d, %#0x)",
-						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, n.UnaryExpression.Type()), p, f.Offset(),
-						c.typ(n, ut), c.typ(n, ct), bf, op, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault),
+						c.task.tlsQualifier, f.AccessBytes()*8, c.helper(n, ut), p, f.Offset(),
+						c.typ(n, ut), c.typ(n, ct), bf,
+						op,
+						c.expr(w, n.AssignmentExpression, ut, exprDefault),
 						f.ValueBits(), f.OffsetBits(), f.Mask(),
 					)
-					return c.fixBitFieldValue(&b, f, ct, mode), n.Type(), exprDefault
+					return c.reduceBitFieldValue(&b, f, f.Type(), rmode), rt, exprDefault
 				default:
 					trc("%v: BITFIELD", n.Position())
 					c.err(errorf("TODO %v", mode))
@@ -2192,29 +2264,6 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
 	return &b, rt, rmode
-}
-
-func (c *ctx) fixBitFieldValue(expr *buf, f *cc.Field, t cc.Type, mode mode) (r *buf) {
-	return expr //TODO
-	if mode == exprVoid {
-		return expr
-	}
-
-	var b buf
-	bits := f.ValueBits()
-	if bits >= t.Size()*8 {
-		return expr
-	}
-
-	m := ^uint64(0) >> (64 - bits)
-	switch {
-	case cc.IsSignedInteger(t):
-		w := t.Size() * 8
-		b.w("(((%s)&%#0x)<<%d>>%[3]d)", expr, m, w-bits)
-	default:
-		b.w("((%s)&%#0x)", expr, m)
-	}
-	return &b
 }
 
 func (c *ctx) expressionList(w writer, n *cc.ExpressionList, t cc.Type, mode mode) (r *buf, rt cc.Type, rmode mode) {

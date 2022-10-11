@@ -186,22 +186,32 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					continue
 				}
 
+				// trc("%q.%d", f.Name(), f.Index())
+				// trc("off %v", off)
 				switch {
 				case f.IsBitfield():
+					// trc("BF")
 					var gsz int64
 					foff := f.Offset()
+					// trc("foff %v", foff)
 					if _, ok := groups[foff]; !ok {
 						groups[foff] = struct{}{}
 						gsz = int64(f.GroupSize())
+						// trc("gsz %v", gsz)
 						off = roundup(off, gsz)
-						if foff > off {
+						// trc("off %v", off)
+						if p := foff - off; p > 0 {
+							// trc("pad %v", p)
 							b.WriteByte('\n')
-							fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, foff-off)
+							fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, p)
+							off += p
 						}
 						fmt.Fprintf(b, "\n%s__ccgo%d uint%d", tag(field), foff, gsz*8)
+						off += gsz
 					}
-					off += gsz
+					// trc("post bf off %v", off)
 				default:
+					// trc("FLD")
 					ft := f.Type()
 					if f.IsFlexibleArrayMember() && ft.Size() <= 0 {
 						break
@@ -230,6 +240,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					b.WriteByte(' ')
 					c.typ0(b, n, ft, true, true, true)
 					off += ft.Size()
+					// trc("post fld off %v", off)
 				}
 			}
 			if p := x.Padding(); p != 0 {

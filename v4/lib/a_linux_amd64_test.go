@@ -115,20 +115,6 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 
-	// //TODO results reduced to bit-field  type
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:                  {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/bitfld-3.c`:  {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr32244-1.c`: {}, // EXEC FAIL
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:                   {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr34971.c`:   {}, // EXEC FAIL
-
-	// //TODO
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20000914-1.c`:                 {}, // EXEC FAIL
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20000914-1.c`: {}, // EXEC FAIL
-	`assets/github.com/vnmakarov/mir/c-tests/lacc/bitfield-types-init.c`:                {}, // EXEC FAIL
-	`assets/tcc-0.9.27/tests/tests2/92_enum_bitfield.c`:                                 {}, // EXEC FAIL
-
 	// ====================================================================
 	// Compiles but does not build.
 
@@ -175,6 +161,9 @@ var testExecKnownFails = map[string]struct{}{
 	// ====================================================================
 	// Does not compile (transpile).
 
+	// --------------------------------------------------------------------
+	// Won't fix
+	//
 	// assembler
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20001009-2.c`:                   {}, // COMPILE FAIL
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20030222-1.c`:                   {}, // COMPILE FAIL
@@ -449,6 +438,7 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/simd-4.c`:         {},
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/simd-5.c`:         {},
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/simd-6.c`:         {},
+	// --------------------------------------------------------------------
 
 	//TODO longjmp/setjmp
 	`assets/github.com/vnmakarov/mir/c-benchmarks/except.c`: {}, // COMPILE FAIL

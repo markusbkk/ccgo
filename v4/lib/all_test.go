@@ -709,7 +709,6 @@ func getCorpusFile(path string) ([]byte, error) {
 }
 
 func TestCSmith(t *testing.T) {
-	t.Skip("TODO") //TODO-
 	abi, err := cc.NewABI(runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		t.Fatal(err)
