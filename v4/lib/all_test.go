@@ -33,6 +33,7 @@ import (
 	"modernc.org/ccorpus2"
 	"modernc.org/fileutil"
 	"modernc.org/gc/v2"
+	"modernc.org/mathutil"
 )
 
 var (
@@ -798,6 +799,10 @@ func TestCSmith(t *testing.T) {
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3720922579",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4263172072",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 572192313",
+		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1110506964",
+		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1338573550",
+		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 2877850218",
+		//TODO "--bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 424465590",
 	}
 	ch := time.After(*oCSmith)
 	t0 := time.Now()
@@ -840,6 +845,12 @@ out:
 		if err := ioutil.WriteFile("main.c", csOut, 0660); err != nil {
 			t.Fatal(err)
 		}
+
+		// Shorten the log output, the CSmith header captures all info.  Full C code in
+		// blackbox, if turned on.
+		lines := strings.Split(strings.TrimSpace(string(csOut)), "\n")
+		lines = lines[:mathutil.Min(len(lines), 8)]
+		csOut = []byte(strings.Join(lines, "\n"))
 
 		csp := fmt.Sprintf("-I%s", filepath.FromSlash("/usr/include/csmith"))
 		if s := os.Getenv("CSMITH_PATH"); s != "" {
