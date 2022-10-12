@@ -220,12 +220,17 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					cAlign := ft.Align()
 					goAlign := c.goFieldAlign(ft)
 					off = roundup(off, int64(goAlign))
-					if cAlign > goAlign && off%int64(cAlign) != 0 {
+					// trc("cAlign %v, goAlign %v, off %v", cAlign, goAlign, off)
+					switch {
+					case cAlign > goAlign && off%int64(cAlign) != 0:
 						b.WriteByte('\n')
 						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, cAlign-goAlign)
 						off += int64(cAlign - goAlign)
+					case off < f.Offset() && off%int64(goAlign) == 0:
+						b.WriteByte('\n')
+						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, f.Offset()-off)
+						off += int64(f.Offset() - off)
 					}
-
 					if ft.Size() == 0 && i == x.NumFields()-1 {
 						break
 					}
