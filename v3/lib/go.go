@@ -12828,7 +12828,7 @@ func (p *project) selectionStatement(f *function, n *cc.SelectionStatement) {
 			// fmt.Printf("%p:%tf\n", f.block, f.block.topDecl)
 			p.w("{")
 			for _, v := range f.block.decls {
-				fmt.Printf("%p:%tf\n", f.block, f.block.topDecl)
+				// fmt.Printf("%p:%tf\n", f.block, f.block.topDecl)
 				p.declaration(f, v, true)
 				// fmt.Println("done!")
 			}
