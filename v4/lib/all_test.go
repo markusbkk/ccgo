@@ -15,7 +15,6 @@ import (
 	"math"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -1005,9 +1004,9 @@ func testSQLite(t *testing.T, dir string) {
 		// "-full-paths",
 		"-verify-types",
 		"-o", main,
-		path.Join(dir, "shell.c"),
-		path.Join(dir, "sqlite3.c"),
-		path.Join(dir, "patch.c"),
+		filepath.Join(dir, "shell.c"),
+		filepath.Join(dir, "sqlite3.c"),
+		filepath.Join(dir, "patch.c"),
 	}
 	if *oKeep {
 		ccgoArgs = append(ccgoArgs, "-keep-object-files", "-extended-errors", "-debug-linker-save")
