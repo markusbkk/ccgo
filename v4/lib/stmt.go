@@ -62,8 +62,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 	case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 		switch {
 		case len(c.switchCtx) != 0:
-			w.w("%s:", c.switchCtx[0])
-			c.switchCtx = c.switchCtx[1:]
+			w.w("%s:", c.switchCtx[n])
 		default:
 			if n.CaseOrdinal() != 0 {
 				w.w("fallthrough;")
@@ -79,8 +78,7 @@ func (c *ctx) labeledStatement(w writer, n *cc.LabeledStatement) {
 	case cc.LabeledStatementDefault: // "default" ':' Statement
 		switch {
 		case len(c.switchCtx) != 0:
-			w.w("%s:", c.switchCtx[0])
-			c.switchCtx = c.switchCtx[1:]
+			w.w("%s:", c.switchCtx[n])
 		default:
 			if n.CaseOrdinal() != 0 {
 				w.w("fallthrough;")
@@ -318,20 +316,20 @@ func (c *ctx) selectionStatementFlat(w writer, n *cc.SelectionStatement) {
 		//	brk:
 		t := cc.IntegerPromotion(n.ExpressionList.Type())
 		w.w("switch %s {", c.expr(w, n.ExpressionList, t, exprDefault))
-		var labels []string
+		labels := map[*cc.LabeledStatement]string{}
 		for _, v := range n.LabeledStatements() {
 			switch v.Case {
 			case cc.LabeledStatementLabel: // IDENTIFIER ':' Statement
 				// nop
 			case cc.LabeledStatementCaseLabel: // "case" ConstantExpression ':' Statement
 				label := c.label()
-				labels = append(labels, label)
+				labels[v] = label
 				w.w("case %s: goto %s;", c.expr(nil, v.ConstantExpression, t, exprDefault), label)
 			case cc.LabeledStatementRange: // "case" ConstantExpression "..." ConstantExpression ':' Statement
 				c.err(errorf("TODO %v", n.Case))
 			case cc.LabeledStatementDefault: // "default" ':' Statement
 				label := c.label()
-				labels = append(labels, label)
+				labels[v] = label
 				w.w("default: goto %s;", label)
 			default:
 				c.err(errorf("internal error %T %v", n, n.Case))

@@ -492,9 +492,31 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 	var out bytes.Buffer
 	switch {
 	case !execute:
-		err = NewTask(goos, goarch, []string{"ccgo", "-c", "-verify-types", "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(
+			goos,
+			goarch,
+			[]string{
+				"ccgo",
+				"-c",
+				"-verify-types",
+				"--prefix-field=F",
+				"-ignore-unsupported-alignment",
+				path,
+			},
+			&out, &out, nil).Main()
 	default:
-		err = NewTask(goos, goarch, []string{"ccgo", "-o", ofn, "-verify-types", "--prefix-field=F", path}, &out, &out, nil).Main()
+		err = NewTask(
+			goos,
+			goarch,
+			[]string{
+				"ccgo",
+				"-o", ofn,
+				"-verify-types",
+				"--prefix-field=F",
+				"-ignore-unsupported-alignment",
+				path,
+			},
+			&out, &out, nil).Main()
 	}
 	if err != nil {
 		if *oTraceC {
@@ -894,6 +916,7 @@ out:
 				"-extended-errors",
 				"-verify-types",
 				"--prefix-field=F",
+				"-ignore-unsupported-alignment",
 				"main.c",
 				csp,
 			},
@@ -994,7 +1017,7 @@ func testSQLite(t *testing.T, dir string) {
 
 		"-DHAVE_USLEEP",
 		"-DLONGDOUBLE_TYPE=double",
-		//TODO "-DSQLITE_DEBUG",
+		"-DSQLITE_DEBUG",
 		"-DSQLITE_DEFAULT_MEMSTATUS=0",
 		"-DSQLITE_ENABLE_DBPAGE_VTAB",
 		"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
@@ -1003,6 +1026,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-positions",
 		// "-full-paths",
 		"-verify-types",
+		"-ignore-unsupported-alignment",
 		"-o", main,
 		filepath.Join(dir, "shell.c"),
 		filepath.Join(dir, "sqlite3.c"),

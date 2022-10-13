@@ -404,11 +404,19 @@ func (c *ctx) isValidType1(n cc.Node, t cc.Type, report bool) bool {
 
 	switch attr := t.Attributes(); {
 	case t.Align() > 8 || (t.Size() > 0 && int64(t.Align()) > t.Size()):
+		if c.task.ignoreUnsupportedAligment {
+			break
+		}
+
 		if report {
 			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), t.Align(), t))
 		}
 		return false
 	case attr != nil && (attr.Aligned() > 8 || (t.Size() > 0 && attr.Aligned() > t.Size())):
+		if c.task.ignoreUnsupportedAligment {
+			break
+		}
+
 		if report {
 			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
 		}

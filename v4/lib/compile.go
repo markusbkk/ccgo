@@ -169,7 +169,7 @@ type ctx struct {
 	initPatch           func(int64, *buf)
 	out                 io.Writer
 	pvoid               cc.Type
-	switchCtx           []string
+	switchCtx           map[*cc.LabeledStatement]string
 	taggedEnums         nameSet
 	taggedStructs       nameSet
 	taggedUnions        nameSet
@@ -214,9 +214,9 @@ func (c *ctx) setContinueCtx(s string) func() {
 	return func() { c.continueCtx = save }
 }
 
-func (c *ctx) setSwitchCtx(s []string) func() {
+func (c *ctx) setSwitchCtx(m map[*cc.LabeledStatement]string) func() {
 	save := c.switchCtx
-	c.switchCtx = s
+	c.switchCtx = m
 	return func() { c.switchCtx = save }
 }
 

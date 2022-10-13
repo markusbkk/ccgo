@@ -1286,6 +1286,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51069.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51077.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51246.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51247.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51354.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51761.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr51856.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr52073.c
@@ -2236,6 +2237,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/991221-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/991227-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/991228-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/alias-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/align-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/align-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/arith-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/arith-rand-ll.c
@@ -2422,6 +2424,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr22429.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr22493-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr22630.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr23047.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr23467.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr23604.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr23941.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/pr24141.c
@@ -3618,6 +3621,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/991228-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/alias-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/alias-access-path-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/alias-access-path-2.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/align-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/align-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/arith-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/arith-rand-ll.c
@@ -3808,6 +3812,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr22429.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr22493-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr22630.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23047.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23467.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23604.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr23941.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/pr24141.c
