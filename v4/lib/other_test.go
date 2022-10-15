@@ -17,6 +17,7 @@ var testExecKnownFails = map[string]struct{}{
 	// Compiler specific conversion results.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`:                 {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
+	`assets/github.com/vnmakarov/mir/c-tests/lacc/convert-unsigned-float.c`:             {}, // EXEC FAIL
 	//
 	// Needs real long double support.
 	`assets/github.com/vnmakarov/mir/c-tests/lacc/long-double-load.c`: {}, // EXEC FAIL
