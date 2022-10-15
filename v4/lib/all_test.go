@@ -7,6 +7,7 @@ package ccgo // import "modernc.org/ccgo/v4/lib"
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -35,6 +36,10 @@ import (
 	"modernc.org/mathutil"
 )
 
+const (
+	csmithBitfields = "--bitfields" // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
+)
+
 var (
 	oBlackBox     = flag.String("blackbox", "", "Record CSmith file to this file")
 	oCSmith       = flag.Duration("csmith", 1*time.Hour, "")
@@ -59,8 +64,6 @@ var (
 	testWD string
 
 	csmithDefaultArgs = strings.Join([]string{
-		"--bitfields", // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
-		//TODO- "--no-bitfields",                  // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
 		"--max-nested-struct-level", "10", // --max-nested-struct-level <num>: limit maximum nested level of structs to <num>(default 0). Only works in the exhaustive mode.
 		"--no-const-pointers",    // --const-pointers | --no-const-pointers: enable | disable const pointers (enabled by default).
 		"--no-consts",            // --consts | --no-consts: enable | disable const qualifier (enabled by default).
@@ -750,6 +753,7 @@ func TestCSmith(t *testing.T) {
 		t.Skipf("skipped: sizeof long double: %v", abi.Types[cc.LongDouble].Size)
 	}
 
+	bigEndian := abi.ByteOrder == binary.BigEndian
 	binaryName := filepath.FromSlash("./a.out")
 	mainName := filepath.FromSlash("main.go")
 	wd, err := os.Getwd()
@@ -778,6 +782,11 @@ func TestCSmith(t *testing.T) {
 		if out, err := shell(true, "go", "get", "modernc.org/libc"); err != nil {
 			t.Fatalf("%v\n%s", err, out)
 		}
+	}
+
+	//TODO report the problem at http://www.flux.utah.edu/mailman/listinfo/csmith-bugs
+	bigEndianBlacklist := []string{
+		"-s 2949258094",
 	}
 
 	fixedBugs := []string{
@@ -837,12 +846,21 @@ out:
 		var args string
 		switch {
 		case i < len(fixedBugs):
-			if re != nil && !re.MatchString(fixedBugs[i]) {
+			s := fixedBugs[i]
+			if re != nil && !re.MatchString(s) {
 				continue
 			}
 
+			if bigEndian {
+				for _, v := range bigEndianBlacklist {
+					if strings.Contains(s, v) {
+						continue out
+					}
+				}
+			}
+
 			args += fixedBugs[i]
-			a := strings.Split(fixedBugs[i], " ")
+			a := strings.Split(s, " ")
 			extra = strings.Join(a[len(a)-2:], " ")
 			t.Log(args)
 		default:
@@ -853,6 +871,9 @@ out:
 			}
 
 			args += csmithDefaultArgs
+			if !bigEndian {
+				args += " " + csmithBitfields
+			}
 		}
 		csOut, err := exec.Command(csmith, strings.Split(args, " ")...).Output()
 		if err != nil {
