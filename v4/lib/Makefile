@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-.PHONY:	build_all_targets clean edit editor tmp x csmith fftest shorttest sqlitetest
+.PHONY:	build_all_targets clean edit editor tmp x csmith fftest shorttest sqlitetest debug
 
 build_all_targets:
 	GOOS=darwin GOARCH=amd64 go build -v ./...
@@ -83,3 +83,8 @@ shorttest:
 
 sqlitetest:
 	go test -v -timeout 24h -run SQL -xtags=libc.memgrind -trc -trco 2>&1 | tee log
+
+debug:
+	go test -count 10 -v -timeout 24h -short -failfast -run Exec -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
+	grep TOTAL log
+	git status testdata

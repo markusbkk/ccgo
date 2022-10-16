@@ -745,8 +745,13 @@ func TestCSmith(t *testing.T) {
 
 	csmith, err := exec.LookPath("csmith")
 	if err != nil {
-		t.Skip(err)
-		return
+		switch runtime.GOOS {
+		case "windows": //TODO
+			t.Skip(err)
+			return
+		default:
+			t.Fatal(err)
+		}
 	}
 
 	if cc.LongDouble64Flag(runtime.GOOS, runtime.GOARCH) == "" { //TODO
