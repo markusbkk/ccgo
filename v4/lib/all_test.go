@@ -787,6 +787,8 @@ func TestCSmith(t *testing.T) {
 	//TODO report the problem at http://www.flux.utah.edu/mailman/listinfo/csmith-bugs
 	bigEndianBlacklist := []string{
 		"-s 2949258094",
+		"-s 3329111231",
+		"-s 4101947480",
 	}
 
 	fixedBugs := []string{
@@ -836,7 +838,7 @@ func TestCSmith(t *testing.T) {
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 4263172072",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 572192313",
 	}
-	ch := time.After(*oCSmith)
+	var ch <-chan time.Time
 	t0 := time.Now()
 	var files, ok int
 	var size int64
@@ -864,6 +866,9 @@ out:
 			extra = strings.Join(a[len(a)-2:], " ")
 			t.Log(args)
 		default:
+			if ch == nil {
+				ch = time.After(*oCSmith)
+			}
 			select {
 			case <-ch:
 				break out
@@ -919,6 +924,13 @@ out:
 		}
 
 		ctime := time.Since(ctime0)
+		if *oTrace {
+			fmt.Fprintf(os.Stderr, "[%s %s]: C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
+		}
+		if ctime > *oCSmithClimit {
+			continue
+		}
+
 		size += int64(len(csOut))
 
 		if err := os.Remove(binaryName); err != nil {
@@ -960,9 +972,6 @@ out:
 			}
 		}()
 
-		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]: C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
-		}
 		goLimit := 10 * ctime
 		if goLimit < 20*time.Minute {
 			goLimit = 20 * time.Minute
@@ -972,7 +981,7 @@ out:
 			ctx, cancel := context.WithTimeout(context.Background(), goLimit)
 			defer cancel()
 
-			return exec.CommandContext(ctx, "go", "run", "-tags=libc.memgrind", mainName).CombinedOutput()
+			return exec.CommandContext(ctx, "go", "run", mainName).CombinedOutput()
 		}()
 		if err != nil {
 			t.Errorf("%s\n%s\n%s\nccgo: %v", extra, csOut, binOutB, err)

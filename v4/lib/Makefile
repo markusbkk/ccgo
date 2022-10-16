@@ -67,7 +67,7 @@ x:
 	git status
 
 csmith:
-	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -csmithc 10s -trc 2>&1 | tee log-cs
+	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -trc 2>&1 | tee log-cs
 
 fftest:
 	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
