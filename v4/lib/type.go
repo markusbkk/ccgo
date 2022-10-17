@@ -169,13 +169,13 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 
 				switch {
 				case f.IsBitfield():
-					al = mathutil.Max(al, f.GroupSize())
+					al = mathutil.Max(al, mathutil.Min(f.GroupSize(), c.maxAlign))
 				default:
 					al = mathutil.Max(al, c.goFieldAlign(x.FieldByIndex(i).Type()))
 				}
 			}
 			if al < x.Align() {
-				c.alignPseudoField(b, x.Align())
+				c.alignPseudoField(b, mathutil.Min(x.Align(), c.maxAlign))
 			}
 			var off int64
 			// trc("===== %s", x)
@@ -198,7 +198,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 						groups[foff] = struct{}{}
 						gsz = int64(f.GroupSize())
 						// trc("gsz %v", gsz)
-						off = roundup(off, gsz)
+						off = roundup(off, mathutil.MinInt64(gsz, int64(c.maxAlign)))
 						// trc("off %v", off)
 						if p := foff - off; p > 0 {
 							// trc("pad %v", p)
@@ -219,9 +219,14 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 
 					cAlign := ft.Align()
 					goAlign := c.goFieldAlign(ft)
+					off0 := off
 					off = roundup(off, int64(goAlign))
 					// trc("cAlign %v, goAlign %v, off %v", cAlign, goAlign, off)
 					switch {
+					case off0%int64(goAlign) != 0 && goAlign < ft.Align():
+						b.WriteByte('\n')
+						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, f.Offset()-off0)
+						off += int64(f.Offset() - off)
 					case cAlign > goAlign && off%int64(cAlign) != 0:
 						b.WriteByte('\n')
 						fmt.Fprintf(b, "%s__ccgo_align%d [%d]byte", tag(field), i, cAlign-goAlign)
@@ -248,9 +253,15 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					// trc("post fld off %v", off)
 				}
 			}
-			if p := x.Padding(); p != 0 {
+			switch {
+			case c.maxAlign < x.Align() && off < x.Size():
 				b.WriteByte('\n')
-				fmt.Fprintf(b, "%s__ccgo_pad [%d]byte", tag(field), p)
+				fmt.Fprintf(b, "%s__ccgo_pad%d [%d]byte", tag(field), nf, x.Size()-off)
+			default:
+				if p := x.Padding(); p != 0 {
+					b.WriteByte('\n')
+					fmt.Fprintf(b, "%s__ccgo_pad%d [%d]byte", tag(field), nf, p)
+				}
 			}
 			b.WriteString("\n}")
 		}
@@ -272,13 +283,13 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 
 				switch {
 				case f.IsBitfield():
-					al = mathutil.Max(al, f.GroupSize())
+					al = mathutil.Max(al, mathutil.Min(f.GroupSize(), c.maxAlign))
 				default:
 					al = mathutil.Max(al, c.goFieldAlign(x.FieldByIndex(i).Type()))
 				}
 			}
 			if al < x.Align() {
-				c.alignPseudoField(b, x.Align())
+				c.alignPseudoField(b, mathutil.Min(x.Align(), c.maxAlign))
 			}
 			ff := firstPositiveSizedField(x)
 			for i := 0; i < x.NumFields(); i++ {
@@ -316,7 +327,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			b.WriteByte(' ')
 			c.typ0(b, n, ff.Type(), true, true, true)
 			if n := t.Size() - sz1; n != 0 {
-				fmt.Fprintf(b, "\n%s__ccgo [%d]byte", tag(field), t.Size()-sz1)
+				fmt.Fprintf(b, "\n%s__ccgo_pad%d [%d]byte", tag(field), nf, t.Size()-sz1)
 			}
 			b.WriteString("\n}")
 		}
@@ -355,11 +366,11 @@ func (c *ctx) goFieldAlign(t cc.Type) (r int) {
 		t = t.(*cc.ArrayType).Elem()
 	}
 	gk := gcKind(t.Kind(), c.ast.ABI)
-	if gk < 0 {
-		return t.Align()
+	if r = c.task.goABI.Types[gk].FieldAlign; r != 0 {
+		return r
 	}
 
-	return c.task.goABI.Types[gk].FieldAlign
+	return mathutil.Min(c.maxAlign, t.Align())
 }
 
 func (c *ctx) isValidParamType(n cc.Node, t cc.Type) (ok bool) {

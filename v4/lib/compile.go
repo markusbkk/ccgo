@@ -167,6 +167,7 @@ type ctx struct {
 	ifn                 string
 	imports             map[string]string // import path: qualifier
 	initPatch           func(int64, *buf)
+	maxAlign            int
 	out                 io.Writer
 	pvoid               cc.Type
 	switchCtx           map[*cc.LabeledStatement]string
@@ -187,6 +188,11 @@ type ctx struct {
 }
 
 func newCtx(task *Task, eh errHandler) *ctx {
+	maxAlign := 8
+	switch task.goarch {
+	case "arm", "386":
+		maxAlign = 4
+	}
 	return &ctx{
 		cfg:                 task.cfg,
 		defineTaggedStructs: map[string]*cc.StructType{},
@@ -197,6 +203,7 @@ func newCtx(task *Task, eh errHandler) *ctx {
 		externsMentioned:    map[string]struct{}{},
 		fields:              map[fielder]*nameSpace{},
 		imports:             map[string]string{},
+		maxAlign:            maxAlign,
 		task:                task,
 		verify:              map[cc.Type]struct{}{},
 	}
