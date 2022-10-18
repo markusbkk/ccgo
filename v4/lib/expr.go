@@ -127,7 +127,7 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 		return c.convertFromPointer(n, s, from.(*cc.PointerType), to, fromMode, toMode)
 	}
 
-	if toMode == exprVoid {
+	if toMode == exprVoid || to.Kind() == cc.Void {
 		return s
 	}
 
@@ -136,6 +136,7 @@ func (c *ctx) convert(n cc.ExpressionNode, w writer, s *buf, from, to cc.Type, f
 	}
 
 	// trc("%v: %s", n.Position(), cc.NodeSource(n))
+	// trc("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode)
 	c.err(errorf("TODO %q %s %s -> %s %s", s, from, fromMode, to, toMode))
 	return s //TODO
 }

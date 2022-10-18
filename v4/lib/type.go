@@ -75,7 +75,9 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 	case *cc.PredefinedType:
 		if t.VectorSize() > 0 {
 			c.err(errorf("TODO vector"))
+			return
 		}
+
 		switch {
 		case cc.IsIntegerType(t):
 			switch {
@@ -301,8 +303,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 				b.WriteByte('\n')
 				switch nm := f.Name(); {
 				case nm == "":
-					c.err(errorf("TODO"))
-					return
+					fmt.Fprintf(b, "%s__ccgo%d", tag(field), i)
 				default:
 					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 				}
@@ -319,8 +320,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			b.WriteByte('\n')
 			switch nm := ff.Name(); {
 			case nm == "":
-				c.err(errorf("TODO"))
-				return
+				fmt.Fprintf(b, "%s__ccgo%d", tag(field), ff.Index())
 			default:
 				fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, ff))
 			}
@@ -432,6 +432,11 @@ func (c *ctx) isValidType1(n cc.Node, t cc.Type, report bool) bool {
 			c.err(errorf("%v: unsupported alignment %d of %s", pos(n), attr.Aligned(), t))
 		}
 		return false
+	case attr != nil && (attr.VectorSize() > 0):
+		if report {
+			c.err(errorf("%v: unsupported vector type: %s", pos(n), t))
+		}
+		return false
 	}
 
 	switch x := t.Undecay().(type) {
@@ -442,6 +447,20 @@ func (c *ctx) isValidType1(n cc.Node, t cc.Type, report bool) bool {
 			}
 			return false
 		}
+	case *cc.FunctionType:
+		if !c.isValidType(n, x.Result(), report) {
+			return false
+		}
+
+		for _, v := range x.Parameters() {
+			if !c.isValidParamType(n, v.Type()) {
+				if report {
+					c.err(errorf("%v: invalid parameter type: %s", pos(n), v.Type()))
+				}
+				return false
+			}
+		}
+		return true
 	}
 
 	if t.IsIncomplete() {

@@ -189,6 +189,13 @@ func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
 }
 
 func (c *ctx) functionDefinition(w writer, n *cc.FunctionDefinition) {
+	if n.UsesVectors() {
+		if !c.task.ignoreVectorFunctions {
+			c.err(errorf("%v: function uses vector type(s)", n.Position()))
+		}
+		return
+	}
+
 	c.functionDefinition0(w, sep(n), n, n.Declarator, n.CompoundStatement, false)
 }
 
@@ -398,7 +405,7 @@ func (c *ctx) initDeclarator(w writer, sep string, n *cc.InitDeclarator, externa
 	case cc.InitDeclaratorDecl: // Declarator Asm
 		switch {
 		case d.IsTypename():
-			if external && c.typenames.add(nm) && !d.Type().IsIncomplete() {
+			if external && c.typenames.add(nm) && !d.Type().IsIncomplete() && c.isValidType(d, d.Type(), false) {
 				w.w("\n\n%s%stype %s%s = %s;", sep, c.posComment(n), tag(typename), nm, c.typedef(d, d.Type()))
 				c.defineType(w, sep, n, d.Type())
 			}

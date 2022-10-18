@@ -77,7 +77,9 @@ type Task struct {
 	debugLinkerSave           bool // -debug-linker-save, causes pre type checking save of the linker result.
 	enableSignal              bool // testing
 	fullPaths                 bool // -full-paths
+	ignoreAsmErrors           bool // -ignore-asm-errors
 	ignoreUnsupportedAligment bool // -ignore-unsupported-alignment
+	ignoreVectorFunctions     bool // -ignore-vector-functions
 	keepObjectFiles           bool // -keep-object-files
 	nostdinc                  bool // -nostdinc
 	nostdlib                  bool // -nostdlib
@@ -168,7 +170,9 @@ func (t *Task) Main() (err error) {
 	set.Opt("debug-linker-save", func(opt string) error { t.debugLinkerSave = true; return nil })
 	set.Opt("extended-errors", func(opt string) error { extendedErrors = true; gc.ExtendedErrors = true; return nil })
 	set.Opt("full-paths", func(opt string) error { t.fullPaths = true; return nil })
+	set.Opt("ignore-asm-errors", func(opt string) error { t.ignoreAsmErrors = true; return nil })
 	set.Opt("ignore-unsupported-alignment", func(opt string) error { t.ignoreUnsupportedAligment = true; return nil })
+	set.Opt("ignore-vector-functions", func(opt string) error { t.ignoreVectorFunctions = true; return nil })
 	set.Opt("keep-object-files", func(opt string) error { t.keepObjectFiles = true; return nil })
 	set.Opt("nostdinc", func(opt string) error { t.nostdinc = true; return nil })
 	set.Opt("nostdlib", func(opt string) error { t.nostdlib = true; return nil })

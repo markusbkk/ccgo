@@ -47,8 +47,10 @@ func (c *ctx) statement(w writer, n *cc.Statement) {
 		w.w("%s%s", sep, c.posComment(n))
 		a := strings.Split(nodeSource(n.AsmStatement), "\n")
 		w.w("\n// %s", strings.Join(a, "\n// "))
-		w.w("\n%spanic(0) // assembler statements not supported", tag(preserve))
-		c.err(errorf("%v: assembler statements not supported", c.pos(n)))
+		w.w("\n%spanic(%q) // assembler statements not supported\n", tag(preserve), c.pos(n))
+		if !c.task.ignoreAsmErrors {
+			c.err(errorf("%v: assembler statements not supported", c.pos(n)))
+		}
 	default:
 		c.err(errorf("internal error %T %v", n, n.Case))
 	}
