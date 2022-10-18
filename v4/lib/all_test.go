@@ -1059,6 +1059,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_LIKE_DOESNT_MATCH_BLOBS",
 		"-DSQLITE_MEMDEBUG",
 		"-DSQLITE_THREADSAFE=0",
+		"--prefix-field=F",
 		"-positions",
 		// "-full-paths",
 		"-verify-types",

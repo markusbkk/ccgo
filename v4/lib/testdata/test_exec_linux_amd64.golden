@@ -475,6 +475,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900216-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900313-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900407-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/900516-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920409-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920410-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/920410-2.c
@@ -674,6 +675,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981001-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981007-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/981107-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990107-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990117-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990203-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990519-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/990523-1.c
@@ -1030,6 +1032,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30132.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30338.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30433.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr30564-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31034.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31345-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr31541.c
@@ -1320,7 +1323,12 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53418-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53495.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53519.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr53886.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-1.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-2.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-3.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-4.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-5.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54103-6.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54321.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54428.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr54552-1.c
@@ -1457,6 +1465,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82389.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82549.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82816.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82838.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82875.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82879.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr82913.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr83051-2.c
@@ -2815,6 +2824,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-2.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-3.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-4.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-5.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c
@@ -4245,6 +4255,7 @@ assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-2.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-3.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-4.c
+assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-5.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strlen-7.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/strncmp-1.c
 assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/struct-aliasing-1.c

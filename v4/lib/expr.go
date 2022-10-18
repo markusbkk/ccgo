@@ -385,9 +385,9 @@ func (c *ctx) reduceBitFieldValue(expr *buf, f *cc.Field, t cc.Type, mode mode) 
 }
 
 func (c *ctx) expr0(w writer, n cc.ExpressionNode, t cc.Type, mod mode) (r *buf, rt cc.Type, rmode mode) {
-	// trc("%v: %T (%q), %v, %v (%v: %v: %v:)", n.Position(), n, cc.NodeSource(n), t, mode, origin(4), origin(3), origin(2))
+	// trc("%v: %T (%q), %v, %v (%v: %v: %v:) (IN)", n.Position(), n, cc.NodeSource(n), t, mod, origin(4), origin(3), origin(2))
 	// defer func() {
-	// 	trc("%v: %T (%q), %v, %v (RET)", n.Position(), n, cc.NodeSource(n), t, mode)
+	// 	trc("%v: %T (%q), %v, %v (RET)", n.Position(), n, cc.NodeSource(n), t, mod)
 	// }()
 
 	defer func(mod mode) {
@@ -473,9 +473,11 @@ out:
 	}
 	if blank {
 		defer func() {
-			var b buf
-			b.w("%s_ = %s", tag(preserve), r.bytes())
-			r.b = b.b
+			if len(r.bytes()) != 0 {
+				var b buf
+				b.w("%s_ = %s", tag(preserve), r.bytes())
+				r.b = b.b
+			}
 		}()
 	}
 	if t == nil {
