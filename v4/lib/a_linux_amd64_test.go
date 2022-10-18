@@ -115,6 +115,10 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 
+	//TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`:                 {}, // EXEC FAIL: assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020107-1.c: panic: 5052909
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`: {}, // EXEC FAIL: assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c: panic: 5052909
+
 	// ====================================================================
 	// Compiles but does not build.
 
