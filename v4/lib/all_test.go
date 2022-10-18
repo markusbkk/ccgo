@@ -587,10 +587,10 @@ func testExec1(t *testing.T, p *parallel, root, path string, execute bool, g *go
 		fmt.Printf("Go out\n==== (A)\n%s\n==== (Z)\n", goOut)
 	}
 	if bytes.Contains(cOut, []byte("\r\n")) {
-		cOut = bytes.ReplaceAll(cOut, []byte("\r\n"), []byte{'\n'})
+		cOut = bytes.ReplaceAll(cOut, []byte("\r"), nil)
 	}
 	if bytes.Contains(goOut, []byte("\r\n")) {
-		goOut = bytes.ReplaceAll(goOut, []byte("\r\n"), []byte{'\n'})
+		goOut = bytes.ReplaceAll(goOut, []byte("\r"), nil)
 	}
 	if cCompilerFailed || cExecFailed || bytes.Equal(cOut, goOut) {
 		p.ok()
