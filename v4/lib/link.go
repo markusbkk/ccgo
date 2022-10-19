@@ -677,7 +677,6 @@ var (
 	_ %s.Pointer
 )
 
-type float128 = struct { __ccgo [2]float64 }
 `, l.reflectName, l.unsafeName)
 
 	for _, linkFile := range linkFiles {

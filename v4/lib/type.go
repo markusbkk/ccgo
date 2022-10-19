@@ -119,7 +119,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			case 16:
 				switch {
 				case isField:
-					b.WriteString("float128")
+					b.WriteString("[2]float64")
 				default:
 					b.WriteString("float64")
 				}
@@ -138,6 +138,8 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			}
 			b.WriteString(tag(preserve))
 			b.WriteString("complex128")
+		case t.Kind() == cc.Float128:
+			b.WriteString("[2]float64")
 		default:
 			b.WriteString(tag(preserve))
 			b.WriteString("int")
