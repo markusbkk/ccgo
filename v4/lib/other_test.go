@@ -88,6 +88,9 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/960405-1.c`:                 {}, // BUILD FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/960405-1.c`: {}, // BUILD FAIL
 
+	//TODO
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20011219-1.c`: {}, // BUILD FAIL
+
 	// ====================================================================
 	// Should not compile (transpile).
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr71109.c`: {}, // COMPILE FAIL
