@@ -1194,6 +1194,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40204.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40233.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40252.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40291.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40351.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40432.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40570.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr40582.c

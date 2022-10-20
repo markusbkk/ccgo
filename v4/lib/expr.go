@@ -1752,10 +1752,11 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 		b.w("((*%s)(%s).", c.typ(n, pe.Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
 		switch {
 		case f.Parent() != nil:
-			c.err(errorf("TODO %v", n.Case))
+			c.parentFields(&b, n.Token, f)
 		default:
-			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			b.w("%s%s", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
+		b.w(")")
 	case exprUintptr:
 		rt, rmode = n.Type().Pointer(), mode
 		b.w("((%s)%s)", c.expr(w, n.PostfixExpression, nil, exprDefault), fldOff(f.Offset()))
@@ -1844,10 +1845,11 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
 		switch {
 		case f.Parent() != nil:
-			c.err(errorf("TODO %v", n.Case))
+			c.parentFields(&b, n.Token, f)
 		default:
-			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			b.w("%s%s", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
+		b.w(")")
 	case exprUintptr:
 		rt, rmode = n.Type().Pointer(), mode
 		b.w("%suintptr(%sunsafe.%[1]sPointer(&(%[3]s.", tag(preserve), tag(importQualifier), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)))
@@ -1870,6 +1872,19 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		c.err(errorf("TODO %v", mode))
 	}
 	return &b, rt, rmode
+}
+
+func (c *ctx) parentFields(b *buf, n cc.Node, f *cc.Field) {
+	if p := f.Parent(); p != nil {
+		c.parentFields(b, n, p)
+		b.w(".")
+	}
+	switch {
+	case f.Name() == "":
+		b.w("%s__ccgo%d", tag(field), f.Offset())
+	default:
+		b.w("%s%s", tag(field), f.Name())
+	}
 }
 
 func (c *ctx) isLastStructOrUnionField(n cc.ExpressionNode) *cc.Field {
