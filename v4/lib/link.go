@@ -596,6 +596,7 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	l.unsafeName = l.tld.reg.put("unsafe")
 
 	// Check for unresolved references.
+	var undefs []string
 	for _, linkFile := range linkFiles {
 		switch object := objects[linkFile]; {
 		case object.kind == objectFile:
@@ -611,7 +612,8 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 
 				lib, ok := l.externs[nm]
 				if !ok {
-					return errorf("%v: undefined reference to '%s'", pos, l.rawName(nm))
+					undefs = append(undefs, errorf("%v: undefined reference to '%s'", pos, l.rawName(nm)).Error())
+					continue
 				}
 
 				// trc("extern %q found in %q", nm, lib.id)
@@ -631,6 +633,11 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 			}
 		}
 	}
+	if len(undefs) != 0 {
+		sort.Strings(undefs)
+		return errorf("%s", strings.Join(undefs, "\n"))
+	}
+
 	if libc := l.libc; libc != nil && !libc.imported {
 		libc.qualifier = l.tld.registerName(l, tag(importQualifier)+libc.pkgName)
 		l.imports = append(l.imports, libc)

@@ -206,6 +206,9 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 		return
 	}
 
+	c.fn = d
+	defer func(d *cc.Declarator) { c.fn = d }(d)
+
 	c.isValidType1(d, ft, true)
 	f0, pass := c.f, c.pass
 	c.f = c.newFnCtx(ft, cs)

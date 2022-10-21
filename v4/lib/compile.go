@@ -164,6 +164,7 @@ type ctx struct {
 	externsMentioned    map[string]struct{}
 	f                   *fnCtx
 	fields              map[fielder]*nameSpace
+	fn                  *cc.Declarator
 	ifn                 string
 	imports             map[string]string // import path: qualifier
 	initPatch           func(int64, *buf)
