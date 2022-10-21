@@ -37,7 +37,8 @@ import (
 )
 
 const (
-	csmithBitfields = "--bitfields" // --bitfields | --no-bitfields: enable | disable full-bitfields structs (disabled by default).
+	csmithBitfields   = "--bitfields"    // --bitfields | --no-bitfields: enable | disable full-bitfields structs (enabled by default). // Was disabled by default in older versions,
+	csmithNoBitfields = "--no-bitfields" // --bitfields | --no-bitfields: enable | disable full-bitfields structs (enabled by default).
 )
 
 var (
@@ -840,7 +841,6 @@ func TestCSmith(t *testing.T) {
 		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 1906742816",
 		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 3629008936",
 		"--bitfields --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid --max-nested-struct-level 10 -s 612971101",
-		"--max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 15871858594759714910",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 1302111308",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3285852464",
 		"--no-bitfields --max-nested-struct-level 10 --no-const-pointers --no-consts --no-packed-struct --no-volatile-pointers --no-volatiles --paranoid -s 3609090094",
@@ -886,7 +886,10 @@ out:
 			}
 
 			args += csmithDefaultArgs
-			if !bigEndian {
+			switch {
+			case bigEndian:
+				args += " " + csmithNoBitfields
+			default:
 				args += " " + csmithBitfields
 			}
 		}
