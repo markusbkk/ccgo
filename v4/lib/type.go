@@ -112,17 +112,12 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			// if t.Size() != 8 {
 			// 	c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			// }
-			b.WriteString(tag(preserve))
 			switch t.Size() {
 			case 8:
+				b.WriteString(tag(preserve))
 				b.WriteString("float64")
 			case 16:
-				switch {
-				case isField:
-					b.WriteString("[2]float64")
-				default:
-					b.WriteString("float64")
-				}
+				fmt.Fprintf(b, "[2]%suint64", tag(preserve))
 			default:
 				c.err(errorf("C %v of unexpected size %d", x.Kind(), t.Size()))
 			}
@@ -139,7 +134,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 			b.WriteString(tag(preserve))
 			b.WriteString("complex128")
 		case t.Kind() == cc.Float128:
-			b.WriteString("[2]float64")
+			fmt.Fprintf(b, "[2]%suint64", tag(preserve))
 		default:
 			b.WriteString(tag(preserve))
 			b.WriteString("int")
