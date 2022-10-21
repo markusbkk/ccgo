@@ -2744,7 +2744,8 @@ func (c *ctx) primaryExpressionFloatConst(w writer, n *cc.PrimaryExpression, t c
 	rt, rmode = t, exprDefault
 	switch x := n.Value().(type) {
 	case *cc.LongDoubleValue:
-		b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), (*big.Float)(x))
+		// b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), (*big.Float)(x))
+		b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, c.ast.Double), (*big.Float)(x))
 	case cc.Float64Value:
 		b.w("(%s%s%sFrom%s(%v))", c.task.tlsQualifier, tag(preserve), c.helper(n, t), c.helper(n, n.Type()), x)
 	default:

@@ -759,9 +759,9 @@ func TestCSmith(t *testing.T) {
 		}
 	}
 
-	if cc.LongDouble64Flag(runtime.GOOS, runtime.GOARCH) == "" { //TODO
-		t.Skipf("skipped: sizeof long double: %v", abi.Types[cc.LongDouble].Size)
-	}
+	//TODO- if cc.LongDouble64Flag(runtime.GOOS, runtime.GOARCH) == "" {
+	//TODO- 	t.Skipf("skipped: sizeof long double: %v", abi.Types[cc.LongDouble].Size)
+	//TODO- }
 
 	bigEndian := abi.ByteOrder == binary.BigEndian
 	binaryName := filepath.FromSlash("./a.out")
