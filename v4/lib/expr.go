@@ -1729,7 +1729,7 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 		return &b, rt, rmode
 	}
 
-	if _, ok := pe.Elem().(*cc.UnionType); ok && f.Index() != 0 { //TODO use firstPositiveSizedField
+	if u, ok := pe.Elem().(*cc.UnionType); ok && f != firstPositiveSizedField(u) {
 		switch mode {
 		case exprSelect, exprLvalue, exprDefault:
 			rt, rmode = n.Type(), mode
@@ -1765,10 +1765,11 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 		b.w("((*%s)(%s).", c.typ(n, pe.Elem()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
 		switch {
 		case f.Parent() != nil:
-			c.err(errorf("TODO %v", n.Case))
+			c.parentFields(&b, n.Token, f)
 		default:
-			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			b.w("%s%s", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
+		b.w(")")
 	default:
 		c.err(errorf("TODO %v", mode))
 	}
@@ -1787,12 +1788,13 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 	if mode == exprVoid {
 		mode = exprDefault
 	}
-	if _, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f.Index() != 0 { // Use firstPositiveSizedField instead of zero
+	if u, ok := n.PostfixExpression.Type().(*cc.UnionType); ok && f != firstPositiveSizedField(u) {
 		switch mode {
 		case exprLvalue, exprDefault, exprSelect:
 			rt, rmode = n.Type(), mode
 			switch {
 			case f.Offset() != 0:
+				//TODO XXX panic(todo("", n.Position()))
 				//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
 				c.err(errorf("TODO"))
 			default:
@@ -1802,6 +1804,7 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 			rt, rmode = n.Type().(*cc.PointerType), exprUintptr
 			switch {
 			case f.Offset() != 0:
+				//TODO XXX panic(todo("", n.Position()))
 				//TODO b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
 				c.err(errorf("TODO"))
 			default:
@@ -1811,10 +1814,11 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 			rt, rmode = n.Type().Pointer(), mode
 			switch {
 			case f.Offset() != 0:
+				//TODO XXX panic(todo("", n.Position()))
 				// b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
 				c.err(errorf("TODO"))
 			default:
-				b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
+				b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 			}
 		case exprIndex:
 			switch x := n.Type().Undecay().(type) {
@@ -1822,10 +1826,11 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 				rt, rmode = n.Type(), mode
 				switch {
 				case f.Offset() != 0:
+					//TODO XXX panic(todo("", n.Position()))
 					// b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
 					c.err(errorf("TODO"))
 				default:
-					b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect))))
+					b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 				}
 			default:
 				c.err(errorf("TODO %T", x))
@@ -1855,15 +1860,17 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		b.w("%suintptr(%sunsafe.%[1]sPointer(&(%[3]s.", tag(preserve), tag(importQualifier), c.pin(n, c.expr(w, n.PostfixExpression, nil, exprLvalue)))
 		switch {
 		case f.Parent() != nil:
-			c.err(errorf("TODO %v", n.Case))
+			c.parentFields(&b, n.Token, f)
 		default:
-			b.w("%s%s)))", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			b.w("%s%s", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
+		b.w(")))")
 	case exprCall:
 		rt, rmode = n.Type().(*cc.PointerType), exprUintptr
 		b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
 		switch {
 		case f.Parent() != nil:
+			//TODO XXX panic(todo("", n.Position()))
 			c.err(errorf("TODO %v", n.Case))
 		default:
 			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))

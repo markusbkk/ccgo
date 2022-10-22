@@ -231,6 +231,44 @@ func (t *Task) Main() (err error) {
 		t.cfgArgs = append(t.cfgArgs, flag)
 	}
 
+	if t.goos == "windows" && (t.goarch == "386" || t.goarch == "amd64") {
+		t.cfgArgs = append(t.cfgArgs,
+			"-mno-3dnow",
+			"-mno-abm",
+			"-mno-aes",
+			"-mno-avx",
+			"-mno-avx2",
+			"-mno-avx512cd",
+			"-mno-avx512er",
+			"-mno-avx512f",
+			"-mno-avx512pf",
+			"-mno-bmi",
+			"-mno-bmi2",
+			"-mno-f16c",
+			"-mno-fma",
+			"-mno-fma4",
+			"-mno-fsgsbase",
+			"-mno-lwp",
+			"-mno-lzcnt",
+			"-mno-mmx",
+			"-mno-pclmul",
+			"-mno-popcnt",
+			"-mno-prefetchwt1",
+			"-mno-rdrnd",
+			"-mno-sha",
+			"-mno-sse",
+			"-mno-sse2",
+			"-mno-sse3",
+			"-mno-sse4",
+			"-mno-sse4.1",
+			"-mno-sse4.2",
+			"-mno-sse4a",
+			"-mno-ssse3",
+			"-mno-tbm",
+			"-mno-xop",
+		)
+	}
+
 	// trc("", t.cfgArgs)
 	cfg, err := cc.NewConfig(t.goos, t.goarch, t.cfgArgs...)
 	if err != nil {

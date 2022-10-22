@@ -1070,7 +1070,7 @@ func testSQLite(t *testing.T, dir string) {
 		"-DSQLITE_THREADSAFE=0",
 		"--prefix-field=F",
 		"-positions",
-		// "-full-paths",
+		"-full-paths",
 		"-verify-types",
 		"-ignore-asm-errors",
 		"-ignore-unsupported-alignment",

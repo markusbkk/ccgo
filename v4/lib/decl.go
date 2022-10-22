@@ -173,7 +173,9 @@ func (f *fnCtx) id() int { f.nextID++; return f.nextID }
 func (c *ctx) externalDeclaration(w writer, n *cc.ExternalDeclaration) {
 	switch n.Case {
 	case cc.ExternalDeclarationFuncDef: // FunctionDefinition
-		if d := n.FunctionDefinition.Declarator; d.Linkage() == cc.External {
+		d := n.FunctionDefinition.Declarator
+		switch d.Linkage() {
+		case cc.External:
 			c.externsDefined[n.FunctionDefinition.Declarator.Name()] = struct{}{}
 		}
 		c.functionDefinition(w, n.FunctionDefinition)
@@ -235,9 +237,6 @@ func (c *ctx) functionDefinition0(w writer, sep string, pos cc.Node, d *cc.Decla
 	c.pass = 2
 	c.f.nextID = 0
 	isMain := d.Linkage() == cc.External && d.Name() == "main"
-	if isMain {
-		c.hasMain = true
-	}
 	s := strings.TrimRight(sep, "\n\r\t ")
 	s += c.posComment(pos)
 	if !strings.HasSuffix(s, "\n") {

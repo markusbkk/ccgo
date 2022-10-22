@@ -596,7 +596,11 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 	l.unsafeName = l.tld.reg.put("unsafe")
 
 	// Check for unresolved references.
-	var undefs []string
+	type undef struct {
+		pos token.Position
+		nm  string
+	}
+	var undefs []undef
 	for _, linkFile := range linkFiles {
 		switch object := objects[linkFile]; {
 		case object.kind == objectFile:
@@ -612,7 +616,8 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 
 				lib, ok := l.externs[nm]
 				if !ok {
-					undefs = append(undefs, errorf("%v: undefined reference to '%s'", pos, l.rawName(nm)).Error())
+					// trc("%q %v: %q", object.id, pos, nm)
+					undefs = append(undefs, undef{pos, nm})
 					continue
 				}
 
@@ -634,8 +639,31 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 		}
 	}
 	if len(undefs) != 0 {
-		sort.Strings(undefs)
-		return errorf("%s", strings.Join(undefs, "\n"))
+		sort.Slice(undefs, func(i, j int) bool {
+			a, b := undefs[i].pos, undefs[j].pos
+			if a.Filename < b.Filename {
+				return true
+			}
+
+			if a.Filename > b.Filename {
+				return false
+			}
+
+			if a.Line < b.Line {
+				return true
+			}
+
+			if a.Line > b.Line {
+				return false
+			}
+
+			return a.Column < b.Column
+		})
+		var a []string
+		for _, v := range undefs {
+			a = append(a, errorf("%v: undefined reference to '%s'", v.pos, l.rawName(v.nm)).Error())
+		}
+		return errorf("%s", strings.Join(a, "\n"))
 	}
 
 	if libc := l.libc; libc != nil && !libc.imported {

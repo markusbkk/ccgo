@@ -516,7 +516,7 @@ func buildDefs(D, U []string) string {
 		a = append(a, fmt.Sprintf("#define %s 1", v))
 	}
 	for _, v := range U {
-		v = v[len("-D"):]
+		v = v[len("-U"):]
 		a = append(a, fmt.Sprintf("#undef %s", v))
 	}
 	return strings.Join(a, "\n")
@@ -1106,4 +1106,14 @@ func gcKind(k cc.Kind, cabi *cc.ABI) gc.Kind {
 		panic(todo("", k))
 	}
 	return -1
+}
+
+func isUnreferencedFnDef(d *cc.Declarator) bool {
+	for _, v := range d.LexicalScope().Nodes[d.Name()] {
+		if x, ok := v.(*cc.Declarator); ok && x.ReadCount() != 0 {
+			return false
+		}
+	}
+
+	return true
 }

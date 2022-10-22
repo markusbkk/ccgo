@@ -184,8 +184,9 @@ type ctx struct {
 	pass   int // 0: out of function, 1: func 1st pass, 2: func 2nd pass.
 
 	closed    bool
-	hasMain   bool
 	hasErrors bool
+	hasMain   bool
+	hasWMain  bool
 }
 
 func newCtx(task *Task, eh errHandler) *ctx {
@@ -302,6 +303,18 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 		return err
 	}
 
+	for _, v := range c.ast.Scope.Nodes["main"] {
+		if x, ok := v.(*cc.Declarator); ok && x.Type().Kind() == cc.Function {
+			c.hasMain = true
+		}
+	}
+	if !c.hasMain && c.task.goos == "windows" {
+		for _, v := range c.ast.Scope.Nodes["wmain"] {
+			if x, ok := v.(*cc.Declarator); ok && x.Type().Kind() == cc.Function {
+				c.hasWMain = true
+			}
+		}
+	}
 	c.void = c.ast.Void
 	c.pvoid = c.ast.PVoid
 	c.ifn = ifn
@@ -335,8 +348,11 @@ func (c *ctx) compile(ifn, ofn string) (err error) {
 	}
 	c.verifyTypes()
 	c.w("%s", sep(c.ast.EOF))
-	if c.hasMain && c.task.tlsQualifier != "" {
+	switch {
+	case c.hasMain && c.task.tlsQualifier != "":
 		c.w("\n\nfunc %smain() { %s%[1]sStart(%[3]smain) }\n", tag(preserve), c.task.tlsQualifier, tag(external))
+	case c.hasWMain && c.task.tlsQualifier != "":
+		c.err(errorf("TODO"))
 	}
 	var a []string
 	for k := range c.externsDefined {
@@ -441,7 +457,8 @@ func (c *ctx) verifyTypes() {
 func (c *ctx) defines(w writer) {
 	var a []*cc.Macro
 	for _, v := range c.ast.Macros {
-		if v.IsConst && len(v.ReplacementList()) == 1 {
+		rl := v.ReplacementList()
+		if v.IsConst && len(rl) == 1 || len(rl) == 3 && rl[0].Ch == '(' && rl[2].Ch == ')' {
 			a = append(a, v)
 		}
 	}
@@ -451,7 +468,17 @@ func (c *ctx) defines(w writer) {
 
 	sort.Slice(a, func(i, j int) bool { return a[i].Name.SrcStr() < a[j].Name.SrcStr() })
 	for _, m := range a {
-		r := m.ReplacementList()[0].SrcStr()
+		var r string
+		switch rl := m.ReplacementList(); len(rl) {
+		case 1:
+			r = m.ReplacementList()[0].SrcStr()
+		case 3:
+			r = m.ReplacementList()[1].SrcStr()
+		default:
+			c.err(errorf("%v: internal error: %v", m.Position()))
+			continue
+		}
+
 		w.w("%s%sconst %s%s = %q;", sep(m.Name), c.posComment(m), tag(define), m.Name.Src(), r)
 		switch x := m.Value().(type) {
 		case cc.Int64Value:
