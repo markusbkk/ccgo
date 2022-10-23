@@ -40,9 +40,13 @@ func (c *ctx) initalizerFlatten(n *cc.Initializer, a []*cc.Initializer) (r []*cc
 }
 
 func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, off0 int64, arrayElem bool) (r *buf) {
-	// trc("==== (init A) typ %s off0 %#0x (%v:)", t, off0, a[0].Position())
+	// p := n.Position()
+	// if len(a) != 0 {
+	// 	p = a[0].Position()
+	// }
+	// trc("==== (init A) typ %s off0 %#0x (%v:) (from %v: %v: %v:)", t, off0, p, origin(4), origin(3), origin(2))
 	// dumpInitializer(a, "")
-	// trc("---- (init Z)")
+	// defer trc("---- (init Z) typ %s off0 %#0x (%v:)", t, off0, p)
 	if cc.IsScalarType(t) {
 		if len(a) == 0 {
 			c.err(errorf("TODO"))
@@ -150,7 +154,7 @@ func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.A
 func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.StructType, off0 int64) (r *buf) {
 	// trc("==== %v: (struct A, size %v) %s off0 %#0x", n.Position(), t.Size(), t, off0)
 	// dumpInitializer(a, "")
-	// trc("---- (struct Z)")
+	// defer trc("---- %v: (struct Z, size %v) %s off0 %#0x", n.Position(), t.Size(), t, off0)
 	var b buf
 	b.w("%s{", c.initTyp(n, t))
 	if c.isZeroInitializerSlice(a) {
@@ -260,7 +264,10 @@ func (c *ctx) initializerStruct(w writer, n cc.Node, a []*cc.Initializer, t *cc.
 			continue
 		}
 
-		// trc("f %q %s off %#0x", f.Name(), f.Type(), f.Offset())
+		for isEmpty(v[0].Type()) {
+			v = v[1:]
+		}
+		// trc("f %q %s off %#0x v[0].Type() %v", f.Name(), f.Type(), f.Offset(), v[0].Type())
 		flds = flds[1:]
 		b.w("%s%s: %s, ", tag(field), c.fieldName(t, f), c.initializer(w, n, v, f.Type(), off0+f.Offset(), false))
 	}
@@ -454,13 +461,13 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 				ps = ps + fmt.Sprintf("{%q %v}", p.Name(), p.Type())
 			}
 			fs = fmt.Sprintf(
-				" %s(field %q, IsBitfield %v, Offset %v, OffsetBits %v, OuterGroupOffset %v, InOverlapGroup %v, Mask %#0x, ValueBits %v",
+				" %s(field %q, IsBitfield %v, Offset %v, OffsetBits %v, OuterGroupOffset %v, InOverlapGroup %v, Mask %#0x, ValueBits %v)",
 				ps, f.Name(), f.IsBitfield(), f.Offset(), f.OffsetBits(), f.OuterGroupOffset(), f.InOverlapGroup(), f.Mask(), f.ValueBits(),
 			)
 		}
 		switch v.Case {
 		case cc.InitializerExpr:
-			fmt.Printf("%s %v: off %#05x '%s' %s%s <- %s%s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type(), fs)
+			fmt.Printf("%s %v: off %#05x '%s' %s type %q <- %s%s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type(), fs)
 		case cc.InitializerInitList:
 			s := pref + "· " + fs
 			for l := v.InitializerList; l != nil; l = l.InitializerList {

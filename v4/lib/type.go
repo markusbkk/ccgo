@@ -387,13 +387,15 @@ func (c *ctx) isValidType(n cc.Node, t cc.Type, report bool) bool {
 		}
 	case *cc.StructType:
 		for i := 0; i < x.NumFields(); i++ {
-			if !c.isValidType(n, x.FieldByIndex(i).Type(), report) {
+			f := x.FieldByIndex(i)
+			if !f.IsFlexibleArrayMember() && !c.isValidType(n, f.Type(), report) {
 				return false
 			}
 		}
 	case *cc.UnionType:
 		for i := 0; i < x.NumFields(); i++ {
-			if !c.isValidType(n, x.FieldByIndex(i).Type(), report) {
+			f := x.FieldByIndex(i)
+			if !f.IsFlexibleArrayMember() && !c.isValidType(n, f.Type(), report) {
 				return false
 			}
 		}
@@ -728,4 +730,15 @@ func firstPositiveSizedField(n *cc.UnionType) *cc.Field {
 		}
 	}
 	return nil
+}
+
+func isEmpty(t cc.Type) bool {
+	switch x := t.(type) {
+	case *cc.StructType:
+		return x.NumFields() == 0
+	case *cc.UnionType:
+		return x.NumFields() == 0
+	}
+
+	return false
 }
