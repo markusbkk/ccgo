@@ -13,8 +13,8 @@ golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab h1:2QkjZIsXupsJbJIdSjjUOgWK3
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/tools v0.1.12 h1:VveCTK38A2rkS8ZqFY25HIDFscX5X9OoEhJd3quQmXU=
 golang.org/x/tools v0.1.12/go.mod h1:hNGJHUnrk76NpqgfD5Aqm5Crs+Hm0VOH/i9J2+nxYbc=
-modernc.org/cc/v4 v4.0.0-20221023122038-dab28091a3ef h1:ApEKJaGBIi2/bIg26IgGot9KspLwRr39K/b802d8ah0=
-modernc.org/cc/v4 v4.0.0-20221023122038-dab28091a3ef/go.mod h1:T6KFXc8WI0m9k6IOHuRe9+vB+Pb/AaV8BMZoVqHLm1I=
+modernc.org/cc/v4 v4.0.0-20221023183428-92aa9d41b107 h1:LEavvkrPyjoFkRulW/r5xDJf0FiDN+IkWU5GsiQBjOs=
+modernc.org/cc/v4 v4.0.0-20221023183428-92aa9d41b107/go.mod h1:T6KFXc8WI0m9k6IOHuRe9+vB+Pb/AaV8BMZoVqHLm1I=
 modernc.org/ccorpus2 v1.2.0 h1:I+dskokQYHl+wL+Y2q9dS9B1o7JbrxBTyYvESaqmBgQ=
 modernc.org/ccorpus2 v1.2.0/go.mod h1:Wifvo4Q/qS/h1aRoC2TffcHsnxwTikmi1AuLANuucJQ=
 modernc.org/fileutil v1.0.0/go.mod h1:JHsWpkrk/CnVV1H/eGlFf85BEpfkrp56ro8nojIq9Q8=

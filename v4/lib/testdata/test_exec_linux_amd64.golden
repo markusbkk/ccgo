@@ -68,6 +68,7 @@ assets/ccgo/bug/select.c
 assets/ccgo/bug/sizeof.c
 assets/ccgo/bug/sizeof2.c
 assets/ccgo/bug/sqlite2.c
+assets/ccgo/bug/struct.c
 assets/ccgo/bug/tk.c
 assets/ccgo/bug/union2.c
 assets/ccgo/bug/webp.c
@@ -4482,6 +4483,7 @@ assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits09.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits10.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits11.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits12.c
+assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0028-inits13.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0029-ptrarith1.c
 assets/github.com/vnmakarov/mir/c-tests/andrewchambers_c/0029-ptrarith2.c
 assets/github.com/vnmakarov/mir/c-tests/lacc/address-deref-offset.c

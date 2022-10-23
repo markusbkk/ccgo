@@ -240,12 +240,7 @@ func (c *ctx) typ0(b *strings.Builder, n cc.Node, t cc.Type, useTypenames, useTa
 					}
 
 					b.WriteByte('\n')
-					switch nm := f.Name(); {
-					case nm == "":
-						fmt.Fprintf(b, "%s__ccgo%d", tag(field), f.Offset())
-					default:
-						fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
-					}
+					fmt.Fprintf(b, "%s%s", tag(field), c.fieldName(x, f))
 					b.WriteByte(' ')
 					c.typ0(b, n, ft, true, true, true)
 					off += ft.Size()
@@ -497,11 +492,17 @@ type fielder interface {
 }
 
 func (c *ctx) fieldName(t cc.Type, f *cc.Field) string {
-	if ft := c.registerFields(t); ft != nil {
-		return c.fields[ft].dict[f.Name()]
+	if f.Name() == "" {
+		return fmt.Sprintf("__ccgo%d_%d", f.Index(), f.Offset())
 	}
 
-	return tag(field) + f.Name()
+	if t != nil {
+		if ft := c.registerFields(t); ft != nil {
+			return c.fields[ft].dict[f.Name()]
+		}
+	}
+
+	return f.Name()
 }
 
 func (c *ctx) registerFields(t cc.Type) (ft fielder) {

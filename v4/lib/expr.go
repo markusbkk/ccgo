@@ -1736,8 +1736,7 @@ func (c *ctx) postfixExpressionPSelect(w writer, n *cc.PostfixExpression, t cc.T
 			rt, rmode = n.Type(), mode
 			switch {
 			case f.Offset() != 0:
-				c.err(errorf("TODO %v", mode))
-				//b.w("(*(*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer((%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.expr(w, n.PostfixExpression, nil, exprDefault), f.Offset())
+				b.w("(*(*%s)(%sunsafe.%sAdd(%s, %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)), f.Offset())
 			default:
 				b.w("(*(*%s)(%s))", c.typ(n, f.Type()), unsafePointer(c.expr(w, n.PostfixExpression, nil, exprDefault)))
 			}
@@ -1811,8 +1810,7 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 			rt, rmode = n.Type().Pointer(), mode
 			switch {
 			case f.Offset() != 0:
-				// b.w("%suintptr(%sunsafe.%s[1]Add(%[2]sunsafe.%[1]sPointer(&(%[3]s)), %d))", tag(preserve), tag(importQualifier), c.expr(w, n.PostfixExpression, nil, exprSelect), f.Offset())
-				b.w("%suintptr(0)", tag(preserve))
+				b.w("%suintptr(%sunsafe.%[1]sAdd(%[3]s, %d))", tag(preserve), tag(importQualifier), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
 			default:
 				b.w("%suintptr(%s)", tag(preserve), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 			}
@@ -1822,9 +1820,7 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 				rt, rmode = n.Type(), mode
 				switch {
 				case f.Offset() != 0:
-					//TODO XXX panic(todo("", n.Position()))
-					// b.w("((*%s)(%sunsafe.%sAdd(%[2]sunsafe.%sPointer(&(%s)), %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), c.pin(n.PostfixExpression, c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
-					c.err(errorf("TODO"))
+					b.w("((*%s)(%sunsafe.%sAdd(%s, %d)))", c.typ(n, f.Type()), tag(importQualifier), tag(preserve), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)), f.Offset())
 				default:
 					b.w("((*%s)(%s))", c.typ(n, f.Type()), unsafeAddr(c.expr(w, n.PostfixExpression, nil, exprSelect)))
 				}
@@ -1866,11 +1862,11 @@ func (c *ctx) postfixExpressionSelect(w writer, n *cc.PostfixExpression, t cc.Ty
 		b.w("(%s.", c.expr(w, n.PostfixExpression, nil, exprSelect))
 		switch {
 		case f.Parent() != nil:
-			//TODO XXX panic(todo("", n.Position()))
-			c.err(errorf("TODO %v", n.Case))
+			c.parentFields(&b, n.Token, f)
 		default:
-			b.w("%s%s)", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
+			b.w("%s%s", tag(field), c.fieldName(n.PostfixExpression.Type(), f))
 		}
+		b.w(")")
 	default:
 		c.err(errorf("TODO %v", mode))
 	}
@@ -1882,12 +1878,7 @@ func (c *ctx) parentFields(b *buf, n cc.Node, f *cc.Field) {
 		c.parentFields(b, n, p)
 		b.w(".")
 	}
-	switch {
-	case f.Name() == "":
-		b.w("%s__ccgo%d", tag(field), f.Offset())
-	default:
-		b.w("%s%s", tag(field), f.Name())
-	}
+	b.w("%s%s", tag(field), c.fieldName(nil, f))
 }
 
 func (c *ctx) isLastStructOrUnionField(n cc.ExpressionNode) *cc.Field {
