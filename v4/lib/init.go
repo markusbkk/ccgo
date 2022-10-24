@@ -53,7 +53,7 @@ func (c *ctx) initializer(w writer, n cc.Node, a []*cc.Initializer, t cc.Type, o
 			return nil
 		}
 
-		if a[0].Offset()-off0 != 0 {
+		if a[0].Offset()-off0 != 0 && a[0].Len() == 1 {
 			c.err(errorf("TODO"))
 			return nil
 		}
@@ -142,10 +142,65 @@ func (c *ctx) initializerArray(w writer, n cc.Node, a []*cc.Initializer, t *cc.A
 	et := t.Elem()
 	esz := et.Size()
 	s := sortInitializers(a, func(n int64) int64 { n -= off0; return n - n%esz })
+	ranged := false
 	for _, v := range s {
-		off := v[0].Offset() - off0
-		off -= off % esz
-		b.w("\n%d: %s, ", off/esz, c.initializer(w, n, v, et, off0+off, true))
+		if v[0].Len() != 1 {
+			ranged = true
+			break
+		}
+	}
+	switch {
+	case ranged:
+		type expanded struct {
+			s   *cc.Initializer
+			off int64
+		}
+		m := map[int64]*expanded{}
+		for _, vs := range s {
+			for _, v := range vs {
+				off := v.Offset() - off0
+				off -= off % esz
+				x := off / esz
+				switch ln := v.Len(); {
+				case ln != 1:
+					for i := int64(0); i < ln; i++ {
+						if ex, ok := m[x]; !ok || ex.s.Order() < v.Order() {
+							m[x] = &expanded{v, off0 + off + i*esz}
+						}
+						x++
+					}
+				default:
+					if ex, ok := m[x]; !ok || ex.s.Order() < v.Order() {
+						m[x] = &expanded{v, off0 + off}
+					}
+				}
+			}
+		}
+		var a []int64
+		for k := range m {
+			a = append(a, k)
+		}
+		sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
+		for _, k := range a {
+			v := m[k]
+			b.w("\n%d: %s, ", k, c.initializer(w, n, []*cc.Initializer{v.s}, et, v.off, true))
+		}
+	default:
+		for _, v := range s {
+			v0 := v[0]
+			off := v0.Offset() - off0
+			off -= off % esz
+			switch ln := v0.Len(); {
+			case ln != 1:
+				for i := int64(0); i < ln; i++ {
+					b.w("\n%d: %s, ", off/esz+i, c.initializer(w, n, v, et, off0+off+i*esz, true))
+				}
+			default:
+				off := v[0].Offset() - off0
+				off -= off % esz
+				b.w("\n%d: %s, ", off/esz, c.initializer(w, n, v, et, off0+off, true))
+			}
+		}
 	}
 	b.w("}")
 	return &b
@@ -467,7 +522,7 @@ func dumpInitializer(a []*cc.Initializer, pref string) {
 		}
 		switch v.Case {
 		case cc.InitializerExpr:
-			fmt.Printf("%s %v: off %#05x '%s' %s type %q <- %s%s\n", pref, pos(v.AssignmentExpression), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type(), fs)
+			fmt.Printf("%s %v: order %v off %#05x '%s' %s type %q <- %s%s\n", pref, pos(v.AssignmentExpression), v.Order(), v.Offset(), cc.NodeSource(v.AssignmentExpression), t, v.Type(), v.AssignmentExpression.Type(), fs)
 		case cc.InitializerInitList:
 			s := pref + "· " + fs
 			for l := v.InitializerList; l != nil; l = l.InitializerList {

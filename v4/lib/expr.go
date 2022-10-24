@@ -2149,8 +2149,8 @@ func (c *ctx) assignmentExpression(w writer, n *cc.AssignmentExpression, t cc.Ty
 			}
 		}
 		switch mode {
-		case exprDefault:
-			rt, rmode = n.Type(), exprDefault
+		case exprDefault, exprSelect:
+			rt, rmode = n.Type(), mode
 			v := c.f.newAutovar(n, n.UnaryExpression.Type())
 			w.w("%s = %s;", v, c.expr(w, n.AssignmentExpression, n.UnaryExpression.Type(), exprDefault))
 			w.w("%s = %s;", c.expr(w, n.UnaryExpression, nil, exprDefault), v)

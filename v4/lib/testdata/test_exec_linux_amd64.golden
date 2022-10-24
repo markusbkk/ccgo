@@ -70,6 +70,7 @@ assets/ccgo/bug/sizeof2.c
 assets/ccgo/bug/sqlite2.c
 assets/ccgo/bug/struct.c
 assets/ccgo/bug/tk.c
+assets/ccgo/bug/union.c
 assets/ccgo/bug/union2.c
 assets/ccgo/bug/webp.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000105-1.c
@@ -1107,6 +1108,7 @@ assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr34993.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35043.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35171.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35318.c
+assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35432.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35468.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35492.c
 assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/pr35595.c
@@ -4772,6 +4774,7 @@ assets/tcc-0.9.27/tests/tests2/82_attribs_position.c
 assets/tcc-0.9.27/tests/tests2/83_utf8_in_identifiers.c
 assets/tcc-0.9.27/tests/tests2/84_hex-float.c
 assets/tcc-0.9.27/tests/tests2/86_memory-model.c
+assets/tcc-0.9.27/tests/tests2/90_struct-init.c
 assets/tcc-0.9.27/tests/tests2/91_ptr_longlong_arith32.c
 assets/tcc-0.9.27/tests/tests2/92_enum_bitfield.c
 assets/tcc-0.9.27/tests/tests2/93_integer_promotion.c

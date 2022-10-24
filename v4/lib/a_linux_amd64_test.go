@@ -113,11 +113,10 @@ var testExecKnownFails = map[string]struct{}{
 	// Compiler specific conversion results.
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`:                 {}, // EXEC FAIL
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20031003-1.c`: {}, // EXEC FAIL
+	// assembler
+	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`:                 {}, // EXEC FAIL
+	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
-
-	//TODO
-	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`:                 {}, // EXEC FAIL: assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/execute/20020107-1.c: panic: 5052909
-	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`: {}, // EXEC FAIL: assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c: panic: 5052909
 
 	// ====================================================================
 	// Compiles but does not build.
@@ -451,9 +450,7 @@ var testExecKnownFails = map[string]struct{}{
 
 	//TODO
 	`assets/benchmarksgame-team.pages.debian.net/fasta-4.c`:                                             {}, // COMPILE FAIL: fasta-4.c.go:4828:2: undefined reference to 'fputs_unlocked' (ccgo.go:263:Main: link.go:246:link: link.go:614:link)
-	`assets/ccgo/bug/struct.c`:                                                                          {}, // COMPILE FAIL: TODO PostfixExpressionSelect (expr.go:455:expr0: expr.go:1361:postfixExpression: expr.go:1788:postfixExpressionSelect)
 	`assets/ccgo/bug/struct2.c`:                                                                         {}, // COMPILE FAIL: bug/struct2.c: gofmt: exit status 2 (asm_amd64.s:1594:goexit: compile.go:354:compile: compile.go:354:compile)
-	`assets/ccgo/bug/union.c`:                                                                           {}, // COMPILE FAIL: TODO exprSelect (expr.go:2407:primaryExpression: expr.go:433:expr0: expr.go:2094:assignmentExpression)
 	`assets/ccgo/bug/union3.c`:                                                                          {}, // COMPILE FAIL: TODO (type.go:17:typedef: type.go:214:typ0: type.go:267:typ0)
 	`assets/ccgo/bug/union4.c`:                                                                          {}, // COMPILE FAIL: TODO (type.go:17:typedef: type.go:214:typ0: type.go:267:typ0)
 	`assets/gcc-9.1.0/gcc/testsuite/gcc.c-torture/compile/20000211-1.c`:                                 {}, // COMPILE FAIL: 20000211-1.c:32:28: invalid type size: -1 (type.go:17:typedef: type.go:52:typ0: type.go:369:checkValidType)

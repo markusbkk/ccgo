@@ -43,13 +43,13 @@ const (
 
 var (
 	oBlackBox     = flag.String("blackbox", "", "Record CSmith file to this file")
-	oCSmith       = flag.Duration("csmith", 1*time.Hour, "")
+	oCSmith       = flag.Duration("csmith", 2*time.Hour, "")
 	oCSmithClimit = flag.Duration("csmithc", 1*time.Minute, "")
 	oDebug        = flag.Bool("debug", false, "")
 	oErr1         = flag.Bool("err1", false, "first error line only")
 	oKeep         = flag.Bool("keep", false, "keep temp directories")
 	oPanic        = flag.Bool("panic", false, "panic on miscompilation")
-	oShellTime    = flag.Duration("shelltimeout", 1800*time.Second, "shell() time limit")
+	oShellTime    = flag.Duration("shelltimeout", 3600*time.Second, "shell() time limit")
 	oStackTrace   = flag.Bool("trcstack", false, "")
 	oTrace        = flag.Bool("trc", false, "print tested paths.")
 	oTraceC       = flag.Bool("trcc", false, "trace TestExec transiple errors")
