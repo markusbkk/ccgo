@@ -1115,7 +1115,6 @@ func testSQLite(t *testing.T, dir string) {
 		}()
 
 		task := NewTask(goos, goarch, ccgoArgs, nil, nil, cfs)
-		task.enableSignal = true
 		if err := task.Main(); err != nil {
 			if *oTrace {
 				fmt.Println(err)

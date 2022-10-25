@@ -75,7 +75,6 @@ type Task struct {
 	ansi                      bool // -ansi
 	c                         bool // -c
 	debugLinkerSave           bool // -debug-linker-save, causes pre type checking save of the linker result.
-	enableSignal              bool // testing
 	fullPaths                 bool // -full-paths
 	ignoreAsmErrors           bool // -ignore-asm-errors
 	ignoreUnsupportedAligment bool // -ignore-unsupported-alignment

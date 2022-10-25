@@ -118,6 +118,9 @@ var testExecKnownFails = map[string]struct{}{
 	`assets/github.com/gcc-mirror/gcc/gcc/testsuite/gcc.c-torture/execute/20020107-1.c`: {}, // EXEC FAIL
 	// --------------------------------------------------------------------
 
+	`assets/benchmarksgame-team.pages.debian.net/fannkuchredux-2.c`:      {}, // EXEC FAIL: assets/benchmarksgame-team.pages.debian.net/fannkuchredux-2.c: libc_linux.go:264:Xsysconf: TODOTODO 84
+	`assets/benchmarksgame-team.pages.debian.net/reverse-complement-2.c`: {}, // EXEC FAIL: assets/benchmarksgame-team.pages.debian.net/reverse-complement-2.c: unexpected fault address 0x7f6e049fffff
+
 	// ====================================================================
 	// Compiles but does not build.
 
