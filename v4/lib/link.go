@@ -564,14 +564,7 @@ func (l *linker) w(s string, args ...interface{}) {
 	}
 }
 
-var hide = map[string]struct{}{
-	tag(external) + "_longjmp":       {}, // only panics
-	tag(external) + "_setjmp":        {}, // only panics
-	tag(external) + "longjmp":        {}, // only panics
-	tag(external) + "pthread_create": {}, // implementation is still broken
-	tag(external) + "setjmp":         {}, // only panics
-	tag(external) + "signal":         {}, // not really supported
-}
+var hide = map[string]struct{}{}
 
 func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object) (err error) {
 	// Force a link error for things not really supported or that only panic at runtime.
@@ -581,8 +574,7 @@ func (l *linker) link(ofn string, linkFiles []string, objects map[string]*object
 		object := objects[linkFile]
 		for nm := range object.externs {
 			if _, ok := l.externs[nm]; !ok {
-				_, hidden := hide[nm]
-				if !hidden || l.task.enableSignal && nm == tag(external)+"signal" {
+				if _, hidden := hide[nm]; !hidden {
 					l.externs[nm] = object
 				}
 			}
