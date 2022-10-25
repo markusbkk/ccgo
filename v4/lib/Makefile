@@ -56,13 +56,13 @@ editor:
 	go install -v -tags=ccgo.assert modernc.org/ccgo/v4 2>&1 | tee log-editor
 
 tmp:
-	go test -tags=ccgo.assert -v -run TestExec -trc -trctodo -shelltimeout 5s 2>&1 | tee log
+	go test -tags=ccgo.assert -v -run TestExec -trc -trctodo -shelltimeout 5s 2>&1 | tee log-tmp
 	grep -a '^TODO' log | sort | uniq -c | sort -n | tee log-2
 	grep -a 'TOTAL\|PASS' log || true
 
 x:
 	rm -f /tmp/ccgo.log
-	go test -v -timeout 24h -tags=ccgo.assert,ccgo.dmesg -short -timeout 24h -run Exec -err1 -trc -shelltimeout 10s 2>&1 | tee log
+	go test -v -timeout 24h -tags=ccgo.assert,ccgo.dmesg -short -timeout 24h -run Exec -err1 -trc -shelltimeout 10s 2>&1 | tee log-x
 	grep TOTAL log
 	git status
 
@@ -70,24 +70,24 @@ csmith:
 	go test -v -timeout 25h -tags=ccgo.assert -run CSmith -blackbox $(shell pwd)/log-csmith -csmith 24h -trc 2>&1 | tee log-cs
 
 fftest:
-	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
+	go test -v -timeout 24h -short -failfast -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log-fftest
 	grep TOTAL log
 	git status testdata
 	git diff testdata/
 
 shorttest:
-	go test -v -timeout 24h -short -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
-	grep TOTAL log
+	go test -v -timeout 24h -short -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log-shorttest
+	grep TOTAL log-shorttest
 	git status testdata
 	git diff testdata/
 
 sqlitetest:
-	go test -v -timeout 24h -run SQL -xtags=libc.memgrind -trc -trco 2>&1 | tee log
+	go test -v -timeout 24h -run SQL -xtags=libc.memgrind -trc -trco 2>&1 | tee log-sqlitetest
 
 debug:
-	go test -count 10 -v -timeout 24h -short -failfast -run Exec -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log
+	go test -count 10 -v -timeout 24h -short -failfast -run Exec -tags=ccgo.assert -trc -shelltimeout 1m 2>&1 | tee log-debug
 	grep TOTAL log
 	git status testdata
 
 install:
-	go install -v -tags=ccgo.assert modernc.org/ccgo/v4 2>&1 | tee log-editor
+	go install -v -tags=ccgo.assert modernc.org/ccgo/v4 2>&1 | tee log-install
