@@ -28,7 +28,13 @@ func (c *ctx) helper(n cc.Node, t cc.Type) string {
 		c.err(errorf("%v: internal error: %s", n.Position(), t))
 	}
 	c.typ0(&b, n, t, false, false, false)
-	return export(b.String()[len(tag(preserve)):])
+	s := b.String()
+	if len(s) == 0 {
+		c.err(errorf("%v: internal error: %s", n.Position(), t))
+		return "__undefined__"
+	}
+
+	return export(s[len(tag(preserve)):])
 }
 
 func (c *ctx) typ(n cc.Node, t cc.Type) string {
