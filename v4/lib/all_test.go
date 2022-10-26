@@ -759,12 +759,13 @@ func TestCSmith(t *testing.T) {
 		}
 	}
 
-	//TODO- if cc.LongDouble64Flag(runtime.GOOS, runtime.GOARCH) == "" {
-	//TODO- 	t.Skipf("skipped: sizeof long double: %v", abi.Types[cc.LongDouble].Size)
-	//TODO- }
-
 	bigEndian := abi.ByteOrder == binary.BigEndian
 	binaryName := filepath.FromSlash("./a.out")
+	goBinaryName := filepath.FromSlash("./main")
+	if runtime.GOOS == "windows" {
+		binaryName = filepath.FromSlash("./a.exe")
+		goBinaryName = filepath.FromSlash("./main.exe")
+	}
 	mainName := filepath.FromSlash("main.go")
 	wd, err := os.Getwd()
 	if err != nil {
@@ -919,13 +920,13 @@ out:
 			csp = fmt.Sprintf("-I%s", s)
 		}
 
-		ctime0 := time.Now()
 		ccOut, err := exec.Command(hostCC, "-o", binaryName, "main.c", csp).CombinedOutput()
 		if err != nil {
 			t.Logf("%s\n%s\ncc: %v", extra, ccOut, err)
 			continue
 		}
 
+		ctime0 := time.Now()
 		binOutA, err := func() ([]byte, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), *oCSmithClimit)
 			defer cancel()
@@ -938,7 +939,7 @@ out:
 
 		ctime := time.Since(ctime0)
 		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]: C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
+			fmt.Fprintf(os.Stderr, "[%s %s]:  C binary real %s\n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), ctime)
 		}
 		if ctime > *oCSmithClimit {
 			continue
@@ -987,6 +988,12 @@ out:
 			}
 		}()
 
+		out, err := shell(false, "go", "build", "-o", goBinaryName, mainName)
+		if err != nil {
+			t.Errorf("%s\n%s\n%s\nccgo: %v", extra, csOut, out, err)
+			break
+		}
+
 		goLimit := 10 * ctime
 		if goLimit < 20*time.Minute {
 			goLimit = 20 * time.Minute
@@ -996,13 +1003,8 @@ out:
 			ctx, cancel := context.WithTimeout(context.Background(), goLimit)
 			defer cancel()
 
-			return exec.CommandContext(ctx, "go", "run", mainName).CombinedOutput()
+			return exec.CommandContext(ctx, goBinaryName).CombinedOutput()
 		}()
-		if err != nil {
-			t.Errorf("%s\n%s\n%s\nccgo: %v", extra, csOut, binOutB, err)
-			break
-		}
-
 		if g, e := binOutB, binOutA; !bytes.Equal(g, e) {
 			t.Errorf("%s\n%s\nccgo: %v\ngot: %s\nexp: %s", extra, csOut, err, g, e)
 			break
@@ -1010,7 +1012,7 @@ out:
 
 		ok++
 		if *oTrace {
-			fmt.Fprintf(os.Stderr, "[%s %s]: Go run   real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), time.Since(goTime0), files, ok)
+			fmt.Fprintf(os.Stderr, "[%s %s]: Go binary real %s\tfiles %v, ok %v, \n", time.Now().Format("15:04:05"), durationStr(time.Since(t0)), time.Since(goTime0), files, ok)
 		}
 
 		if err := os.Remove(mainName); err != nil {
