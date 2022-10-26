@@ -24,6 +24,7 @@ assets/CompCert-3.6/test/c/spectral.c
 assets/CompCert-3.6/test/c/vmach.c
 assets/benchmarksgame-team.pages.debian.net/binary-trees-5.c
 assets/benchmarksgame-team.pages.debian.net/binary-trees.c
+assets/benchmarksgame-team.pages.debian.net/fannkuchredux-2.c
 assets/benchmarksgame-team.pages.debian.net/fannkuchredux-3.c
 assets/benchmarksgame-team.pages.debian.net/fasta-3.c
 assets/benchmarksgame-team.pages.debian.net/fasta-8.c
