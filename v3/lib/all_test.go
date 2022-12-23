@@ -1247,6 +1247,8 @@ func TestMirBenchmarks(t *testing.T) {
 		blacklist["mandelbrot.c"] = struct{}{} //TODO
 	case "windows/386":
 		blacklist["mandelbrot.c"] = struct{}{} //TODO
+	case "linux/s390x":
+		blacklist["mandelbrot.c"] = struct{}{} //TODO
 	}
 	binary := map[string]bool{
 		"mandelbrot.c": true,
